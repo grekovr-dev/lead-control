@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
  && rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-install pdo_mysql mbstring bcmath gd
+RUN docker-php-ext-install pdo_mysql mbstring bcmath gd pcntl posix
 
 RUN pecl install redis \
     && docker-php-ext-enable redis
