@@ -1,0 +1,77 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        UID: ${UID}
+        GID: ${GID}
+    container_name: lead_app
+    volumes:
+      - ./:/var/www
+      - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/99-xdebug.ini:ro
+    environment:
+      XDEBUG_MODE: debug
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - leadnet
+
+  nginx:
+    image: nginx:alpine
+    container_name: lead_nginx
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./docker/certs:/etc/nginx/certs:ro
+    depends_on:
+      - app
+    networks:
+      - leadnet
+
+  db:
+    image: mysql:8
+    container_name: lead_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: lead
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: lead
+      MYSQL_PASSWORD: lead
+    volumes:
+      - lead_db_data:/var/lib/mysql
+    networks:
+      - leadnet
+
+  redis:
+    image: redis:alpine
+    container_name: lead_redis
+    restart: unless-stopped
+    networks:
+      - leadnet
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: lead_pma
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - db
+    networks:
+      - leadnet
+
+networks:
+  leadnet:
+
+volumes:
+  lead_db_data:

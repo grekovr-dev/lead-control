@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Pint (format)",
+      "type": "shell",
+      "command": "docker compose exec -T app bash -lc 'cd apps/web && ./vendor/bin/pint'",
+      "problemMatcher": []
+    },
+    {
+      "label": "PHPStan (Larastan)",
+      "type": "shell",
+      "command": "docker compose exec -T app bash -lc 'cd apps/web && ./vendor/bin/phpstan analyse'",
+      "problemMatcher": []
+    }
+  ]
+}

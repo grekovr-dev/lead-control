@@ -1,0 +1,56 @@
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE
+# =========================
+.idea/
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/php-docker.sh
+
+# =========================
+# Laravel
+# =========================
+apps/web/vendor/
+apps/web/node_modules/
+
+apps/web/storage/*
+!apps/web/storage/.gitignore
+
+apps/web/bootstrap/cache/*
+!apps/web/bootstrap/cache/.gitignore
+
+# =========================
+# Environment
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Docker
+# =========================
+docker/certs/*
+!docker/certs/.gitignore
+
+# =========================
+# Database
+# =========================
+*.sqlite
+
+# =========================
+# Cache
+# =========================
+.cache
