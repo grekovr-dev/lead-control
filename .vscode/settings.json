@@ -44,5 +44,9 @@
     "**/apps/web/storage": true,
     "**/apps/web/bootstrap/cache": true,
     "**/node_modules": true
-  }
+  },
+  // ===== CSS =====
+  "css.customData": [
+    ".vscode/css-custom-data.json"
+  ]
 }
