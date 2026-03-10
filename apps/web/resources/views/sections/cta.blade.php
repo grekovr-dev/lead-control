@@ -1,6 +1,6 @@
 <section class="px-6 py-16 md:py-20">
     <div class="mx-auto max-w-6xl">
-        <div class="relative overflow-hidden rounded-3xl border border-teal-200 bg-gradient-to-r from-teal-700 via-teal-600 to-cyan-600 px-8 py-12 text-white md:px-12">
+        <div class="relative overflow-hidden rounded-3xl border border-teal-200 bg-linear-to-r from-teal-700 via-teal-600 to-cyan-600 px-8 py-12 text-white md:px-12">
             <div class="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/20 blur-3xl"></div>
             <div class="pointer-events-none absolute -bottom-20 left-10 h-52 w-52 rounded-full bg-cyan-300/25 blur-3xl"></div>
 
