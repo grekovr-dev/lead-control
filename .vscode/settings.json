@@ -16,7 +16,6 @@
     "**/node_modules/**",
     "**/storage/**",
     "**/bootstrap/cache/**",
-    "**/vendor/**",
     "**/.idea/**"
   ],
   // ключевое: автозагрузка из Laravel-проекта
@@ -26,13 +25,10 @@
     "src"
   ],
   // ===== Blade / Laravel =====
-  // Форматирование Blade (если у тебя Blade Formatter / Laravel Blade Formatter)
-  // (если один из этих плагинов использует другие ключи — скажешь, подправлю под точное расширение)
   "[blade]": {
     "editor.formatOnSave": true
   },
   // ===== Pint (Laravel) =====
-  // запускать Pint проще через задачи, но оставим подсказку:
   "terminal.integrated.env.linux": {
     "PROJECT_ROOT": "${workspaceFolder}"
   },
@@ -48,5 +44,6 @@
   // ===== CSS =====
   "css.customData": [
     ".vscode/css-custom-data.json"
-  ]
+  ],
+  "phpunit.command": "docker compose exec -T app sh -c \"cd apps/web && php artisan test\""
 }

@@ -26,12 +26,31 @@
         </div>
 
         <div class="rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_20px_40px_-28px_rgba(15,23,42,0.45)] md:p-8">
-            <form class="space-y-5">
+            @if (session('success'))
+                <div class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                    <ul class="list-disc space-y-1 pl-5">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('leads.store') }}" class="space-y-5">
+                @csrf
                 <div>
                     <label for="name" class="mb-2 block text-sm font-medium text-slate-700">Ім'я</label>
                     <input
                         id="name"
+                        name="name"
                         type="text"
+                        value="{{ old('name') }}"
                         placeholder="Ваше ім'я"
                         class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-100"
                     >
@@ -41,7 +60,9 @@
                     <label for="phone" class="mb-2 block text-sm font-medium text-slate-700">Телефон</label>
                     <input
                         id="phone"
+                        name="phone"
                         type="tel"
+                        value="{{ old('phone') }}"
                         placeholder="+380..."
                         class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-100"
                     >
@@ -51,14 +72,15 @@
                     <label for="comment" class="mb-2 block text-sm font-medium text-slate-700">Коментар</label>
                     <textarea
                         id="comment"
+                        name="comment"
                         rows="4"
                         placeholder="Коротко опишіть ваш запит"
                         class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-100"
-                    ></textarea>
+                    >{{ old('comment') }}</textarea>
                 </div>
 
                 <button
-                    type="button"
+                    type="submit"
                     class="w-full rounded-xl bg-teal-700 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-teal-800"
                 >
                     Надіслати заявку
