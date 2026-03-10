@@ -12,7 +12,7 @@ class LeadModel extends Model
     protected $fillable = [
         'name',
         'phone',
-        'source',
+        'comment',
         'status',
     ];
 
