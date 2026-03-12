@@ -9,7 +9,7 @@
             </span>
 
             <h1 class="mb-5 text-4xl font-semibold leading-tight text-slate-900 md:text-5xl lg:text-6xl">
-                Акуратний монтаж стелі за 1–2 дні без зайвого клопоту
+                Швидкий монтаж стелі за 1–2 дні без зайвого клопоту
             </h1>
 
             <p class="mb-8 max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
@@ -23,11 +23,11 @@
                 </li>
                 <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                    Працюємо чисто й акуратно
+                    Працюємо швидко і якісно
                 </li>
                 <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                    Гарантія на роботи й матеріали
+                    Гарантія на роботи і матеріали
                 </li>
                 <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
