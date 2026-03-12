@@ -1,15 +1,23 @@
 <section class="relative overflow-hidden px-6 pb-16 pt-14 md:pb-20 md:pt-20">
-    <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-gradient-to-b from-teal-50 via-cyan-50/60 to-transparent"></div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-linear-to-b from-teal-50 via-cyan-50/60 to-transparent"></div>
     <div class="pointer-events-none absolute -right-14 -top-20 -z-10 h-64 w-64 rounded-full bg-teal-200/40 blur-3xl"></div>
 
     <div class="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.05fr_0.95fr] md:items-center">
         <div>
-            <span class="mb-5 inline-flex rounded-full border border-teal-200 bg-white/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-teal-700">
-                Натяжні стелі під ключ
-            </span>
+            <div class="mb-5 flex flex-wrap items-center gap-3">
+                <span class="inline-flex rounded-full border border-teal-200 bg-white/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-teal-700">
+                    Натяжні стелі під ключ
+                </span>
+                <a
+                    href="{{ $phoneHref }}"
+                    class="inline-flex rounded-full border border-teal-200 bg-white/90 px-4 py-1.5 text-xs font-semibold tracking-[0.14em] text-teal-700 transition hover:border-teal-300 hover:bg-white"
+                >
+                    {{ $phoneDisplay }}
+                </a>
+            </div>
 
             <h1 class="mb-5 text-4xl font-semibold leading-tight text-slate-900 md:text-5xl lg:text-6xl">
-                Акуратний монтаж стелі за 1–2 дні без зайвого клопоту
+                Швидкий монтаж стелі за 1–2 дні без зайвого клопоту
             </h1>
 
             <p class="mb-8 max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
@@ -23,15 +31,15 @@
                 </li>
                 <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                    Працюємо чисто й акуратно
+                    Працюємо швидко і якісно
                 </li>
                 <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                    Гарантія на роботи й матеріали
+                    Гарантія на роботи і матеріали
                 </li>
                 <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                    Перший контакт за 15 хвилин
+                    Офіційний договір і прозорі умови
                 </li>
             </ul>
 
@@ -41,6 +49,9 @@
                 </a>
                 <a href="#works" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100">
                     Подивитися приклади
+                </a>
+                <a href="{{ $phoneHref }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100">
+                    {{ $phoneDisplay }}
                 </a>
             </div>
         </div>
@@ -59,7 +70,7 @@
                 <div class="mt-6 grid gap-4 sm:grid-cols-2">
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                         <p class="text-xs uppercase tracking-wide text-slate-500">Досвід</p>
-                        <p class="mt-2 text-2xl font-semibold text-slate-900">12+ років</p>
+                        <p class="mt-2 text-2xl font-semibold text-slate-900">15+ років</p>
                     </div>
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                         <p class="text-xs uppercase tracking-wide text-slate-500">Проєкти</p>
@@ -72,6 +83,14 @@
                         Безкоштовна консультація та попередній кошторис до початку робіт.
                     </p>
                 </div>
+            </div>
+
+            <div class="mt-4 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_22px_45px_-28px_rgba(15,23,42,0.45)]">
+                <img
+                    src="{{ asset('images/hero.jpg') }}"
+                    alt="Натяжна стеля з сучасним освітленням"
+                    class="h-56 w-full object-cover sm:h-64"
+                >
             </div>
         </div>
     </div>
