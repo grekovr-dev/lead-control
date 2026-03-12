@@ -5,6 +5,7 @@
             <a href="#benefits" class="transition hover:text-slate-700">Переваги</a>
             <a href="#works" class="transition hover:text-slate-700">Роботи</a>
             <a href="#lead-form" class="transition hover:text-slate-700">Залишити заявку</a>
+            <a href="{{ $phoneHref }}" class="transition hover:text-slate-700">{{ $phoneDisplay }}</a>
         </div>
     </div>
 </footer>
