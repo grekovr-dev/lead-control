@@ -45,5 +45,19 @@
   "css.customData": [
     ".vscode/css-custom-data.json"
   ],
-  "phpunit.command": "docker compose exec -T app sh -c \"cd apps/web && php artisan test\""
+  // ===== PHPUnit Test Explorer =====
+  // Для docker path mapping используем абсолютный путь: ${workspaceFolder}
+  // в phpunit.paths у этого расширения работает нестабильно.
+  "phpunit.command": "docker compose exec -T app ${php} ${phpargs} ${phpunit} ${phpunitargs}",
+  "phpunit.php": "php",
+  "phpunit.phpunit": "/var/www/apps/web/vendor/bin/phpunit",
+  "phpunit.args": [
+    "-c",
+    "/var/www/apps/web/phpunit.xml"
+  ],
+  "phpunit.debuggerConfig": "Listen Xdebug (Docker Tests)",
+  "phpunit.xdebugPort": 9003,
+  "phpunit.paths": {
+    "/home/hrekov-r/Projects/lead-control": "/var/www"
+  }
 }
