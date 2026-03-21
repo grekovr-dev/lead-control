@@ -4,35 +4,27 @@ declare(strict_types=1);
 
 namespace Inbound\Application\Actions\Capture\RegisterTouch;
 
+use Inbound\Application\Actions\Capture\ResolveVisitForCapture\ResolveVisitForCaptureAction;
+use Inbound\Application\Actions\Capture\ResolveVisitForCapture\ResolveVisitForCaptureCommand;
 use Inbound\Domain\Touch\Touch;
 use Inbound\Domain\Touch\TouchRepository;
-use Inbound\Domain\Visit\Visit;
-use Inbound\Domain\Visit\VisitRepository;
 
 final class RegisterTouchAction
 {
     public function __construct(
         private TouchRepository $touchRepository,
-        private VisitRepository $visitRepository,
+        private ResolveVisitForCaptureAction $resolveVisitForCaptureAction,
     ) {
     }
 
     public function __invoke(RegisterTouchCommand $command): Touch
     {
-        $visit = $this->visitRepository->findActiveByVisitorId($command->visitorId);
-
-        if ($visit === null) {
-            $visit = new Visit(
-                $command->visitId,
-                $command->visitorId,
-                $command->attribution,
-                $command->attribution,
-                $command->occurredAt,
-                $command->occurredAt,
-            );
-        } else {
-            $visit->touch($command->attribution, $command->occurredAt);
-        }
+        $visit = ($this->resolveVisitForCaptureAction)(new ResolveVisitForCaptureCommand(
+            $command->visitId,
+            $command->visitorId,
+            $command->attribution,
+            $command->occurredAt,
+        ));
 
         $touch = new Touch(
             $command->touchId,
@@ -43,7 +35,6 @@ final class RegisterTouchAction
         );
 
         $this->touchRepository->save($touch);
-        $this->visitRepository->save($visit);
 
         return $touch;
     }

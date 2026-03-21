@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inbound\Application\Actions\Capture\CreateLeadFromPhoneClick;
 
+use Inbound\Application\Actions\Capture\ResolveVisitForCapture\VisitSessionRule;
 use Inbound\Domain\Lead\Lead;
 use Inbound\Domain\Lead\LeadRepository;
 use Inbound\Domain\Lead\LeadStatus;
@@ -14,14 +15,15 @@ final class CreateLeadFromPhoneClickAction
     public function __construct(
         private LeadRepository $leadRepository,
         private VisitRepository $visitRepository,
+        private VisitSessionRule $visitSessionRule,
     ) {
     }
 
     public function __invoke(CreateLeadFromPhoneClickCommand $command): Lead
     {
-        $visit = $this->visitRepository->findActiveByVisitorId($command->visitorId);
+        $visit = $this->visitRepository->findLastByVisitorId($command->visitorId);
 
-        if ($visit === null) {
+        if ($visit === null || !$this->visitSessionRule->continues($visit, $command->occurredAt)) {
             throw new ActiveVisitNotFoundException('Cannot create lead from phone click without an active visit.');
         }
 

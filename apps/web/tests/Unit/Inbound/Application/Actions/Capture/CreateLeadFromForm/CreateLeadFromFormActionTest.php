@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Inbound\Application\Actions\Capture\CreateLeadFromForm;
 
+use DateInterval;
 use DateTimeImmutable;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\ActiveVisitNotFoundException;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormAction;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormCommand;
+use Inbound\Application\Actions\Capture\ResolveVisitForCapture\VisitSessionRule;
 use Inbound\Domain\Lead\Lead;
 use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Lead\LeadRepository;
@@ -47,7 +49,7 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $visitRepository
             ->expects($this->once())
-            ->method('findActiveByVisitorId')
+            ->method('findLastByVisitorId')
             ->with($command->visitorId)
             ->willReturn($existingVisit);
 
@@ -66,7 +68,11 @@ final class CreateLeadFromFormActionTest extends TestCase
                     && $lead->createdAt() == $occurredAt;
             }));
 
-        $action = new CreateLeadFromFormAction($leadRepository, $visitRepository);
+        $action = new CreateLeadFromFormAction(
+            $leadRepository,
+            $visitRepository,
+            new VisitSessionRule(new DateInterval('PT30M')),
+        );
 
         $result = $action($command);
 
@@ -91,7 +97,7 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $visitRepository
             ->expects($this->once())
-            ->method('findActiveByVisitorId')
+            ->method('findLastByVisitorId')
             ->with($command->visitorId)
             ->willReturn(null);
 
@@ -99,7 +105,56 @@ final class CreateLeadFromFormActionTest extends TestCase
             ->expects($this->never())
             ->method('save');
 
-        $action = new CreateLeadFromFormAction($leadRepository, $visitRepository);
+        $action = new CreateLeadFromFormAction(
+            $leadRepository,
+            $visitRepository,
+            new VisitSessionRule(new DateInterval('PT30M')),
+        );
+
+        $this->expectException(ActiveVisitNotFoundException::class);
+        $this->expectExceptionMessage('Cannot create lead from form without an active visit.');
+
+        $action($command);
+    }
+
+    public function test_it_throws_when_last_visit_session_is_expired(): void
+    {
+        $command = new CreateLeadFromFormCommand(
+            new LeadId('lead-123'),
+            new VisitorId('visitor-456'),
+            'John Doe',
+            '+380501112233',
+            new Attribution('google', 'cpc', null, null, null, null, null, null),
+            new DateTimeImmutable('2026-03-20T12:40:01+02:00'),
+        );
+
+        $expiredVisit = new Visit(
+            new VisitId('visit-existing'),
+            $command->visitorId,
+            Attribution::empty(),
+            Attribution::empty(),
+            new DateTimeImmutable('2026-03-20T12:00:00+02:00'),
+            new DateTimeImmutable('2026-03-20T12:10:00+02:00'),
+        );
+
+        $leadRepository = $this->createMock(LeadRepository::class);
+        $visitRepository = $this->createMock(VisitRepository::class);
+
+        $visitRepository
+            ->expects($this->once())
+            ->method('findLastByVisitorId')
+            ->with($command->visitorId)
+            ->willReturn($expiredVisit);
+
+        $leadRepository
+            ->expects($this->never())
+            ->method('save');
+
+        $action = new CreateLeadFromFormAction(
+            $leadRepository,
+            $visitRepository,
+            new VisitSessionRule(new DateInterval('PT30M')),
+        );
 
         $this->expectException(ActiveVisitNotFoundException::class);
         $this->expectExceptionMessage('Cannot create lead from form without an active visit.');

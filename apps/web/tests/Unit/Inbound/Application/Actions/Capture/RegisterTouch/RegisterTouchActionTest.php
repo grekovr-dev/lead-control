@@ -7,6 +7,8 @@ namespace Tests\Unit\Inbound\Application\Actions\Capture\RegisterTouch;
 use DateTimeImmutable;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchAction;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchCommand;
+use Inbound\Application\Actions\Capture\ResolveVisitForCapture\ResolveVisitForCaptureAction;
+use Inbound\Application\Actions\Capture\ResolveVisitForCapture\VisitSessionRule;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
 use Inbound\Domain\Touch\Touch;
@@ -20,7 +22,7 @@ use PHPUnit\Framework\TestCase;
 
 final class RegisterTouchActionTest extends TestCase
 {
-    public function test_it_uses_existing_active_visit(): void
+    public function test_it_uses_existing_visit_when_session_continues(): void
     {
         $occurredAt = new DateTimeImmutable('2026-03-20T11:10:00+02:00');
         $command = new RegisterTouchCommand(
@@ -57,7 +59,7 @@ final class RegisterTouchActionTest extends TestCase
 
         $visitRepository
             ->expects($this->once())
-            ->method('findActiveByVisitorId')
+            ->method('findLastByVisitorId')
             ->with($command->visitorId)
             ->willReturn($existingVisit);
 
@@ -71,7 +73,10 @@ final class RegisterTouchActionTest extends TestCase
                     && $visit->lastTouchedAt() == $occurredAt;
             }));
 
-        $action = new RegisterTouchAction($touchRepository, $visitRepository);
+        $action = new RegisterTouchAction(
+            $touchRepository,
+            new ResolveVisitForCaptureAction($visitRepository, new VisitSessionRule()),
+        );
 
         $result = $action($command);
 
@@ -79,7 +84,7 @@ final class RegisterTouchActionTest extends TestCase
         $this->assertTrue($result->visitId()->equals($existingVisit->id()));
     }
 
-    public function test_it_creates_new_visit_when_active_visit_is_missing(): void
+    public function test_it_creates_new_visit_when_last_visit_is_missing(): void
     {
         $occurredAt = new DateTimeImmutable('2026-03-20T11:10:00+02:00');
         $command = new RegisterTouchCommand(
@@ -107,7 +112,7 @@ final class RegisterTouchActionTest extends TestCase
 
         $visitRepository
             ->expects($this->once())
-            ->method('findActiveByVisitorId')
+            ->method('findLastByVisitorId')
             ->with($command->visitorId)
             ->willReturn(null);
 
@@ -123,7 +128,10 @@ final class RegisterTouchActionTest extends TestCase
                     && $visit->lastTouchedAt() == $occurredAt;
             }));
 
-        $action = new RegisterTouchAction($touchRepository, $visitRepository);
+        $action = new RegisterTouchAction(
+            $touchRepository,
+            new ResolveVisitForCaptureAction($visitRepository, new VisitSessionRule()),
+        );
 
         $result = $action($command);
 
