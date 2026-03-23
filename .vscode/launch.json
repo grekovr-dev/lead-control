@@ -10,6 +10,16 @@
         "/var/www/apps/web": "${workspaceFolder}/apps/web",
         "/var/www/src": "${workspaceFolder}/src"
       }
+    },
+    {
+      "name": "Listen Xdebug (Docker Tests)",
+      "type": "php",
+      "request": "launch",
+      "port": 9003,
+      "pathMappings": {
+        "/var/www/apps/web": "${workspaceFolder}/apps/web",
+        "/var/www/src": "${workspaceFolder}/src"
+      }
     }
   ]
 }
