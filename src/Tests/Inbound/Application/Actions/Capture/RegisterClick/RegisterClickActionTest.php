@@ -30,6 +30,7 @@ final class RegisterClickActionTest extends TestCase
             new VisitorId('visitor-456'),
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             'https://example.com/landing',
+            ' https://google.com/search?q=ceilings ',
             $occurredAt,
         );
 
@@ -53,7 +54,7 @@ final class RegisterClickActionTest extends TestCase
                     && $click->visitorId()->equals($command->visitorId)
                     && $click->attribution()->equals($command->attribution)
                     && $click->landingUrl() === 'https://example.com/landing'
-                    && $click->referrer() === null
+                    && $click->referrer() === 'https://google.com/search?q=ceilings'
                     && $click->occurredAt() == $occurredAt;
             }));
 
@@ -92,6 +93,7 @@ final class RegisterClickActionTest extends TestCase
             new VisitorId('visitor-456'),
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             'https://example.com/landing',
+            null,
             $occurredAt,
         );
 

@@ -18,6 +18,7 @@ final readonly class RegisterClickCommand
         public VisitorId $visitorId,
         public Attribution $attribution,
         public string $landingUrl,
+        public ?string $referrer,
         public DateTimeImmutable $occurredAt,
     ) {
     }
