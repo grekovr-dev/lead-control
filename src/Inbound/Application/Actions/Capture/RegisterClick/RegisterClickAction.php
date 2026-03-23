@@ -32,7 +32,7 @@ final class RegisterClickAction
             $command->visitorId,
             $command->attribution,
             $command->landingUrl,
-            null,
+            $command->referrer,
             $command->occurredAt,
         );
 

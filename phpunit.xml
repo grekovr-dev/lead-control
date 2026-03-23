@@ -8,10 +8,10 @@
         <testsuite name="Inbound">
             <directory>src/Tests/Inbound</directory>
         </testsuite>
-        <testsuite name="Laravel Unit">
+        <testsuite name="Unit">
             <directory>apps/web/tests/Unit</directory>
         </testsuite>
-        <testsuite name="Laravel Feature">
+        <testsuite name="Feature">
             <directory>apps/web/tests/Feature</directory>
         </testsuite>
     </testsuites>
