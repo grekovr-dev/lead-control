@@ -53,7 +53,7 @@
   "phpunit.phpunit": "/var/www/apps/web/vendor/bin/phpunit",
   "phpunit.args": [
     "-c",
-    "/var/www/apps/web/phpunit.xml"
+    "/var/www/phpunit.xml"
   ],
   "phpunit.debuggerConfig": "Listen Xdebug (Docker Tests)",
   "phpunit.xdebugPort": 9003,
