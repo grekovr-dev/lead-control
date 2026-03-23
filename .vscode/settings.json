@@ -1,16 +1,14 @@
 {
-  // ===== Общие удобства =====
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll": "explicit"
   },
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
-  // ===== PHP (используем PHP из Docker) =====
+
   "php.validate.executablePath": "${workspaceFolder}/.vscode/php-docker.sh",
   "intelephense.environment.phpVersion": "8.3.0",
   "intelephense.files.maxSize": 5000000,
-  // Чтобы Intelephense не ел мозг из-за vendor/временных файлов
   "intelephense.files.exclude": [
     "**/.git/**",
     "**/node_modules/**",
@@ -18,36 +16,65 @@
     "**/bootstrap/cache/**",
     "**/.idea/**"
   ],
-  // ключевое: автозагрузка из Laravel-проекта
   "intelephense.environment.includePaths": [
     "apps/web/vendor",
     "apps/web",
     "src"
   ],
-  // ===== Blade / Laravel =====
+
   "[blade]": {
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "shufo.vscode-blade-formatter"
   },
-  // ===== Pint (Laravel) =====
+
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2
+  },
+
+  "tailwindCSS.includeLanguages": {
+    "blade": "html",
+    "php": "html"
+  },
+
+  "tailwindCSS.experimental.classRegex": [
+    ["class\\s*=\\s*\"([^\"]*)\"", 1],
+    ["class\\s*=\\s*'([^']*)'", 1],
+    ["x-bind:class\\s*=\\s*\"([^\"]*)\"", 1],
+    ["x-bind:class\\s*=\\s*'([^']*)'", 1],
+    [":class\\s*=\\s*\"([^\"]*)\"", 1],
+    [":class\\s*=\\s*'([^']*)'", 1]
+  ],
+
+  "emmet.includeLanguages": {
+    "blade": "html"
+  },
+
+  "files.associations": {
+    "*.blade.php": "blade"
+  },
+
   "terminal.integrated.env.linux": {
     "PROJECT_ROOT": "${workspaceFolder}"
   },
-  // ===== Docker =====
+
   "docker.composeCommand": "docker compose",
-  // ===== Поиск/исключения =====
+
   "search.exclude": {
     "**/apps/web/vendor": true,
     "**/apps/web/storage": true,
     "**/apps/web/bootstrap/cache": true,
     "**/node_modules": true
   },
-  // ===== CSS =====
+
   "css.customData": [
     ".vscode/css-custom-data.json"
   ],
-  // ===== PHPUnit Test Explorer =====
-  // Для docker path mapping используем абсолютный путь: ${workspaceFolder}
-  // в phpunit.paths у этого расширения работает нестабильно.
+
   "phpunit.command": "docker compose exec -T app ${php} ${phpargs} ${phpunit} ${phpunitargs}",
   "phpunit.php": "php",
   "phpunit.phpunit": "/var/www/apps/web/vendor/bin/phpunit",
