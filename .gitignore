@@ -54,3 +54,5 @@ docker/certs/*
 # Cache
 # =========================
 .cache
+.phpunit.result.cache
+

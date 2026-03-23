@@ -8,9 +8,5 @@
         <a href="{{ route('admin.dashboard') }}" class="block rounded-lg px-3 py-2 hover:bg-slate-800">
             Dashboard
         </a>
-
-        <a href="{{ route('admin.leads.index') }}" class="block rounded-lg px-3 py-2 hover:bg-slate-800">
-            Лиды
-        </a>
     </nav>
 </div>

@@ -42,7 +42,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('leads.store') }}" class="space-y-5">
+            <form method="POST" class="space-y-5">
                 @csrf
                 <div>
                     <label for="name" class="mb-2 block text-sm font-medium text-slate-700">Ім'я</label>
