@@ -29,7 +29,7 @@ final class RegisterTouchActionTest extends TestCase
             new TouchId('touch-123'),
             new VisitId('visit-new'),
             new VisitorId('visitor-456'),
-            TouchType::FormSubmit,
+            TouchType::LeadFormClick,
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             $occurredAt,
         );
@@ -53,7 +53,7 @@ final class RegisterTouchActionTest extends TestCase
                 return $touch->id()->equals($command->touchId)
                     && $touch->visitId()->equals($existingVisit->id())
                     && $touch->visitorId()->equals($command->visitorId)
-                    && $touch->type() === TouchType::FormSubmit
+                    && $touch->type() === TouchType::LeadFormClick
                     && $touch->occurredAt() == $occurredAt;
             }));
 

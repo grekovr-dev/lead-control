@@ -28,7 +28,7 @@ final class RegisterTouchActionTest extends TestCase
             new TouchId('touch-new'),
             new VisitId('visit-new'),
             new VisitorId('550e8400-e29b-41d4-a716-446655440000'),
-            TouchType::FormSubmit,
+            TouchType::LeadFormClick,
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             $occurredAt,
         );
@@ -40,14 +40,14 @@ final class RegisterTouchActionTest extends TestCase
         $this->assertSame('touch-new', $touch->id()->value());
         $this->assertSame('visit-new', $touch->visitId()->value());
         $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $touch->visitorId()->value());
-        $this->assertSame(TouchType::FormSubmit, $touch->type());
+        $this->assertSame(TouchType::LeadFormClick, $touch->type());
 
         $this->assertDatabaseCount('touches', 1);
         $this->assertDatabaseHas('touches', [
             'id' => 'touch-new',
             'visit_id' => 'visit-new',
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
-            'type' => 'form_submit',
+            'type' => 'lead_form_click',
             'occurred_at' => '2026-03-23 11:10:00',
         ]);
 

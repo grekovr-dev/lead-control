@@ -158,13 +158,13 @@ final class RegisterControllerTest extends TestCase
             ], JSON_THROW_ON_ERROR))
             ->withCredentials()
             ->postJson(route('capture.touch'), [
-                'type' => 'form_submit',
+                'type' => 'lead_form_click',
             ]);
 
         $response->assertOk();
         $response->assertJsonPath('ok', true);
         $response->assertJsonPath('data.visitorId', '550e8400-e29b-41d4-a716-446655440000');
-        $response->assertJsonPath('data.type', 'form_submit');
+        $response->assertJsonPath('data.type', 'lead_form_click');
 
         $touchId = (string) $response->json('data.touchId');
         $visitId = (string) $response->json('data.visitId');
@@ -177,7 +177,7 @@ final class RegisterControllerTest extends TestCase
             'id' => $touchId,
             'visit_id' => $visitId,
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
-            'type' => 'form_submit',
+            'type' => 'lead_form_click',
         ]);
         $this->assertDatabaseHas('visits', [
             'id' => $visitId,

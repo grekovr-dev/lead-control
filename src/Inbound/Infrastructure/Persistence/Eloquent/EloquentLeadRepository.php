@@ -39,6 +39,20 @@ final class EloquentLeadRepository implements LeadRepository
         return $this->mapModelToLead($model);
     }
 
+    public function findByVisitIdAndOrigin(VisitId $visitId, string $origin): ?Lead
+    {
+        $model = LeadModel::query()
+            ->where('visit_id', $visitId->value())
+            ->where('origin', $origin)
+            ->first();
+
+        if (!$model instanceof LeadModel) {
+            return null;
+        }
+
+        return $this->mapModelToLead($model);
+    }
+
     /**
      * @return array<string, DateTimeImmutable|LeadStatus|string|null>
      */

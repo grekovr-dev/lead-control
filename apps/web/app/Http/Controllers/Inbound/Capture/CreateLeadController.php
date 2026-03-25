@@ -10,14 +10,16 @@ use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Inbound\Application\Actions\Capture\CapturePhoneClick\ActiveVisitNotFoundException as PhoneClickActiveVisitNotFoundException;
+use Inbound\Application\Actions\Capture\CapturePhoneClick\CapturePhoneClickAction;
+use Inbound\Application\Actions\Capture\CapturePhoneClick\CapturePhoneClickCommand;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\ActiveVisitNotFoundException as FormActiveVisitNotFoundException;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormAction;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormCommand;
-use Inbound\Application\Actions\Capture\CreateLeadFromPhoneClick\ActiveVisitNotFoundException as PhoneClickActiveVisitNotFoundException;
-use Inbound\Application\Actions\Capture\CreateLeadFromPhoneClick\CreateLeadFromPhoneClickAction;
-use Inbound\Application\Actions\Capture\CreateLeadFromPhoneClick\CreateLeadFromPhoneClickCommand;
 use Inbound\Domain\Lead\Lead;
 use Inbound\Domain\Lead\LeadId;
+use Inbound\Domain\Touch\Touch;
+use Inbound\Domain\Touch\TouchId;
 
 class CreateLeadController extends Controller
 {
@@ -48,23 +50,28 @@ class CreateLeadController extends Controller
         return $this->createdResponse($lead);
     }
 
-    public function phoneClick(Request $request, CreateLeadFromPhoneClickAction $action): JsonResponse
+    public function phoneClick(Request $request, CapturePhoneClickAction $action): JsonResponse
     {
         $visitorId = $this->visitorIdCookieResolver->resolve($request);
-        $command = new CreateLeadFromPhoneClickCommand(
+        $command = new CapturePhoneClickCommand(
             new LeadId((string) Str::uuid()),
+            new TouchId((string) Str::uuid()),
             $visitorId,
             $this->attributionCookieStore->resolve($request),
             new DateTimeImmutable(),
         );
 
         try {
-            $lead = $action($command);
+            $result = $action($command);
         } catch (PhoneClickActiveVisitNotFoundException $exception) {
-            return $this->activeVisitNotFoundResponse($exception->getMessage());
+            return $this->activeVisitNotFoundResponse('Cannot create lead from phone click without an active visit.');
         }
 
-        return $this->createdResponse($lead);
+        if ($result instanceof Lead) {
+            return $this->createdResponse($result);
+        }
+
+        return $this->touchResponse($result);
     }
 
     private function createdResponse(Lead $lead): JsonResponse
@@ -78,6 +85,19 @@ class CreateLeadController extends Controller
                 'origin' => $lead->origin(),
             ],
         ], 201);
+    }
+
+    private function touchResponse(Touch $touch): JsonResponse
+    {
+        return response()->json([
+            'ok' => true,
+            'data' => [
+                'touchId' => $touch->id()->value(),
+                'visitId' => $touch->visitId()->value(),
+                'visitorId' => $touch->visitorId()->value(),
+                'type' => $touch->type()->value,
+            ],
+        ]);
     }
 
     private function activeVisitNotFoundResponse(string $message): JsonResponse
