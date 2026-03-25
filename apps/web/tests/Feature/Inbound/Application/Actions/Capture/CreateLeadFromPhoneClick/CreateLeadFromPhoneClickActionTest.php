@@ -39,7 +39,6 @@ final class CreateLeadFromPhoneClickActionTest extends TestCase
             new VisitorId('550e8400-e29b-41d4-a716-446655440000'),
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             $occurredAt,
-            ' +380501112233 ',
         );
 
         $action = $this->app->make(CreateLeadFromPhoneClickAction::class);
@@ -50,7 +49,7 @@ final class CreateLeadFromPhoneClickActionTest extends TestCase
         $this->assertSame('visit-existing', $lead->visitId()->value());
         $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $lead->visitorId()->value());
         $this->assertNull($lead->name());
-        $this->assertSame('+380501112233', $lead->phone());
+        $this->assertNull($lead->phone());
         $this->assertSame('phone_click', $lead->origin());
         $this->assertSame('new', $lead->status()->value);
 
@@ -60,7 +59,7 @@ final class CreateLeadFromPhoneClickActionTest extends TestCase
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
             'visit_id' => 'visit-existing',
             'name' => null,
-            'phone' => '+380501112233',
+            'phone' => null,
             'status' => 'new',
             'origin' => 'phone_click',
             'created_at' => '2026-03-23 13:10:00',
@@ -78,7 +77,6 @@ final class CreateLeadFromPhoneClickActionTest extends TestCase
             new VisitorId('550e8400-e29b-41d4-a716-446655440000'),
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             new DateTimeImmutable('2026-03-23 13:10:00'),
-            '+380501112233',
         );
 
         $action = $this->app->make(CreateLeadFromPhoneClickAction::class);
@@ -105,7 +103,6 @@ final class CreateLeadFromPhoneClickActionTest extends TestCase
             new VisitorId('550e8400-e29b-41d4-a716-446655440000'),
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             new DateTimeImmutable('2026-03-23 13:40:01'),
-            '+380501112233',
         );
 
         $action = $this->app->make(CreateLeadFromPhoneClickAction::class);

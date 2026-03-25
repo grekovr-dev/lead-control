@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inbound\Domain\Shared\VisitorId;
 use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\Cookie;
 
 final class VisitorIdCookieResolver
 {
@@ -31,5 +32,22 @@ final class VisitorIdCookieResolver
         }
 
         return new VisitorId((string) Str::uuid());
+    }
+
+    public function make(VisitorId $visitorId): Cookie
+    {
+        // TODO: Consider extracting cookie creation into a dedicated VisitorIdCookieStore
+        // to mirror AttributionCookieStore and keep this resolver read-only.
+        return Cookie::create(
+            $this->cookieName,
+            $visitorId->value(),
+            now()->addDays(30),
+            '/',
+            null,
+            false,
+            true,
+            false,
+            Cookie::SAMESITE_LAX,
+        );
     }
 }
