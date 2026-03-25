@@ -49,7 +49,7 @@ final class CreateLeadControllerTest extends TestCase
             ->withCredentials()
             ->postJson(route('capture.leads.form'), [
                 'name' => ' John Doe ',
-                'phone' => ' +380501112233 ',
+                'phone' => ' +380 (50) 111-22-33 ',
             ]);
 
         $response->assertCreated();
@@ -126,6 +126,26 @@ final class CreateLeadControllerTest extends TestCase
         $response->assertJsonPath('code', 'validation_error');
         $response->assertJsonPath('message', 'The given data was invalid.');
         $response->assertJsonPath('errors.phone.0', 'The phone field is required.');
+        $this->assertDatabaseCount('leads', 0);
+    }
+
+    public function test_form_endpoint_returns_validation_error_when_phone_is_not_e164(): void
+    {
+        $visitorIdCookieResolver = $this->app->make(VisitorIdCookieResolver::class);
+
+        $response = $this
+            ->withCookie($visitorIdCookieResolver->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
+            ->withCredentials()
+            ->postJson(route('capture.leads.form'), [
+                'name' => 'John Doe',
+                'phone' => '380501112233',
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('ok', false);
+        $response->assertJsonPath('code', 'validation_error');
+        $response->assertJsonPath('message', 'The given data was invalid.');
+        $response->assertJsonPath('errors.phone.0', 'The phone field format is invalid.');
         $this->assertDatabaseCount('leads', 0);
     }
 
