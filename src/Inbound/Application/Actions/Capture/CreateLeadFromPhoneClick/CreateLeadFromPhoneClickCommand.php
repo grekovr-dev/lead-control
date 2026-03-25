@@ -16,7 +16,6 @@ final readonly class CreateLeadFromPhoneClickCommand
         public VisitorId $visitorId,
         public Attribution $attribution,
         public DateTimeImmutable $occurredAt,
-        public ?string $phone = null,
     ) {
     }
 }

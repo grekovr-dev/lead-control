@@ -32,7 +32,7 @@ final class CreateLeadFromPhoneClickAction
             $command->visitorId,
             $visit->id(),
             null,
-            $command->phone,
+            null,
             $command->attribution,
             LeadStatus::NEW,
             'phone_click',

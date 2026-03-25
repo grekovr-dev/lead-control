@@ -31,7 +31,6 @@ final class CreateLeadFromPhoneClickActionTest extends TestCase
             new VisitorId('visitor-456'),
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             $occurredAt,
-            '+380501112233',
         );
 
         $existingVisit = new Visit(
@@ -60,7 +59,7 @@ final class CreateLeadFromPhoneClickActionTest extends TestCase
                     && $lead->visitorId()->equals($command->visitorId)
                     && $lead->visitId()->equals($existingVisit->id())
                     && $lead->name() === null
-                    && $lead->phone() === '+380501112233'
+                    && $lead->phone() === null
                     && $lead->attribution()->equals($command->attribution)
                     && $lead->status() === LeadStatus::NEW
                     && $lead->origin() === 'phone_click'
@@ -87,7 +86,6 @@ final class CreateLeadFromPhoneClickActionTest extends TestCase
             new VisitorId('visitor-456'),
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             new DateTimeImmutable('2026-03-20T13:10:00+02:00'),
-            '+380501112233',
         );
 
         $leadRepository = $this->createMock(LeadRepository::class);
@@ -122,7 +120,6 @@ final class CreateLeadFromPhoneClickActionTest extends TestCase
             new VisitorId('visitor-456'),
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             new DateTimeImmutable('2026-03-20T13:40:01+02:00'),
-            '+380501112233',
         );
 
         $expiredVisit = new Visit(
