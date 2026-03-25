@@ -19,7 +19,7 @@ final class TouchTest extends TestCase
         $id = new TouchId('touch-123');
         $visitId = new VisitId('visit-456');
         $visitorId = new VisitorId('visitor-789');
-        $type = TouchType::FormSubmit;
+        $type = TouchType::LeadFormClick;
         $occurredAt = new DateTimeImmutable('2026-03-19T12:00:00+02:00');
 
         $touch = new Touch(

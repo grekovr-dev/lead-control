@@ -2,22 +2,36 @@
     <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-linear-to-b from-teal-50 via-cyan-50/60 to-transparent"></div>
     <div class="pointer-events-none absolute -right-14 -top-20 -z-10 h-64 w-64 rounded-full bg-teal-200/40 blur-3xl"></div>
 
-    <div class="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.05fr_0.95fr] md:items-center">
+    <div class="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.05fr_0.95fr] md:items-start">
         <div>
-            <div class="mb-5 flex flex-wrap items-center gap-3">
-                <span class="inline-flex rounded-full border border-teal-200 bg-white/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-teal-700">
-                    Натяжні стелі під ключ
+            <div class="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <span class="text-base font-semibold tracking-[0.08em] text-slate-800">
+                    Добро стелі. Київ
                 </span>
-                <a
-                    href="{{ $phoneHref }}"
-                    class="inline-flex rounded-full border border-teal-200 bg-white/90 px-4 py-1.5 text-xs font-semibold tracking-[0.14em] text-teal-700 transition hover:border-teal-300 hover:bg-white"
-                >
-                    {{ $phoneDisplay }}
-                </a>
+
+                <div class="flex flex-wrap items-center gap-3 lg:justify-end">
+                    <a
+                        href="{{ $phoneHref }}"
+                        @click.prevent="trackPhoneLeadAndNavigate('{{ $phoneHref }}')"
+                        class="inline-flex min-h-11 items-center rounded-full border border-teal-200 bg-white/90 px-4 py-2.5 text-xs font-semibold tracking-[0.14em] text-teal-700 transition hover:border-teal-300 hover:bg-white"
+                    >
+                        {{ $phoneDisplay }}
+                    </a>
+                    <a
+                        href="{{ $messengerHref }}"
+                        @click="trackTouch('messenger_click')"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex min-h-11 items-center gap-2 rounded-full border border-sky-200 bg-white/90 px-4 py-2.5 text-xs font-semibold tracking-[0.14em] text-sky-700 transition hover:border-sky-300 hover:bg-white"
+                    >
+                        <img src="{{ $messengerIconSrc }}" alt="" class="h-4 w-4 shrink-0">
+                        <span>Telegram</span>
+                    </a>
+                </div>
             </div>
 
-            <h1 class="mb-5 text-4xl font-semibold leading-tight text-slate-900 md:text-5xl lg:text-6xl">
-                Швидкий монтаж стелі за 1–2 дні без зайвого клопоту
+            <h1 class="mb-5 text-3xl font-semibold leading-tight text-slate-900 md:text-3xl lg:text-4xl">
+                Швидкий монтаж натяжних стель за 1–2 дні без зайвого клопоту
             </h1>
 
             <p class="mb-8 max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
@@ -44,13 +58,13 @@
             </ul>
 
             <div class="flex flex-col gap-3 sm:flex-row">
-                <a href="#lead-form" class="inline-flex items-center justify-center rounded-xl bg-teal-700 px-6 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-teal-800">
+                <a href="#lead-form" @click.prevent="trackTouchAndNavigate('#lead-form', 'lead_form_click')" class="inline-flex items-center justify-center rounded-xl bg-teal-700 px-6 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-teal-800">
                     Залишити заявку
                 </a>
-                <a href="#works" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100">
+                <a href="#works" @click.prevent="trackTouchAndNavigate('#works', 'works_click')" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100">
                     Подивитися приклади
                 </a>
-                <a href="{{ $phoneHref }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100">
+                <a href="{{ $phoneHref }}" @click.prevent="trackPhoneLeadAndNavigate('{{ $phoneHref }}')" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100">
                     {{ $phoneDisplay }}
                 </a>
             </div>

@@ -74,4 +74,26 @@ final class LandingControllerTest extends TestCase
         $response->assertCookieMissing($attributionCookieStore->cookieName());
         $response->assertCookieMissing($referrerCookieStore->cookieName());
     }
+
+    public function test_it_wires_initial_landing_click_tracking_into_the_view(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('id="landing-capture-config"', $content);
+        $this->assertStringContainsString('landingCapture()', $content);
+        $this->assertStringContainsString('x-init="init()"', $content);
+
+        foreach ([
+            route('capture.click'),
+            route('capture.touch'),
+            route('capture.leads.form'),
+            route('capture.leads.phone-click'),
+        ] as $route) {
+            $this->assertStringContainsString(str_replace('/', '\\/', $route), $content);
+        }
+    }
 }
