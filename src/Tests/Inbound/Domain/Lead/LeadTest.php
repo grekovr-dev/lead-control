@@ -65,6 +65,26 @@ final class LeadTest extends TestCase
         $this->assertNull($lead->phone());
     }
 
+    public function test_change_status_updates_the_current_status(): void
+    {
+        $lead = new Lead(
+            new LeadId('lead-123'),
+            new VisitorId('visitor-456'),
+            new VisitId('visit-789'),
+            'John Doe',
+            '+380501112233',
+            Attribution::empty(),
+            LeadStatus::NEW,
+            'form',
+            new DateTimeImmutable('2026-03-19T12:00:00+02:00'),
+        );
+
+        $lead->changeStatus(LeadStatus::QUALIFIED);
+
+        $this->assertSame(LeadStatus::QUALIFIED, $lead->status());
+        $this->assertSame('form', $lead->origin());
+    }
+
     public function test_it_rejects_a_blank_origin(): void
     {
         $this->expectException(InvalidArgumentException::class);

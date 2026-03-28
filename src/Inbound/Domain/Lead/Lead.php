@@ -107,6 +107,11 @@ final class Lead
         return $this->createdAt;
     }
 
+    public function changeStatus(LeadStatus $status): void
+    {
+        $this->status = $status;
+    }
+
     private static function normalizeNullableString(?string $value): ?string
     {
         if ($value === null) {
