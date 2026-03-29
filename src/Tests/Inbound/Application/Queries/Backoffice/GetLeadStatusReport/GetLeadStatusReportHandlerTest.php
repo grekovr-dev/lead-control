@@ -22,13 +22,13 @@ final class GetLeadStatusReportHandlerTest extends TestCase
             rows: [
                 new LeadStatusReportRowView(
                     status: 'new',
-                    statusLabel: 'Новый',
+                    statusLabel: 'Новий',
                     leadsCount: 3,
                     shareOfTotalRate: 37.5,
                 ),
                 new LeadStatusReportRowView(
                     status: 'won',
-                    statusLabel: 'Выигран',
+                    statusLabel: 'Успішний',
                     leadsCount: 2,
                     shareOfTotalRate: 25.0,
                 ),

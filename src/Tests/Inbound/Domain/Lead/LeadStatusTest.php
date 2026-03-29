@@ -22,25 +22,25 @@ final class LeadStatusTest extends TestCase
 
     public function test_it_returns_labels_for_all_statuses(): void
     {
-        $this->assertSame('Новый', LeadStatus::NEW->label());
-        $this->assertSame('Связались', LeadStatus::CONTACTED->label());
-        $this->assertSame('Квалифицирован', LeadStatus::QUALIFIED->label());
-        $this->assertSame('Замер запланирован', LeadStatus::MEASURING_SCHEDULED->label());
-        $this->assertSame('Предложение подготовлено', LeadStatus::OFFER_PREPARED->label());
-        $this->assertSame('Выигран', LeadStatus::WON->label());
-        $this->assertSame('Потерян', LeadStatus::LOST->label());
+        $this->assertSame('Новий', LeadStatus::NEW->label());
+        $this->assertSame('Зв’язалися', LeadStatus::CONTACTED->label());
+        $this->assertSame('Кваліфікований', LeadStatus::QUALIFIED->label());
+        $this->assertSame('Замір заплановано', LeadStatus::MEASURING_SCHEDULED->label());
+        $this->assertSame('Пропозицію підготовлено', LeadStatus::OFFER_PREPARED->label());
+        $this->assertSame('Успішний', LeadStatus::WON->label());
+        $this->assertSame('Втрачений', LeadStatus::LOST->label());
     }
 
     public function test_it_returns_options_map(): void
     {
         $this->assertSame([
-            'new' => 'Новый',
-            'contacted' => 'Связались',
-            'qualified' => 'Квалифицирован',
-            'measuring_scheduled' => 'Замер запланирован',
-            'offer_prepared' => 'Предложение подготовлено',
-            'won' => 'Выигран',
-            'lost' => 'Потерян',
+            'new' => 'Новий',
+            'contacted' => 'Зв’язалися',
+            'qualified' => 'Кваліфікований',
+            'measuring_scheduled' => 'Замір заплановано',
+            'offer_prepared' => 'Пропозицію підготовлено',
+            'won' => 'Успішний',
+            'lost' => 'Втрачений',
         ], LeadStatus::options());
     }
 }

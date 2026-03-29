@@ -17,13 +17,13 @@ enum LeadStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::NEW => 'Новый',
-            self::CONTACTED => 'Связались',
-            self::QUALIFIED => 'Квалифицирован',
-            self::MEASURING_SCHEDULED => 'Замер запланирован',
-            self::OFFER_PREPARED => 'Предложение подготовлено',
-            self::WON => 'Выигран',
-            self::LOST => 'Потерян',
+            self::NEW => 'Новий',
+            self::CONTACTED => 'Зв’язалися',
+            self::QUALIFIED => 'Кваліфікований',
+            self::MEASURING_SCHEDULED => 'Замір заплановано',
+            self::OFFER_PREPARED => 'Пропозицію підготовлено',
+            self::WON => 'Успішний',
+            self::LOST => 'Втрачений',
         };
     }
 

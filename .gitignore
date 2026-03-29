@@ -54,5 +54,6 @@ docker/certs/*
 # Cache
 # =========================
 .cache
-.phpunit.result.cache
 
+.phpunit.result.cache
+.codex

@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Inbound\Backoffice;
 
 use App\Http\Controllers\Controller;
-use Inbound\Domain\Lead\LeadStatus;
-use Inbound\Infrastructure\Persistence\Eloquent\LeadModel;
+use Illuminate\Contracts\View\View;
+use Inbound\Application\Queries\Backoffice\GetDashboardOverview\GetDashboardOverviewHandler;
+use Inbound\Application\Queries\Backoffice\GetDashboardOverview\GetDashboardOverviewQuery;
 
 class DashboardController extends Controller
 {
-    public function __invoke()
+    public function __invoke(GetDashboardOverviewHandler $handler): View
     {
+        $overview = $handler(new GetDashboardOverviewQuery());
+
         return view('admin.dashboard.index', [
-            'leadsCount' => LeadModel::query()->count(),
-            'newLeadsCount' => LeadModel::query()->where('status', LeadStatus::NEW->value)->count(),
-            'wonLeadsCount' => LeadModel::query()->where('status', LeadStatus::WON->value)->count(),
-            'lostLeadsCount' => LeadModel::query()->where('status', LeadStatus::LOST->value)->count(),
+            'overview' => $overview,
         ]);
     }
 }
