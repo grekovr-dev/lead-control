@@ -72,6 +72,12 @@ Pattern already established:
 Do not restart this pattern.
 Continue it.
 
+Reporting foundation read-side is also implemented on this branch:
+- GetAttributionFunnelReport
+- GetOriginFunnelReport
+- GetLeadStatusReport
+- GetFunnelTrends
+
 ---
 
 ### Infrastructure
@@ -135,39 +141,82 @@ Goal:
 - preserve DDD/Application/Infrastructure boundaries
 - prepare future reporting UI, but do NOT build it yet unless explicitly requested
 
+At this point, the reporting core queries already exist.
+The main continuity concern is preserving their agreed semantics, especially for attribution reporting.
+
 ---
 
 ## Reporting Plan For This Branch
 
-The expected order is:
+The planned order for this branch was:
 
 1. `GetAttributionFunnelReport`
 2. `GetOriginFunnelReport`
 3. `GetLeadStatusReport`
 4. `GetFunnelTrends`
 
-These are separate reporting slices.
-Do not collapse them into one universal reporting service.
+Status:
+- all 4 slices are now implemented
+- they remain separate reporting slices
+- do NOT collapse them into one universal reporting service
 
 ---
 
 ## Immediate Next Step
 
-The next expected task for a new agent on this branch is:
+The next expected task for a new agent on this branch is NOT to rebuild reporting from scratch.
 
-→ implement `GetAttributionFunnelReport`
+Current expectation:
+- preserve the reporting semantics already established
+- review/report/stabilize if needed
+- do NOT start Laravel reporting UI unless explicitly requested
 
-It should become the first reporting slice.
+If work continues inside the reporting core, it should be incremental and semantics-aware.
 
-Minimum intent:
-- aggregate by attribution dimensions such as `source / medium / campaign`
-- provide funnel counts such as:
-  - clicks
-  - visits
-  - leads
-- provide core conversion metrics such as:
-  - clicks -> leads
-  - visits -> leads
+---
+
+## Reporting Slices Already Implemented
+
+### `GetAttributionFunnelReport`
+
+This report was refined after implementation and must now be treated with the following semantics:
+
+- it is a first-touch acquisition report
+- attribution buckets are based on `Visit.firstAttribution`
+- `visitsCount` is grouped by `Visit.firstAttribution`
+- `leadsCount` is grouped via `lead.visit_id -> visit.firstAttribution`
+- `visitsToLeadsConversionRate` is the core funnel conversion
+- `rawClicksCount` is included only as a reference metric
+
+Important:
+- `rawClicksCount` is NOT part of the core conversion denominator
+- do NOT reintroduce `clicks -> leads` conversion into this report without additional modeling
+- do NOT mix `Click.attribution`, `Visit.firstAttribution`, and `Lead.attribution` into one funnel bucket again
+
+Practical meaning:
+- this report is suitable for first-touch acquisition analysis
+- it is suitable for metrics such as `cost per lead` once spend data exists
+- it is NOT a strict click-cohort funnel
+
+### `GetOriginFunnelReport`
+
+- origin-oriented funnel report
+- currently models `touches -> leads` by lead origin semantics
+- should remain separate from attribution-first reporting
+
+### `GetLeadStatusReport`
+
+- current-state lead status distribution
+- rows exist for all `LeadStatus::cases()`
+- this is a status distribution report, not a timeline/history report
+
+### `GetFunnelTrends`
+
+- daily time-series for clicks / visits / leads
+- current conversion rates are same-day ratios
+
+Important:
+- do NOT overstate these rates as cohort conversions without additional modeling
 
 ---
 
@@ -214,8 +263,6 @@ For each new reporting slice, the expected pattern is:
 
 ## What Is NOT Done Yet
 
-- reporting foundation queries
-- reporting-specific aggregates and time-series
 - reporting UI
 - backoffice UI wiring
 - Blade/controllers/routes for reporting screens
