@@ -45,6 +45,7 @@ final class EloquentLeadsListReadModel implements LeadsListReadModel
 
             $items[] = new LeadListItemView(
                 leadId: (string) $model->getAttribute('id'),
+                shortLeadId: $this->shortLeadId((string) $model->getAttribute('id')),
                 visitorId: $this->nullableString($model->getAttribute('visitor_id')),
                 visitId: $this->nullableString($model->getAttribute('visit_id')),
                 name: $this->nullableString($model->getAttribute('name')),
@@ -52,6 +53,7 @@ final class EloquentLeadsListReadModel implements LeadsListReadModel
                 status: $leadStatus->value,
                 statusLabel: $leadStatus->label(),
                 origin: (string) $model->getAttribute('origin'),
+                originLabel: $this->originLabel((string) $model->getAttribute('origin')),
                 attributionSource: $this->nullableString($model->getAttribute('attribution_source')),
                 attributionMedium: $this->nullableString($model->getAttribute('attribution_medium')),
                 createdAt: $this->toDateTimeImmutable($model->getAttribute('created_at')),
@@ -89,6 +91,27 @@ final class EloquentLeadsListReadModel implements LeadsListReadModel
     private function nullableString(mixed $value): ?string
     {
         return is_string($value) ? $value : null;
+    }
+
+    private function shortLeadId(string $leadId): string
+    {
+        $segments = explode('-', $leadId);
+
+        if (count($segments) < 2) {
+            return $leadId;
+        }
+
+        return implode('-', array_slice($segments, 0, 2));
+    }
+
+    private function originLabel(string $origin): string
+    {
+        return match ($origin) {
+            'form' => 'Форма',
+            'phone_click' => 'Клік по телефону',
+            'messenger_click' => 'Клік по месенджеру',
+            default => $origin,
+        };
     }
 
     private function toDateTimeImmutable(mixed $value): DateTimeImmutable

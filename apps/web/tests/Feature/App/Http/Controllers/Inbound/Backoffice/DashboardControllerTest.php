@@ -36,6 +36,7 @@ final class DashboardControllerTest extends TestCase
             'Типи дотиків',
             'Походження лідів',
             'Останні ліди',
+            'Відкрити список лідів',
         ]);
         $response->assertSee('<html lang="uk">', false);
         $response->assertSee('<title>Огляд • Lead Control</title>', false);
@@ -43,7 +44,7 @@ final class DashboardControllerTest extends TestCase
         $response->assertSee('aria-label="Відкрити бокову навігацію"', false);
         $response->assertSee('aria-label="Закрити бокову навігацію"', false);
         $response->assertSee('title="Ліди"', false);
-        $response->assertSee('Незабаром', false);
+        $response->assertSee('href="' . route('admin.leads.index') . '"', false);
     }
 
     public function test_it_renders_dashboard_metrics_from_the_backoffice_overview_read_model(): void
@@ -80,7 +81,7 @@ final class DashboardControllerTest extends TestCase
         ]);
 
         LeadModel::query()->create([
-            'id' => 'lead-1',
+            'id' => '123e4567-e89b-12d3-a456-426614174000',
             'visitor_id' => 'visitor-1',
             'visit_id' => 'visit-1',
             'name' => 'John Doe',
@@ -121,5 +122,12 @@ final class DashboardControllerTest extends TestCase
             'Форма',
             'Клік по формі',
         ]);
+        $response->assertSeeText('123e4567-e89b');
+        $response->assertDontSeeText('123e4567-e89b-12d3-a456-426614174000');
+        $response->assertSee('data-admin-leads-list', false);
+        $response->assertSee('data-lead-details-source-link', false);
+        $response->assertSee('data-copy-lead-id-button', false);
+        $response->assertSee('data-copy-value="123e4567-e89b-12d3-a456-426614174000"', false);
+        $response->assertSee('href="' . route('admin.leads.show', ['leadId' => '123e4567-e89b-12d3-a456-426614174000']) . '"', false);
     }
 }

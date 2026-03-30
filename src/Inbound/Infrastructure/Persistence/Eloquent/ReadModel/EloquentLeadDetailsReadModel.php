@@ -61,6 +61,7 @@ final class EloquentLeadDetailsReadModel implements LeadDetailsReadModel
             status: $leadStatus->value,
             statusLabel: $leadStatus->label(),
             origin: (string) $leadModel->getAttribute('origin'),
+            originLabel: $this->originLabel((string) $leadModel->getAttribute('origin')),
             createdAt: $this->toDateTimeImmutable($leadModel->getAttribute('created_at')),
             attribution: $this->mapAttributionSnapshot($leadModel, 'attribution'),
         );
@@ -157,6 +158,16 @@ final class EloquentLeadDetailsReadModel implements LeadDetailsReadModel
     private function nullableString(mixed $value): ?string
     {
         return is_string($value) ? $value : null;
+    }
+
+    private function originLabel(string $origin): string
+    {
+        return match ($origin) {
+            'form' => 'Форма',
+            'phone_click' => 'Клік по телефону',
+            'messenger_click' => 'Клік по месенджеру',
+            default => $origin,
+        };
     }
 
     private function nullableDateTimeImmutable(mixed $value): ?DateTimeImmutable

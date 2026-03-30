@@ -40,6 +40,7 @@ final class GetDashboardOverviewHandlerTest extends TestCase
             recentLeads: [
                 new DashboardRecentLeadView(
                     leadId: 'lead-1',
+                    shortLeadId: 'lead-1',
                     visitorId: 'visitor-1',
                     visitId: 'visit-1',
                     name: 'John Doe',
@@ -47,6 +48,7 @@ final class GetDashboardOverviewHandlerTest extends TestCase
                     status: 'new',
                     statusLabel: 'Новий',
                     origin: 'form',
+                    originLabel: 'Форма',
                     attributionSource: 'google',
                     attributionMedium: 'cpc',
                     createdAt: new DateTimeImmutable('2026-03-26T10:00:00+02:00'),

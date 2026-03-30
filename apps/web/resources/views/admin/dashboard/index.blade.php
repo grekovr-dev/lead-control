@@ -6,7 +6,7 @@
 @section('active_nav', 'dashboard')
 
 @section('content')
-    <div class="space-y-8">
+    <div class="space-y-8" data-admin-leads-list>
         <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div class="text-sm text-slate-500">Кліки</div>
@@ -94,6 +94,13 @@
                     <h2 class="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Останні ліди</h2>
                     <p class="mt-1 text-sm text-slate-500">Операційний список останніх конверсій без переходу в окремий розділ.</p>
                 </div>
+
+                <a
+                    href="{{ route('admin.leads.index') }}"
+                    class="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                    Відкрити список лідів
+                </a>
             </div>
 
             @if ($overview->recentLeads === [])
@@ -117,7 +124,33 @@
                             @foreach ($overview->recentLeads as $lead)
                                 <tr class="align-top">
                                     <td class="px-4 py-3">
-                                        <div class="font-medium text-slate-900">{{ $lead->leadId }}</div>
+                                        <div class="flex items-center gap-2">
+                                            <a
+                                                href="{{ route('admin.leads.show', ['leadId' => $lead->leadId]) }}"
+                                                data-lead-details-source-link
+                                                class="font-medium text-slate-900 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-700 hover:decoration-slate-400"
+                                                title="{{ $lead->leadId }}"
+                                            >
+                                                {{ $lead->shortLeadId }}
+                                            </a>
+
+                                            <button
+                                                type="button"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+                                                data-copy-lead-id-button
+                                                data-copy-value="{{ $lead->leadId }}"
+                                                data-copy-label="Скопіювати повний ID ліда"
+                                                data-copied-label="Скопійовано"
+                                                title="Скопіювати повний ID ліда"
+                                                aria-label="Скопіювати повний ID ліда"
+                                            >
+                                                <span
+                                                    class="icon-mask h-4 w-4"
+                                                    style="--icon-url: url('{{ asset('images/backoffice/copy.svg') }}');"
+                                                    aria-hidden="true"
+                                                ></span>
+                                            </button>
+                                        </div>
                                         @if ($lead->visitId !== null)
                                             <div class="mt-1 text-xs text-slate-500">Візит: {{ $lead->visitId }}</div>
                                         @endif
@@ -127,7 +160,7 @@
                                         <div class="mt-1 text-xs text-slate-500">{{ $lead->phone ?? 'Телефон не вказано' }}</div>
                                     </td>
                                     <td class="px-4 py-3 text-slate-700">{{ $lead->statusLabel }}</td>
-                                    <td class="px-4 py-3 text-slate-700">{{ $lead->origin }}</td>
+                                    <td class="px-4 py-3 text-slate-700">{{ $lead->originLabel }}</td>
                                     <td class="px-4 py-3 text-slate-700">
                                         @php
                                             $attributionParts = array_filter([$lead->attributionSource, $lead->attributionMedium]);

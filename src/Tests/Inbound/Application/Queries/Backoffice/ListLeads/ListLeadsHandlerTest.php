@@ -34,6 +34,7 @@ final class ListLeadsHandlerTest extends TestCase
             items: [
                 new LeadListItemView(
                     leadId: 'lead-1',
+                    shortLeadId: 'lead-1',
                     visitorId: 'visitor-1',
                     visitId: 'visit-1',
                     name: 'John Doe',
@@ -41,12 +42,14 @@ final class ListLeadsHandlerTest extends TestCase
                     status: 'new',
                     statusLabel: 'Новий',
                     origin: 'form',
+                    originLabel: 'Форма',
                     attributionSource: 'google',
                     attributionMedium: 'cpc',
                     createdAt: new DateTimeImmutable('2026-03-26T12:00:00+02:00'),
                 ),
                 new LeadListItemView(
                     leadId: 'lead-2',
+                    shortLeadId: 'lead-2',
                     visitorId: 'visitor-2',
                     visitId: 'visit-2',
                     name: null,
@@ -54,6 +57,7 @@ final class ListLeadsHandlerTest extends TestCase
                     status: 'new',
                     statusLabel: 'Новий',
                     origin: 'form',
+                    originLabel: 'Форма',
                     attributionSource: 'google',
                     attributionMedium: 'cpc',
                     createdAt: new DateTimeImmutable('2026-03-26T11:00:00+02:00'),

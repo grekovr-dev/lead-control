@@ -1,14 +1,16 @@
 <div class="flex items-start justify-between gap-4">
-    <div class="flex min-w-0 items-start gap-3">
+    <div class="flex min-w-0 items-start gap-3 lg:gap-4">
         <button
             type="button"
             class="mt-2 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
             @click="openSidebar()"
             aria-label="Відкрити бокову навігацію"
         >
-            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <path stroke-linecap="round" d="M3 5h14M3 10h14M3 15h14" />
-            </svg>
+            <span
+                class="icon-mask h-5 w-5"
+                style="--icon-url: url('{{ asset('images/backoffice/hamburger.svg') }}');"
+                aria-hidden="true"
+            ></span>
         </button>
 
         <button
@@ -17,12 +19,19 @@
             @click="toggleDesktopSidebar()"
             :aria-label="sidebarCollapsed ? 'Розгорнути бокову навігацію' : 'Згорнути бокову навігацію'"
         >
-            <svg x-show="!sidebarCollapsed" class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12.5 4.5 7 10l5.5 5.5" />
-            </svg>
-            <svg x-show="sidebarCollapsed" x-cloak class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 4.5 13 10l-5.5 5.5" />
-            </svg>
+            <span
+                x-show="!sidebarCollapsed"
+                class="icon-mask h-5 w-5"
+                style="--icon-url: url('{{ asset('images/backoffice/chevron-left.svg') }}');"
+                aria-hidden="true"
+            ></span>
+            <span
+                x-show="sidebarCollapsed"
+                x-cloak
+                class="icon-mask h-5 w-5"
+                style="--icon-url: url('{{ asset('images/backoffice/chevron-right.svg') }}');"
+                aria-hidden="true"
+            ></span>
         </button>
 
         <div class="min-w-0">
