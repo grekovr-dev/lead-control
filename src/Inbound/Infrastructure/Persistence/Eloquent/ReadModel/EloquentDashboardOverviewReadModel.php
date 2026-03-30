@@ -142,6 +142,7 @@ final class EloquentDashboardOverviewReadModel implements DashboardOverviewReadM
 
             $items[] = new DashboardRecentLeadView(
                 leadId: (string) $model->getAttribute('id'),
+                shortLeadId: $this->shortLeadId((string) $model->getAttribute('id')),
                 visitorId: $this->nullableString($model->getAttribute('visitor_id')),
                 visitId: $this->nullableString($model->getAttribute('visit_id')),
                 name: $this->nullableString($model->getAttribute('name')),
@@ -149,6 +150,7 @@ final class EloquentDashboardOverviewReadModel implements DashboardOverviewReadM
                 status: $leadStatus->value,
                 statusLabel: $leadStatus->label(),
                 origin: (string) $model->getAttribute('origin'),
+                originLabel: $this->leadOriginLabel((string) $model->getAttribute('origin')),
                 attributionSource: $this->nullableString($model->getAttribute('attribution_source')),
                 attributionMedium: $this->nullableString($model->getAttribute('attribution_medium')),
                 createdAt: $this->toDateTimeImmutable($model->getAttribute('created_at')),
@@ -176,6 +178,17 @@ final class EloquentDashboardOverviewReadModel implements DashboardOverviewReadM
             'messenger_click' => 'Клік по месенджеру',
             default => $origin,
         };
+    }
+
+    private function shortLeadId(string $leadId): string
+    {
+        $segments = explode('-', $leadId);
+
+        if (count($segments) < 2) {
+            return $leadId;
+        }
+
+        return implode('-', array_slice($segments, 0, 2));
     }
 
     private function nullableString(mixed $value): ?string

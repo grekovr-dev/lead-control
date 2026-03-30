@@ -22,7 +22,7 @@ final class EloquentLeadTimelineReadModelTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_it_returns_a_chronological_timeline_for_a_lead(): void
+    public function test_it_returns_a_reverse_chronological_timeline_for_a_lead(): void
     {
         $this->createUser(42);
         $this->createLead('lead-123', 'visitor-123', 'visit-123', '2026-03-28 12:00:00');
@@ -105,16 +105,16 @@ final class EloquentLeadTimelineReadModelTest extends TestCase
 
         $this->assertSame('lead-123', $timeline->leadId);
         $this->assertCount(5, $timeline->events);
-        $this->assertSame(['click', 'touch', 'lead_created', 'status_transition', 'lead_note'], array_map(
+        $this->assertSame(['lead_note', 'status_transition', 'lead_created', 'touch', 'click'], array_map(
             static fn ($event): string => $event->type,
             $timeline->events,
         ));
-        $this->assertSame('https://example.com/landing', $timeline->events[0]->landingUrl);
-        $this->assertSame('messenger_click', $timeline->events[1]->touchType);
+        $this->assertSame(42, $timeline->events[0]->authorId);
+        $this->assertSame('Need to call back tomorrow.', $timeline->events[0]->description);
+        $this->assertSame('manual_backoffice', $timeline->events[1]->ruleKey);
         $this->assertSame('form', $timeline->events[2]->origin);
-        $this->assertSame('manual_backoffice', $timeline->events[3]->ruleKey);
-        $this->assertSame(42, $timeline->events[4]->authorId);
-        $this->assertSame('Need to call back tomorrow.', $timeline->events[4]->description);
+        $this->assertSame('messenger_click', $timeline->events[3]->touchType);
+        $this->assertSame('https://example.com/landing', $timeline->events[4]->landingUrl);
     }
 
     public function test_it_throws_when_lead_is_missing(): void

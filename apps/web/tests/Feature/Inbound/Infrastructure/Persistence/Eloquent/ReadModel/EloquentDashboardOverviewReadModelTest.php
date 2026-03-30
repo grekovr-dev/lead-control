@@ -74,7 +74,7 @@ final class EloquentDashboardOverviewReadModelTest extends TestCase
         ]);
 
         LeadModel::query()->create([
-            'id' => 'lead-1',
+            'id' => '123e4567-e89b-12d3-a456-426614174000',
             'visitor_id' => 'visitor-1',
             'visit_id' => 'visit-1',
             'name' => 'John Doe',
@@ -95,7 +95,9 @@ final class EloquentDashboardOverviewReadModelTest extends TestCase
         $this->assertSame(25.0, $overview->clicksToLeadsConversionRate);
         $this->assertSame(50.0, $overview->visitsToLeadsConversionRate);
         $this->assertCount(1, $overview->recentLeads);
-        $this->assertSame('lead-1', $overview->recentLeads[0]->leadId);
+        $this->assertSame('123e4567-e89b-12d3-a456-426614174000', $overview->recentLeads[0]->leadId);
+        $this->assertSame('123e4567-e89b', $overview->recentLeads[0]->shortLeadId);
+        $this->assertSame('Форма', $overview->recentLeads[0]->originLabel);
     }
 
     public function test_it_returns_zero_conversion_rates_when_source_counts_are_missing(): void

@@ -31,7 +31,7 @@ final class EloquentLeadStatusReportReadModelTest extends TestCase
 
         $newRow = $report->rows[0];
         $this->assertSame('new', $newRow->status);
-        $this->assertSame('Новый', $newRow->statusLabel);
+        $this->assertSame('Новий', $newRow->statusLabel);
         $this->assertSame(2, $newRow->leadsCount);
         $this->assertSame(50.0, $newRow->shareOfTotalRate);
 

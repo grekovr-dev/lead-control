@@ -234,7 +234,7 @@ final class EloquentLeadTimelineReadModel implements LeadTimelineReadModel
             $rightTime = $rightEvent->occurredAt->format('U.u');
 
             if ($leftTime !== $rightTime) {
-                return $leftTime <=> $rightTime;
+                return $rightTime <=> $leftTime;
             }
 
             $priority = $this->eventPriority($leftEvent->type) <=> $this->eventPriority($rightEvent->type);

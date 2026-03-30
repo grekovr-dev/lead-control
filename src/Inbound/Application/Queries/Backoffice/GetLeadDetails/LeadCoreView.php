@@ -17,6 +17,7 @@ final readonly class LeadCoreView
         public string $status,
         public string $statusLabel,
         public string $origin,
+        public string $originLabel,
         public DateTimeImmutable $createdAt,
         public AttributionSnapshotView $attribution,
     ) {

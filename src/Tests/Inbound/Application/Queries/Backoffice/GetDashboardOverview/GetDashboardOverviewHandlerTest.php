@@ -26,8 +26,8 @@ final class GetDashboardOverviewHandlerTest extends TestCase
             clicksToLeadsConversionRate: 12.5,
             visitsToLeadsConversionRate: 18.75,
             leadStatusBreakdown: [
-                new DashboardBreakdownItemView('new', 'Новый', 10),
-                new DashboardBreakdownItemView('won', 'Выигран', 5),
+                new DashboardBreakdownItemView('new', 'Новий', 10),
+                new DashboardBreakdownItemView('won', 'Успішний', 5),
             ],
             touchTypeBreakdown: [
                 new DashboardBreakdownItemView('lead_form_click', 'Клік по формі', 20),
@@ -40,13 +40,15 @@ final class GetDashboardOverviewHandlerTest extends TestCase
             recentLeads: [
                 new DashboardRecentLeadView(
                     leadId: 'lead-1',
+                    shortLeadId: 'lead-1',
                     visitorId: 'visitor-1',
                     visitId: 'visit-1',
                     name: 'John Doe',
                     phone: '+380501112233',
                     status: 'new',
-                    statusLabel: 'Новый',
+                    statusLabel: 'Новий',
                     origin: 'form',
+                    originLabel: 'Форма',
                     attributionSource: 'google',
                     attributionMedium: 'cpc',
                     createdAt: new DateTimeImmutable('2026-03-26T10:00:00+02:00'),

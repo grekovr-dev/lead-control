@@ -29,8 +29,9 @@ final class GetLeadDetailsHandlerTest extends TestCase
                 name: 'John Doe',
                 phone: '+380501112233',
                 status: 'new',
-                statusLabel: 'Новый',
+                statusLabel: 'Новий',
                 origin: 'form',
+                originLabel: 'Форма',
                 createdAt: new DateTimeImmutable('2026-03-26T12:00:00+02:00'),
                 attribution: new AttributionSnapshotView(
                     source: 'google',
