@@ -4,23 +4,27 @@ declare(strict_types=1);
 
 namespace Inbound\Infrastructure\Persistence\Eloquent\ReadModel;
 
+use Illuminate\Database\Eloquent\Builder;
 use Inbound\Application\Queries\Backoffice\GetLeadStatusReport\GetLeadStatusReportQuery;
 use Inbound\Application\Queries\Backoffice\GetLeadStatusReport\LeadStatusReportReadModel;
 use Inbound\Application\Queries\Backoffice\GetLeadStatusReport\LeadStatusReportRowView;
 use Inbound\Application\Queries\Backoffice\GetLeadStatusReport\LeadStatusReportView;
 use Inbound\Domain\Lead\LeadStatus;
+use Inbound\Domain\Shared\DateRange;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadModel;
 
 final class EloquentLeadStatusReportReadModel implements LeadStatusReportReadModel
 {
     public function __invoke(GetLeadStatusReportQuery $query): LeadStatusReportView
     {
-        unset($query);
+        $leadQuery = LeadModel::query();
 
-        $leadsCount = LeadModel::query()->count();
+        $this->applyLeadCreatedAtRange($leadQuery, $query->leadCreatedAtRange);
+
+        $leadsCount = (clone $leadQuery)->count();
 
         /** @var array<string, int|string> $counts */
-        $counts = LeadModel::query()
+        $counts = (clone $leadQuery)
             ->selectRaw('status, COUNT(*) as aggregate')
             ->groupBy('status')
             ->pluck('aggregate', 'status')
@@ -52,5 +56,20 @@ final class EloquentLeadStatusReportReadModel implements LeadStatusReportReadMod
         }
 
         return round(($count / $total) * 100, 2);
+    }
+
+    private function applyLeadCreatedAtRange(Builder $query, ?DateRange $range): void
+    {
+        if ($range === null) {
+            return;
+        }
+
+        if ($range->fromInclusive() !== null) {
+            $query->where('created_at', '>=', $range->fromInclusive());
+        }
+
+        if ($range->toExclusive() !== null) {
+            $query->where('created_at', '<', $range->toExclusive());
+        }
     }
 }

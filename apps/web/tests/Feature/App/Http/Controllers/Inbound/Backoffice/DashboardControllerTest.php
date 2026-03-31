@@ -31,6 +31,7 @@ final class DashboardControllerTest extends TestCase
             'Візити',
             'Дотики',
             'Ліди',
+            'Звіти',
             'Новий',
             'Статуси лідів',
             'Типи дотиків',
@@ -45,6 +46,8 @@ final class DashboardControllerTest extends TestCase
         $response->assertSee('aria-label="Закрити бокову навігацію"', false);
         $response->assertSee('title="Ліди"', false);
         $response->assertSee('href="' . route('admin.leads.index') . '"', false);
+        $response->assertSee('title="Звіти"', false);
+        $response->assertSee('href="' . route('admin.reports.index') . '"', false);
     }
 
     public function test_it_renders_dashboard_metrics_from_the_backoffice_overview_read_model(): void

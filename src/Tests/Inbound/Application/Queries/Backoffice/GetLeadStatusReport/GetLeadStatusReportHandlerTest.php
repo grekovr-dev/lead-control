@@ -4,18 +4,25 @@ declare(strict_types=1);
 
 namespace Tests\Inbound\Application\Queries\Backoffice\GetLeadStatusReport;
 
+use DateTimeImmutable;
 use Inbound\Application\Queries\Backoffice\GetLeadStatusReport\GetLeadStatusReportHandler;
 use Inbound\Application\Queries\Backoffice\GetLeadStatusReport\GetLeadStatusReportQuery;
 use Inbound\Application\Queries\Backoffice\GetLeadStatusReport\LeadStatusReportReadModel;
 use Inbound\Application\Queries\Backoffice\GetLeadStatusReport\LeadStatusReportRowView;
 use Inbound\Application\Queries\Backoffice\GetLeadStatusReport\LeadStatusReportView;
+use Inbound\Domain\Shared\DateRange;
 use PHPUnit\Framework\TestCase;
 
 final class GetLeadStatusReportHandlerTest extends TestCase
 {
     public function test_it_passes_the_query_to_the_read_model_and_returns_the_report_view(): void
     {
-        $query = new GetLeadStatusReportQuery();
+        $query = new GetLeadStatusReportQuery(
+            leadCreatedAtRange: new DateRange(
+                fromInclusive: new DateTimeImmutable('2026-03-01 00:00:00'),
+                toExclusive: new DateTimeImmutable('2026-04-01 00:00:00'),
+            ),
+        );
 
         $expectedView = new LeadStatusReportView(
             leadsCount: 8,
@@ -41,6 +48,8 @@ final class GetLeadStatusReportHandlerTest extends TestCase
         $result = $handler($query);
 
         $this->assertSame($query, $readModel->receivedQuery);
+        $this->assertNotNull($readModel->receivedQuery?->leadCreatedAtRange);
+        $this->assertTrue($query->leadCreatedAtRange->equals($readModel->receivedQuery->leadCreatedAtRange));
         $this->assertSame($expectedView, $result);
         $this->assertSame(8, $result->leadsCount);
         $this->assertCount(2, $result->rows);
