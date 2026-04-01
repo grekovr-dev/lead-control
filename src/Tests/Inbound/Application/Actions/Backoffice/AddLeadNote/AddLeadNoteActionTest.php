@@ -102,6 +102,7 @@ final class AddLeadNoteActionTest extends TestCase
             LeadStatus::NEW,
             'form',
             new DateTimeImmutable('2026-03-28T11:45:00+02:00'),
+            Attribution::empty(),
         );
     }
 }

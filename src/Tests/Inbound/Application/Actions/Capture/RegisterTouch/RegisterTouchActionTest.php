@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Tests\Inbound\Application\Actions\Capture\RegisterTouch;
 
 use DateTimeImmutable;
+use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
+use Inbound\Application\Actions\Capture\ContinueCurrentVisit\CurrentVisitNotFoundException;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchAction;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchCommand;
-use Inbound\Application\Actions\Capture\ResolveVisitForCapture\ResolveVisitForCaptureAction;
-use Inbound\Application\Actions\Capture\ResolveVisitForCapture\VisitSessionRule;
+use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
 use Inbound\Domain\Touch\Touch;
@@ -22,15 +23,13 @@ use PHPUnit\Framework\TestCase;
 
 final class RegisterTouchActionTest extends TestCase
 {
-    public function test_it_uses_existing_visit_when_session_continues(): void
+    public function test_it_uses_existing_visit_when_it_exists(): void
     {
         $occurredAt = new DateTimeImmutable('2026-03-20T11:10:00+02:00');
         $command = new RegisterTouchCommand(
             new TouchId('touch-123'),
-            new VisitId('visit-new'),
             new VisitorId('visitor-456'),
             TouchType::LeadFormClick,
-            new Attribution('google', 'cpc', null, null, null, null, null, null),
             $occurredAt,
         );
 
@@ -45,6 +44,13 @@ final class RegisterTouchActionTest extends TestCase
 
         $touchRepository = $this->createMock(TouchRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $transactionManager = $this->createMock(TransactionManager::class);
+
+        $transactionManager
+            ->expects($this->once())
+            ->method('run')
+            ->with($this->isInstanceOf(\Closure::class))
+            ->willReturnCallback(static fn (callable $callback): mixed => $callback());
 
         $touchRepository
             ->expects($this->once())
@@ -66,16 +72,16 @@ final class RegisterTouchActionTest extends TestCase
         $visitRepository
             ->expects($this->once())
             ->method('save')
-            ->with($this->callback(function (Visit $visit) use ($existingVisit, $command, $occurredAt): bool {
+            ->with($this->callback(function (Visit $visit) use ($existingVisit, $occurredAt): bool {
                 return $visit === $existingVisit
-                    && $visit->firstAttribution()->source() === 'google'
-                    && $visit->lastAttribution()->equals($command->attribution)
+                    && $visit->lastAttribution()->medium() === 'remarketing'
                     && $visit->lastTouchedAt() == $occurredAt;
             }));
 
         $action = new RegisterTouchAction(
             $touchRepository,
-            new ResolveVisitForCaptureAction($visitRepository, new VisitSessionRule()),
+            new ContinueCurrentVisitAction($visitRepository),
+            $transactionManager,
         );
 
         $result = $action($command);
@@ -84,31 +90,28 @@ final class RegisterTouchActionTest extends TestCase
         $this->assertTrue($result->visitId()->equals($existingVisit->id()));
     }
 
-    public function test_it_creates_new_visit_when_last_visit_is_missing(): void
+    public function test_it_throws_when_current_visit_is_missing(): void
     {
-        $occurredAt = new DateTimeImmutable('2026-03-20T11:10:00+02:00');
         $command = new RegisterTouchCommand(
             new TouchId('touch-123'),
-            new VisitId('visit-789'),
             new VisitorId('visitor-456'),
             TouchType::MessengerClick,
-            new Attribution('google', 'cpc', null, null, null, null, null, null),
-            $occurredAt,
+            new DateTimeImmutable('2026-03-20T11:10:00+02:00'),
         );
 
         $touchRepository = $this->createMock(TouchRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $transactionManager = $this->createMock(TransactionManager::class);
+
+        $transactionManager
+            ->expects($this->once())
+            ->method('run')
+            ->with($this->isInstanceOf(\Closure::class))
+            ->willReturnCallback(static fn (callable $callback): mixed => $callback());
 
         $touchRepository
-            ->expects($this->once())
-            ->method('save')
-            ->with($this->callback(function (Touch $touch) use ($command, $occurredAt): bool {
-                return $touch->id()->equals($command->touchId)
-                    && $touch->visitId()->equals($command->visitId)
-                    && $touch->visitorId()->equals($command->visitorId)
-                    && $touch->type() === TouchType::MessengerClick
-                    && $touch->occurredAt() == $occurredAt;
-            }));
+            ->expects($this->never())
+            ->method('save');
 
         $visitRepository
             ->expects($this->once())
@@ -117,26 +120,18 @@ final class RegisterTouchActionTest extends TestCase
             ->willReturn(null);
 
         $visitRepository
-            ->expects($this->once())
-            ->method('save')
-            ->with($this->callback(function (Visit $visit) use ($command, $occurredAt): bool {
-                return $visit->id()->equals($command->visitId)
-                    && $visit->visitorId()->equals($command->visitorId)
-                    && $visit->firstAttribution()->equals($command->attribution)
-                    && $visit->lastAttribution()->equals($command->attribution)
-                    && $visit->startedAt() == $occurredAt
-                    && $visit->lastTouchedAt() == $occurredAt;
-            }));
+            ->expects($this->never())
+            ->method('save');
 
         $action = new RegisterTouchAction(
             $touchRepository,
-            new ResolveVisitForCaptureAction($visitRepository, new VisitSessionRule()),
+            new ContinueCurrentVisitAction($visitRepository),
+            $transactionManager,
         );
 
-        $result = $action($command);
+        $this->expectException(CurrentVisitNotFoundException::class);
+        $this->expectExceptionMessage('Cannot continue current visit without an existing visit.');
 
-        $this->assertInstanceOf(Touch::class, $result);
-        $this->assertTrue($result->id()->equals($command->touchId));
-        $this->assertTrue($result->visitId()->equals($command->visitId));
+        $action($command);
     }
 }

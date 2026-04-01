@@ -15,6 +15,7 @@ final class Visit
     private VisitorId $visitorId;
     private Attribution $firstAttribution;
     private Attribution $lastAttribution;
+    private ?string $landingUrl;
     private DateTimeImmutable $startedAt;
     private DateTimeImmutable $lastTouchedAt;
 
@@ -25,6 +26,7 @@ final class Visit
         Attribution $lastAttribution,
         DateTimeImmutable $startedAt,
         DateTimeImmutable $lastTouchedAt,
+        ?string $landingUrl = null,
     ) {
         if ($startedAt > $lastTouchedAt) {
             throw new InvalidArgumentException('Visit startedAt cannot be later than lastTouchedAt.');
@@ -34,6 +36,7 @@ final class Visit
         $this->visitorId = $visitorId;
         $this->firstAttribution = $firstAttribution;
         $this->lastAttribution = $lastAttribution;
+        $this->landingUrl = self::normalizeNullableString($landingUrl);
         $this->startedAt = $startedAt;
         $this->lastTouchedAt = $lastTouchedAt;
     }
@@ -58,6 +61,11 @@ final class Visit
         return $this->lastAttribution;
     }
 
+    public function landingUrl(): ?string
+    {
+        return $this->landingUrl;
+    }
+
     public function startedAt(): DateTimeImmutable
     {
         return $this->startedAt;
@@ -68,7 +76,19 @@ final class Visit
         return $this->lastTouchedAt;
     }
 
-    public function touch(Attribution $attribution, DateTimeImmutable $occurredAt): void
+    public function touch(DateTimeImmutable $occurredAt): void
+    {
+        $this->assertTouchOccurredAt($occurredAt);
+        $this->lastTouchedAt = $occurredAt;
+    }
+
+    public function touchWithAttribution(Attribution $attribution, DateTimeImmutable $occurredAt): void
+    {
+        $this->touch($occurredAt);
+        $this->lastAttribution = $attribution;
+    }
+
+    private function assertTouchOccurredAt(DateTimeImmutable $occurredAt): void
     {
         if ($occurredAt < $this->startedAt) {
             throw new InvalidArgumentException('Visit touch occurredAt cannot be earlier than startedAt.');
@@ -77,8 +97,16 @@ final class Visit
         if ($occurredAt < $this->lastTouchedAt) {
             throw new InvalidArgumentException('Visit touch occurredAt cannot be earlier than lastTouchedAt.');
         }
+    }
 
-        $this->lastAttribution = $attribution;
-        $this->lastTouchedAt = $occurredAt;
+    private static function normalizeNullableString(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return $value === '' ? null : $value;
     }
 }

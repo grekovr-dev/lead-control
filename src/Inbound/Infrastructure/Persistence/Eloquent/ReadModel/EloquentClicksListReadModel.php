@@ -41,7 +41,7 @@ final class EloquentClicksListReadModel implements ClicksListReadModel
                 clickId: (string) $model->getAttribute('id'),
                 visitorId: (string) $model->getAttribute('visitor_id'),
                 landingUrl: (string) $model->getAttribute('landing_url'),
-                referrer: $this->nullableString($model->getAttribute('referrer')),
+                referrer: $this->nullableString($model->getAttribute('attribution_referrer')),
                 attributionSource: $this->nullableString($model->getAttribute('attribution_source')),
                 attributionMedium: $this->nullableString($model->getAttribute('attribution_medium')),
                 attributionCampaign: $this->nullableString($model->getAttribute('attribution_campaign')),

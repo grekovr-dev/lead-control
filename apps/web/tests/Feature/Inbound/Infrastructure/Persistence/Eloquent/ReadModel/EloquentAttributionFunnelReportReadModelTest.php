@@ -27,8 +27,8 @@ final class EloquentAttributionFunnelReportReadModelTest extends TestCase
         $this->createVisit('visit-2', 'visitor-2', 'google', 'cpc', 'spring-sale');
         $this->createVisit('visit-3', 'visitor-3', 'facebook', 'paid-social', 'retargeting');
 
-        $this->createLead('lead-1', 'visitor-1', 'visit-1', 'email', 'newsletter', 'reactivation');
-        $this->createLead('lead-2', 'visitor-3', 'visit-3', null, null, null);
+        $this->createLead('lead-1', 'visitor-1', 'visit-1', 'google', 'cpc', 'spring-sale');
+        $this->createLead('lead-2', 'visitor-3', 'visit-3', 'facebook', 'paid-social', 'retargeting');
 
         $readModel = new EloquentAttributionFunnelReportReadModel();
 
@@ -92,7 +92,7 @@ final class EloquentAttributionFunnelReportReadModelTest extends TestCase
             'id' => $id,
             'visitor_id' => $visitorId,
             'landing_url' => 'https://example.com/'.$id,
-            'referrer' => null,
+            'attribution_referrer' => null,
             'occurred_at' => '2026-03-29 10:00:00',
             'attribution_source' => $source,
             'attribution_medium' => $medium,
@@ -138,9 +138,9 @@ final class EloquentAttributionFunnelReportReadModelTest extends TestCase
             'status' => 'new',
             'origin' => 'form',
             'created_at' => '2026-03-29 10:10:00',
-            'attribution_source' => $source,
-            'attribution_medium' => $medium,
-            'attribution_campaign' => $campaign,
+            'visit_attribution_source' => $source,
+            'visit_attribution_medium' => $medium,
+            'visit_attribution_campaign' => $campaign,
         ]);
     }
 }

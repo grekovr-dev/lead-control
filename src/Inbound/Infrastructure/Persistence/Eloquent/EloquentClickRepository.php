@@ -11,6 +11,7 @@ use Inbound\Domain\Click\ClickId;
 use Inbound\Domain\Click\ClickRepository;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
+use Inbound\Domain\Visit\VisitId;
 
 final class EloquentClickRepository implements ClickRepository
 {
@@ -18,8 +19,8 @@ final class EloquentClickRepository implements ClickRepository
     {
         $model = ClickModel::query()->find($click->id()->value());
 
-        if (!$model instanceof ClickModel) {
-            $model = new ClickModel();
+        if (! $model instanceof ClickModel) {
+            $model = new ClickModel;
         }
 
         $model->fill($this->mapClickToAttributes($click));
@@ -30,7 +31,7 @@ final class EloquentClickRepository implements ClickRepository
     {
         $model = ClickModel::query()->find($id->value());
 
-        if (!$model instanceof ClickModel) {
+        if (! $model instanceof ClickModel) {
             return null;
         }
 
@@ -45,8 +46,8 @@ final class EloquentClickRepository implements ClickRepository
         return [
             'id' => $click->id()->value(),
             'visitor_id' => $click->visitorId()->value(),
+            'visit_id' => $click->visitId()?->value(),
             'landing_url' => $click->landingUrl(),
-            'referrer' => $click->referrer(),
             'occurred_at' => $click->occurredAt(),
             ...$this->mapAttributionToAttributes($click->attribution()),
         ];
@@ -54,13 +55,15 @@ final class EloquentClickRepository implements ClickRepository
 
     private function mapModelToClick(ClickModel $model): Click
     {
+        $visitId = $this->nullableString($model->getAttribute('visit_id'));
+
         return new Click(
             new ClickId((string) $model->getAttribute('id')),
             new VisitorId((string) $model->getAttribute('visitor_id')),
             $this->mapAttributesToAttribution($model),
             (string) $model->getAttribute('landing_url'),
-            $model->getAttribute('referrer'),
             $this->toDateTimeImmutable($model->getAttribute('occurred_at')),
+            $visitId !== null ? new VisitId($visitId) : null,
         );
     }
 
@@ -70,6 +73,7 @@ final class EloquentClickRepository implements ClickRepository
     private function mapAttributionToAttributes(Attribution $attribution): array
     {
         return [
+            'attribution_referrer' => $attribution->referrer(),
             'attribution_source' => $attribution->source(),
             'attribution_medium' => $attribution->medium(),
             'attribution_campaign' => $attribution->campaign(),
@@ -92,12 +96,18 @@ final class EloquentClickRepository implements ClickRepository
             $model->getAttribute('attribution_gclid'),
             $model->getAttribute('attribution_fbclid'),
             $model->getAttribute('attribution_msclkid'),
+            $model->getAttribute('attribution_referrer'),
         );
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        return is_string($value) ? $value : null;
     }
 
     private function toDateTimeImmutable(mixed $value): DateTimeImmutable
     {
-        if (!$value instanceof DateTimeInterface) {
+        if (! $value instanceof DateTimeInterface) {
             throw new \UnexpectedValueException('Expected a date/time value from ClickModel.');
         }
 

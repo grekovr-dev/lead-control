@@ -2,9 +2,11 @@
 
 namespace App\Providers\Inbound;
 
+use App\Http\Cookies\Inbound\Capture\VisitorIdCookieConfig;
 use DateInterval;
 use Illuminate\Support\ServiceProvider;
-use Inbound\Application\Actions\Capture\ResolveVisitForCapture\VisitSessionRule;
+use Inbound\Application\Actions\Capture\ResolveCurrentVisit\VisitSessionRule;
+use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Click\ClickRepository;
 use Inbound\Domain\Lead\LeadRepository;
 use Inbound\Domain\Touch\TouchRepository;
@@ -13,6 +15,7 @@ use Inbound\Infrastructure\Persistence\Eloquent\EloquentClickRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentLeadRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentTouchRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentVisitRepository;
+use Inbound\Infrastructure\Persistence\LaravelTransactionManager;
 
 class CaptureServiceProvider extends ServiceProvider
 {
@@ -21,6 +24,12 @@ class CaptureServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(VisitorIdCookieConfig::class, function ($app): VisitorIdCookieConfig {
+            return new VisitorIdCookieConfig(
+                lifetimeDays: (int) $app['config']->get('inbound.capture.visitor_cookie_lifetime_days', 30),
+            );
+        });
+
         $this->app->bind(VisitSessionRule::class, function ($app): VisitSessionRule {
             return new VisitSessionRule(
                 new DateInterval((string) $app['config']->get('inbound.capture.visit_session_lifetime', 'PT30M')),
@@ -31,6 +40,7 @@ class CaptureServiceProvider extends ServiceProvider
         $this->app->bind(VisitRepository::class, EloquentVisitRepository::class);
         $this->app->bind(TouchRepository::class, EloquentTouchRepository::class);
         $this->app->bind(LeadRepository::class, EloquentLeadRepository::class);
+        $this->app->bind(TransactionManager::class, LaravelTransactionManager::class);
     }
 
     /**

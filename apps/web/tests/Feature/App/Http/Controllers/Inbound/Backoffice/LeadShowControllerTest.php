@@ -40,7 +40,7 @@ final class LeadShowControllerTest extends TestCase
             'id' => 'click-123',
             'visitor_id' => 'visitor-123',
             'landing_url' => 'https://example.com/landing',
-            'referrer' => 'https://google.com/',
+            'attribution_referrer' => 'https://google.com/',
             'occurred_at' => '2026-03-28 11:40:00',
         ]);
 
@@ -60,10 +60,11 @@ final class LeadShowControllerTest extends TestCase
             'phone' => '+380501112233',
             'status' => 'new',
             'origin' => 'form',
+            'landing_url' => 'https://example.com/landing',
             'created_at' => '2026-03-28 12:00:00',
-            'attribution_source' => 'google',
-            'attribution_medium' => 'cpc',
-            'attribution_campaign' => 'spring-sale',
+            'visit_attribution_source' => 'google',
+            'visit_attribution_medium' => 'cpc',
+            'visit_attribution_campaign' => 'spring-sale',
         ]);
 
         LeadStatusTransitionModel::query()->create([

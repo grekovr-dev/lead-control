@@ -13,8 +13,7 @@ final class AttributionCookieStore
     public function __construct(
         private string $cookieName = 'inbound_attribution',
         private int $lifetimeMinutes = 43200,
-    ) {
-    }
+    ) {}
 
     public function cookieName(): string
     {
@@ -25,7 +24,7 @@ final class AttributionCookieStore
     {
         $payload = $request->cookie($this->cookieName);
 
-        if (!is_string($payload) || trim($payload) === '') {
+        if (! is_string($payload) || trim($payload) === '') {
             return Attribution::empty();
         }
 
@@ -35,7 +34,7 @@ final class AttributionCookieStore
             return Attribution::empty();
         }
 
-        if (!is_array($data)) {
+        if (! is_array($data)) {
             return Attribution::empty();
         }
 
@@ -48,6 +47,7 @@ final class AttributionCookieStore
             $this->resolveString($data, 'gclid'),
             $this->resolveString($data, 'fbclid'),
             $this->resolveString($data, 'msclkid'),
+            $this->resolveString($data, 'referrer'),
         );
     }
 
@@ -72,8 +72,23 @@ final class AttributionCookieStore
         );
     }
 
+    public function forget(): Cookie
+    {
+        return Cookie::create(
+            $this->cookieName,
+            '',
+            new DateTimeImmutable('-1 day'),
+            '/',
+            null,
+            false,
+            true,
+            false,
+            Cookie::SAMESITE_LAX,
+        );
+    }
+
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     private function resolveString(array $data, string $key): ?string
     {

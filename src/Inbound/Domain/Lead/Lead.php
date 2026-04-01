@@ -13,17 +13,31 @@ use InvalidArgumentException;
 final class Lead
 {
     private const ORIGIN_FORM = 'form';
+
     private const ORIGIN_PHONE_CLICK = 'phone_click';
+
     private const ORIGIN_MESSENGER_CLICK = 'messenger_click';
 
     private LeadId $id;
+
     private VisitorId $visitorId;
+
     private VisitId $visitId;
+
     private ?string $name;
+
     private ?string $phone;
-    private Attribution $attribution;
+
+    private Attribution $visitAttribution;
+
+    private Attribution $visitorAttribution;
+
     private LeadStatus $status;
+
     private string $origin;
+
+    private ?string $landingUrl;
+
     private DateTimeImmutable $createdAt;
 
     public function __construct(
@@ -32,10 +46,12 @@ final class Lead
         VisitId $visitId,
         ?string $name,
         ?string $phone,
-        Attribution $attribution,
+        Attribution $visitAttribution,
         LeadStatus $status,
         string $origin,
         DateTimeImmutable $createdAt,
+        Attribution $visitorAttribution,
+        ?string $landingUrl = null,
     ) {
         $origin = trim($origin);
 
@@ -43,7 +59,7 @@ final class Lead
             throw new InvalidArgumentException('Lead origin cannot be empty.');
         }
 
-        if (!in_array($origin, [
+        if (! in_array($origin, [
             self::ORIGIN_FORM,
             self::ORIGIN_PHONE_CLICK,
             self::ORIGIN_MESSENGER_CLICK,
@@ -56,9 +72,11 @@ final class Lead
         $this->visitId = $visitId;
         $this->name = self::normalizeNullableString($name);
         $this->phone = self::normalizeNullableString($phone);
-        $this->attribution = $attribution;
+        $this->visitAttribution = $visitAttribution;
+        $this->visitorAttribution = $visitorAttribution;
         $this->status = $status;
         $this->origin = $origin;
+        $this->landingUrl = self::normalizeNullableString($landingUrl);
         $this->createdAt = $createdAt;
     }
 
@@ -87,9 +105,14 @@ final class Lead
         return $this->phone;
     }
 
-    public function attribution(): Attribution
+    public function visitAttribution(): Attribution
     {
-        return $this->attribution;
+        return $this->visitAttribution;
+    }
+
+    public function visitorAttribution(): Attribution
+    {
+        return $this->visitorAttribution;
     }
 
     public function status(): LeadStatus
@@ -100,6 +123,11 @@ final class Lead
     public function origin(): string
     {
         return $this->origin;
+    }
+
+    public function landingUrl(): ?string
+    {
+        return $this->landingUrl;
     }
 
     public function createdAt(): DateTimeImmutable

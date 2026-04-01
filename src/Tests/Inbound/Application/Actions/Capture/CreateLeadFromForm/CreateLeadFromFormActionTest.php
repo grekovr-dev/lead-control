@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Inbound\Application\Actions\Capture\CreateLeadFromForm;
 
-use DateInterval;
 use DateTimeImmutable;
-use Inbound\Application\Actions\Capture\CreateLeadFromForm\ActiveVisitNotFoundException;
+use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormAction;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormCommand;
-use Inbound\Application\Actions\Capture\ResolveVisitForCapture\VisitSessionRule;
+use Inbound\Application\Actions\Capture\CreateLeadFromForm\CurrentVisitNotFoundException;
+use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Lead\Lead;
 use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Lead\LeadRepository;
@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
 
 final class CreateLeadFromFormActionTest extends TestCase
 {
-    public function test_it_creates_lead_using_existing_active_visit(): void
+    public function test_it_creates_lead_using_existing_visit(): void
     {
         $occurredAt = new DateTimeImmutable('2026-03-20T12:10:00+02:00');
         $command = new CreateLeadFromFormCommand(
@@ -31,8 +31,17 @@ final class CreateLeadFromFormActionTest extends TestCase
             new VisitorId('visitor-456'),
             'John Doe',
             '+380501112233',
-            new Attribution('google', 'cpc', null, null, null, null, null, null),
             $occurredAt,
+        );
+
+        $firstVisit = new Visit(
+            new VisitId('visit-first'),
+            $command->visitorId,
+            new Attribution('facebook', 'paid-social', null, null, null, null, null, null),
+            new Attribution('facebook', 'paid-social', null, null, null, null, null, null),
+            new DateTimeImmutable('2026-03-20T10:00:00+02:00'),
+            new DateTimeImmutable('2026-03-20T10:10:00+02:00'),
+            'https://example.com/first-landing',
         );
 
         $existingVisit = new Visit(
@@ -42,10 +51,18 @@ final class CreateLeadFromFormActionTest extends TestCase
             new Attribution('google', 'remarketing', null, null, null, null, null, null),
             new DateTimeImmutable('2026-03-20T12:00:00+02:00'),
             new DateTimeImmutable('2026-03-20T12:05:00+02:00'),
+            'https://example.com/form-landing',
         );
 
         $leadRepository = $this->createMock(LeadRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $transactionManager = $this->createMock(TransactionManager::class);
+
+        $transactionManager
+            ->expects($this->once())
+            ->method('run')
+            ->with($this->isInstanceOf(\Closure::class))
+            ->willReturnCallback(static fn (callable $callback): mixed => $callback());
 
         $visitRepository
             ->expects($this->once())
@@ -53,16 +70,32 @@ final class CreateLeadFromFormActionTest extends TestCase
             ->with($command->visitorId)
             ->willReturn($existingVisit);
 
+        $visitRepository
+            ->expects($this->once())
+            ->method('save')
+            ->with($this->callback(function (Visit $visit) use ($existingVisit, $occurredAt): bool {
+                return $visit === $existingVisit
+                    && $visit->lastTouchedAt() == $occurredAt;
+            }));
+
+        $visitRepository
+            ->expects($this->once())
+            ->method('findFirstByVisitorId')
+            ->with($command->visitorId)
+            ->willReturn($firstVisit);
+
         $leadRepository
             ->expects($this->once())
             ->method('save')
-            ->with($this->callback(function (Lead $lead) use ($command, $existingVisit, $occurredAt): bool {
+            ->with($this->callback(function (Lead $lead) use ($command, $existingVisit, $firstVisit, $occurredAt): bool {
                 return $lead->id()->equals($command->leadId)
                     && $lead->visitorId()->equals($command->visitorId)
                     && $lead->visitId()->equals($existingVisit->id())
                     && $lead->name() === 'John Doe'
                     && $lead->phone() === '+380501112233'
-                    && $lead->attribution()->equals($command->attribution)
+                    && $lead->visitAttribution()->equals($existingVisit->firstAttribution())
+                    && $lead->visitorAttribution()->equals($firstVisit->firstAttribution())
+                    && $lead->landingUrl() === 'https://example.com/form-landing'
                     && $lead->status() === LeadStatus::NEW
                     && $lead->origin() === 'form'
                     && $lead->createdAt() == $occurredAt;
@@ -71,7 +104,8 @@ final class CreateLeadFromFormActionTest extends TestCase
         $action = new CreateLeadFromFormAction(
             $leadRepository,
             $visitRepository,
-            new VisitSessionRule(new DateInterval('PT30M')),
+            new ContinueCurrentVisitAction($visitRepository),
+            $transactionManager,
         );
 
         $result = $action($command);
@@ -81,25 +115,39 @@ final class CreateLeadFromFormActionTest extends TestCase
         $this->assertTrue($result->visitId()->equals($existingVisit->id()));
     }
 
-    public function test_it_throws_when_active_visit_is_missing(): void
+    public function test_it_throws_when_current_visit_is_missing(): void
     {
         $command = new CreateLeadFromFormCommand(
             new LeadId('lead-123'),
             new VisitorId('visitor-456'),
             'John Doe',
             '+380501112233',
-            new Attribution('google', 'cpc', null, null, null, null, null, null),
             new DateTimeImmutable('2026-03-20T12:10:00+02:00'),
         );
 
         $leadRepository = $this->createMock(LeadRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $transactionManager = $this->createMock(TransactionManager::class);
+
+        $transactionManager
+            ->expects($this->once())
+            ->method('run')
+            ->with($this->isInstanceOf(\Closure::class))
+            ->willReturnCallback(static fn (callable $callback): mixed => $callback());
 
         $visitRepository
             ->expects($this->once())
             ->method('findLastByVisitorId')
             ->with($command->visitorId)
             ->willReturn(null);
+
+        $visitRepository
+            ->expects($this->never())
+            ->method('save');
+
+        $visitRepository
+            ->expects($this->never())
+            ->method('findFirstByVisitorId');
 
         $leadRepository
             ->expects($this->never())
@@ -108,23 +156,23 @@ final class CreateLeadFromFormActionTest extends TestCase
         $action = new CreateLeadFromFormAction(
             $leadRepository,
             $visitRepository,
-            new VisitSessionRule(new DateInterval('PT30M')),
+            new ContinueCurrentVisitAction($visitRepository),
+            $transactionManager,
         );
 
-        $this->expectException(ActiveVisitNotFoundException::class);
-        $this->expectExceptionMessage('Cannot create lead from form without an active visit.');
+        $this->expectException(CurrentVisitNotFoundException::class);
+        $this->expectExceptionMessage('Cannot create lead from form without a current visit.');
 
         $action($command);
     }
 
-    public function test_it_throws_when_last_visit_session_is_expired(): void
+    public function test_it_continues_last_visit_even_when_it_is_expired_by_session_rule(): void
     {
         $command = new CreateLeadFromFormCommand(
             new LeadId('lead-123'),
             new VisitorId('visitor-456'),
             'John Doe',
             '+380501112233',
-            new Attribution('google', 'cpc', null, null, null, null, null, null),
             new DateTimeImmutable('2026-03-20T12:40:01+02:00'),
         );
 
@@ -139,6 +187,13 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $leadRepository = $this->createMock(LeadRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $transactionManager = $this->createMock(TransactionManager::class);
+
+        $transactionManager
+            ->expects($this->once())
+            ->method('run')
+            ->with($this->isInstanceOf(\Closure::class))
+            ->willReturnCallback(static fn (callable $callback): mixed => $callback());
 
         $visitRepository
             ->expects($this->once())
@@ -146,19 +201,35 @@ final class CreateLeadFromFormActionTest extends TestCase
             ->with($command->visitorId)
             ->willReturn($expiredVisit);
 
+        $visitRepository
+            ->expects($this->once())
+            ->method('save')
+            ->with($this->callback(function (Visit $visit) use ($expiredVisit, $command): bool {
+                return $visit === $expiredVisit
+                    && $visit->lastTouchedAt() == $command->occurredAt;
+            }));
+
+        $visitRepository
+            ->expects($this->once())
+            ->method('findFirstByVisitorId')
+            ->with($command->visitorId)
+            ->willReturn($expiredVisit);
+
         $leadRepository
-            ->expects($this->never())
-            ->method('save');
+            ->expects($this->once())
+            ->method('save')
+            ->with($this->isInstanceOf(Lead::class));
 
         $action = new CreateLeadFromFormAction(
             $leadRepository,
             $visitRepository,
-            new VisitSessionRule(new DateInterval('PT30M')),
+            new ContinueCurrentVisitAction($visitRepository),
+            $transactionManager,
         );
 
-        $this->expectException(ActiveVisitNotFoundException::class);
-        $this->expectExceptionMessage('Cannot create lead from form without an active visit.');
+        $result = $action($command);
 
-        $action($command);
+        $this->assertInstanceOf(Lead::class, $result);
+        $this->assertTrue($result->visitId()->equals($expiredVisit->id()));
     }
 }

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Inbound\Application\Actions\Capture\RegisterClick;
 
-use Inbound\Application\Actions\Capture\ResolveVisitForCapture\ResolveVisitForCaptureAction;
-use Inbound\Application\Actions\Capture\ResolveVisitForCapture\ResolveVisitForCaptureCommand;
+use Inbound\Application\Actions\Capture\ResolveCurrentVisit\ResolveCurrentVisitAction;
+use Inbound\Application\Actions\Capture\ResolveCurrentVisit\ResolveCurrentVisitCommand;
+use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Click\Click;
 use Inbound\Domain\Click\ClickRepository;
 use Inbound\Domain\Visit\Visit;
@@ -14,30 +15,35 @@ final class RegisterClickAction
 {
     public function __construct(
         private ClickRepository $clickRepository,
-        private ResolveVisitForCaptureAction $resolveVisitForCaptureAction,
-    ) {
-    }
+        private ResolveCurrentVisitAction $resolveCurrentVisitAction,
+        private TransactionManager $transactionManager,
+    ) {}
 
     public function __invoke(RegisterClickCommand $command): Visit
     {
-        $visit = ($this->resolveVisitForCaptureAction)(new ResolveVisitForCaptureCommand(
-            $command->visitId,
-            $command->visitorId,
-            $command->attribution,
-            $command->occurredAt,
-        ));
+        return $this->transactionManager->run(function () use ($command): Visit {
+            $attribution = $command->attribution;
 
-        $click = new Click(
-            $command->clickId,
-            $command->visitorId,
-            $command->attribution,
-            $command->landingUrl,
-            $command->referrer,
-            $command->occurredAt,
-        );
+            $visit = ($this->resolveCurrentVisitAction)(new ResolveCurrentVisitCommand(
+                $command->visitId,
+                $command->visitorId,
+                $attribution,
+                $command->occurredAt,
+                $command->landingUrl,
+            ));
 
-        $this->clickRepository->save($click);
+            $click = new Click(
+                $command->clickId,
+                $command->visitorId,
+                $attribution,
+                $command->landingUrl,
+                $command->occurredAt,
+                $visit->id(),
+            );
 
-        return $visit;
+            $this->clickRepository->save($click);
+
+            return $visit;
+        });
     }
 }

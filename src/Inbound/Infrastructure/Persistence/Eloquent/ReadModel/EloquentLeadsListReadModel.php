@@ -54,8 +54,8 @@ final class EloquentLeadsListReadModel implements LeadsListReadModel
                 statusLabel: $leadStatus->label(),
                 origin: (string) $model->getAttribute('origin'),
                 originLabel: $this->originLabel((string) $model->getAttribute('origin')),
-                attributionSource: $this->nullableString($model->getAttribute('attribution_source')),
-                attributionMedium: $this->nullableString($model->getAttribute('attribution_medium')),
+                attributionSource: $this->nullableString($model->getAttribute('visit_attribution_source')),
+                attributionMedium: $this->nullableString($model->getAttribute('visit_attribution_medium')),
                 createdAt: $this->toDateTimeImmutable($model->getAttribute('created_at')),
             );
         }
@@ -80,11 +80,11 @@ final class EloquentLeadsListReadModel implements LeadsListReadModel
         }
 
         if ($query->attributionSource !== null) {
-            $leadQuery->where('attribution_source', $query->attributionSource);
+            $leadQuery->where('visit_attribution_source', $query->attributionSource);
         }
 
         if ($query->attributionMedium !== null) {
-            $leadQuery->where('attribution_medium', $query->attributionMedium);
+            $leadQuery->where('visit_attribution_medium', $query->attributionMedium);
         }
     }
 

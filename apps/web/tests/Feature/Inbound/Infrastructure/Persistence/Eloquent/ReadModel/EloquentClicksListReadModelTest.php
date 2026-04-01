@@ -135,7 +135,7 @@ final class EloquentClicksListReadModelTest extends TestCase
             'id' => $id,
             'visitor_id' => $visitorId,
             'landing_url' => $landingUrl,
-            'referrer' => $referrer,
+            'attribution_referrer' => $referrer,
             'occurred_at' => $occurredAt,
             'attribution_source' => $attributionSource,
             'attribution_medium' => $attributionMedium,

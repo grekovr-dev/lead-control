@@ -39,7 +39,7 @@ final class EloquentLeadTimelineReadModelTest extends TestCase
             'id' => 'click-123',
             'visitor_id' => 'visitor-123',
             'landing_url' => 'https://example.com/landing',
-            'referrer' => 'https://google.com/',
+            'attribution_referrer' => 'https://google.com/',
             'occurred_at' => '2026-03-28 11:40:00',
         ]);
 
@@ -47,7 +47,7 @@ final class EloquentLeadTimelineReadModelTest extends TestCase
             'id' => 'click-other',
             'visitor_id' => 'visitor-other',
             'landing_url' => 'https://example.com/other',
-            'referrer' => null,
+            'attribution_referrer' => null,
             'occurred_at' => '2026-03-28 11:45:00',
         ]);
 

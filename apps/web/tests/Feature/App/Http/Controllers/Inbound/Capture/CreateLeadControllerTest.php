@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\App\Http\Controllers\Inbound\Capture;
 
 use App\Http\Cookies\Inbound\Capture\AttributionCookieStore;
-use App\Http\Resolvers\Inbound\Capture\VisitorIdCookieResolver;
+use App\Http\Cookies\Inbound\Capture\VisitorIdCookieStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadModel;
 use Inbound\Infrastructure\Persistence\Eloquent\VisitModel;
@@ -24,6 +24,7 @@ final class CreateLeadControllerTest extends TestCase
         VisitModel::query()->create([
             'id' => 'visit-existing',
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'landing_url' => 'https://example.com/landing',
             'started_at' => now()->subMinutes(10),
             'last_touched_at' => now()->subMinutes(5),
             'first_attribution_source' => 'google',
@@ -32,11 +33,11 @@ final class CreateLeadControllerTest extends TestCase
             'last_attribution_medium' => 'remarketing',
         ]);
 
-        $visitorIdCookieResolver = $this->app->make(VisitorIdCookieResolver::class);
+        $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);
         $attributionCookieStore = $this->app->make(AttributionCookieStore::class);
 
         $response = $this
-            ->withCookie($visitorIdCookieResolver->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
+            ->withCookie($visitorIdCookieStore->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
             ->withCookie($attributionCookieStore->cookieName(), json_encode([
                 'source' => 'google',
                 'medium' => 'cpc',
@@ -71,9 +72,11 @@ final class CreateLeadControllerTest extends TestCase
             'phone' => '+380501112233',
             'status' => 'new',
             'origin' => 'form',
-            'attribution_source' => 'google',
-            'attribution_medium' => 'cpc',
-            'attribution_campaign' => 'spring-sale',
+            'landing_url' => 'https://example.com/landing',
+            'visit_attribution_source' => 'google',
+            'visit_attribution_medium' => 'cpc',
+            'visitor_attribution_source' => 'google',
+            'visitor_attribution_medium' => 'cpc',
         ]);
         $this->assertDatabaseCount('visits', 1);
     }
@@ -83,11 +86,11 @@ final class CreateLeadControllerTest extends TestCase
      */
     public function test_form_endpoint_returns_conflict_when_active_visit_is_missing(): void
     {
-        $visitorIdCookieResolver = $this->app->make(VisitorIdCookieResolver::class);
+        $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);
         $attributionCookieStore = $this->app->make(AttributionCookieStore::class);
 
         $response = $this
-            ->withCookie($visitorIdCookieResolver->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
+            ->withCookie($visitorIdCookieStore->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
             ->withCookie($attributionCookieStore->cookieName(), json_encode([
                 'source' => 'google',
                 'medium' => 'cpc',
@@ -106,17 +109,33 @@ final class CreateLeadControllerTest extends TestCase
 
         $response->assertStatus(409);
         $response->assertJsonPath('ok', false);
-        $response->assertJsonPath('code', 'active_visit_not_found');
-        $response->assertJsonPath('message', 'Cannot create lead from form without an active visit.');
+        $response->assertJsonPath('code', 'current_visit_not_found');
+        $response->assertJsonPath('message', 'Cannot create lead from form without a current visit.');
+        $this->assertDatabaseCount('leads', 0);
+    }
+
+    public function test_form_endpoint_returns_conflict_when_visitor_cookie_is_missing(): void
+    {
+        $response = $this
+            ->withCredentials()
+            ->postJson(route('capture.leads.form'), [
+                'name' => 'John Doe',
+                'phone' => '+380501112233',
+            ]);
+
+        $response->assertStatus(409);
+        $response->assertJsonPath('ok', false);
+        $response->assertJsonPath('code', 'visitor_id_not_found');
+        $response->assertJsonPath('message', 'Visitor context is missing.');
         $this->assertDatabaseCount('leads', 0);
     }
 
     public function test_form_endpoint_returns_validation_error_when_phone_is_missing(): void
     {
-        $visitorIdCookieResolver = $this->app->make(VisitorIdCookieResolver::class);
+        $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);
 
         $response = $this
-            ->withCookie($visitorIdCookieResolver->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
+            ->withCookie($visitorIdCookieStore->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
             ->withCredentials()
             ->postJson(route('capture.leads.form'), [
                 'name' => 'John Doe',
@@ -132,10 +151,10 @@ final class CreateLeadControllerTest extends TestCase
 
     public function test_form_endpoint_returns_validation_error_when_phone_is_not_e164(): void
     {
-        $visitorIdCookieResolver = $this->app->make(VisitorIdCookieResolver::class);
+        $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);
 
         $response = $this
-            ->withCookie($visitorIdCookieResolver->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
+            ->withCookie($visitorIdCookieStore->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
             ->withCredentials()
             ->postJson(route('capture.leads.form'), [
                 'name' => 'John Doe',
@@ -158,6 +177,7 @@ final class CreateLeadControllerTest extends TestCase
         VisitModel::query()->create([
             'id' => 'visit-existing',
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'landing_url' => 'https://example.com/landing',
             'started_at' => now()->subMinutes(10),
             'last_touched_at' => now()->subMinutes(5),
             'first_attribution_source' => 'google',
@@ -166,11 +186,11 @@ final class CreateLeadControllerTest extends TestCase
             'last_attribution_medium' => 'remarketing',
         ]);
 
-        $visitorIdCookieResolver = $this->app->make(VisitorIdCookieResolver::class);
+        $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);
         $attributionCookieStore = $this->app->make(AttributionCookieStore::class);
 
         $response = $this
-            ->withCookie($visitorIdCookieResolver->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
+            ->withCookie($visitorIdCookieStore->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
             ->withCookie($attributionCookieStore->cookieName(), json_encode([
                 'source' => 'google',
                 'medium' => 'cpc',
@@ -203,9 +223,11 @@ final class CreateLeadControllerTest extends TestCase
             'phone' => null,
             'status' => 'new',
             'origin' => 'phone_click',
-            'attribution_source' => 'google',
-            'attribution_medium' => 'cpc',
-            'attribution_campaign' => 'spring-sale',
+            'landing_url' => 'https://example.com/landing',
+            'visit_attribution_source' => 'google',
+            'visit_attribution_medium' => 'cpc',
+            'visitor_attribution_source' => 'google',
+            'visitor_attribution_medium' => 'cpc',
         ]);
         $this->assertDatabaseCount('visits', 1);
     }
@@ -218,6 +240,7 @@ final class CreateLeadControllerTest extends TestCase
         VisitModel::query()->create([
             'id' => 'visit-existing',
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'landing_url' => 'https://example.com/landing',
             'started_at' => now()->subMinutes(10),
             'last_touched_at' => now()->subMinutes(5),
             'first_attribution_source' => 'google',
@@ -235,15 +258,18 @@ final class CreateLeadControllerTest extends TestCase
             'status' => 'new',
             'origin' => 'phone_click',
             'created_at' => now()->subMinutes(4),
-            'attribution_source' => 'google',
-            'attribution_medium' => 'cpc',
+            'landing_url' => 'https://example.com/landing',
+            'visit_attribution_source' => 'google',
+            'visit_attribution_medium' => 'cpc',
+            'visitor_attribution_source' => 'google',
+            'visitor_attribution_medium' => 'cpc',
         ]);
 
-        $visitorIdCookieResolver = $this->app->make(VisitorIdCookieResolver::class);
+        $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);
         $attributionCookieStore = $this->app->make(AttributionCookieStore::class);
 
         $response = $this
-            ->withCookie($visitorIdCookieResolver->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
+            ->withCookie($visitorIdCookieStore->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
             ->withCookie($attributionCookieStore->cookieName(), json_encode([
                 'source' => 'google',
                 'medium' => 'remarketing',
@@ -284,6 +310,7 @@ final class CreateLeadControllerTest extends TestCase
         VisitModel::query()->create([
             'id' => 'visit-existing',
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'landing_url' => 'https://example.com/landing',
             'started_at' => now()->subMinutes(10),
             'last_touched_at' => now()->subMinutes(5),
             'first_attribution_source' => 'google',
@@ -301,15 +328,18 @@ final class CreateLeadControllerTest extends TestCase
             'status' => 'new',
             'origin' => 'form',
             'created_at' => now()->subMinutes(4),
-            'attribution_source' => 'google',
-            'attribution_medium' => 'cpc',
+            'landing_url' => 'https://example.com/landing',
+            'visit_attribution_source' => 'google',
+            'visit_attribution_medium' => 'cpc',
+            'visitor_attribution_source' => 'google',
+            'visitor_attribution_medium' => 'cpc',
         ]);
 
-        $visitorIdCookieResolver = $this->app->make(VisitorIdCookieResolver::class);
+        $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);
         $attributionCookieStore = $this->app->make(AttributionCookieStore::class);
 
         $response = $this
-            ->withCookie($visitorIdCookieResolver->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
+            ->withCookie($visitorIdCookieStore->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
             ->withCookie($attributionCookieStore->cookieName(), json_encode([
                 'source' => 'google',
                 'medium' => 'remarketing',
@@ -347,11 +377,11 @@ final class CreateLeadControllerTest extends TestCase
      */
     public function test_phone_click_endpoint_returns_conflict_when_active_visit_is_missing(): void
     {
-        $visitorIdCookieResolver = $this->app->make(VisitorIdCookieResolver::class);
+        $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);
         $attributionCookieStore = $this->app->make(AttributionCookieStore::class);
 
         $response = $this
-            ->withCookie($visitorIdCookieResolver->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
+            ->withCookie($visitorIdCookieStore->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
             ->withCookie($attributionCookieStore->cookieName(), json_encode([
                 'source' => 'google',
                 'medium' => 'cpc',
@@ -367,8 +397,22 @@ final class CreateLeadControllerTest extends TestCase
 
         $response->assertStatus(409);
         $response->assertJsonPath('ok', false);
-        $response->assertJsonPath('code', 'active_visit_not_found');
-        $response->assertJsonPath('message', 'Cannot create lead from phone click without an active visit.');
+        $response->assertJsonPath('code', 'current_visit_not_found');
+        $response->assertJsonPath('message', 'Cannot create lead from phone click without a current visit.');
+        $this->assertDatabaseCount('leads', 0);
+        $this->assertDatabaseCount('touches', 0);
+    }
+
+    public function test_phone_click_endpoint_returns_conflict_when_visitor_cookie_is_missing(): void
+    {
+        $response = $this
+            ->withCredentials()
+            ->postJson(route('capture.leads.phone-click'));
+
+        $response->assertStatus(409);
+        $response->assertJsonPath('ok', false);
+        $response->assertJsonPath('code', 'visitor_id_not_found');
+        $response->assertJsonPath('message', 'Visitor context is missing.');
         $this->assertDatabaseCount('leads', 0);
         $this->assertDatabaseCount('touches', 0);
     }

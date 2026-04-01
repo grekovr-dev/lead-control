@@ -210,8 +210,8 @@ final class LeadIndexControllerTest extends TestCase
             'phone' => '+380501112233',
             'status' => $status,
             'origin' => $origin,
-            'attribution_source' => $attributionSource,
-            'attribution_medium' => $attributionMedium,
+            'visit_attribution_source' => $attributionSource,
+            'visit_attribution_medium' => $attributionMedium,
             'created_at' => sprintf('2026-03-28 10:%02d:00', $minute),
         ]);
     }

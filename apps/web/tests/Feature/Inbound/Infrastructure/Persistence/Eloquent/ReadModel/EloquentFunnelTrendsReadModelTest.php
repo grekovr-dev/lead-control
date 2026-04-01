@@ -89,7 +89,7 @@ final class EloquentFunnelTrendsReadModelTest extends TestCase
             'id' => $id,
             'visitor_id' => $visitorId,
             'landing_url' => 'https://example.com/'.$id,
-            'referrer' => null,
+            'attribution_referrer' => null,
             'occurred_at' => $occurredAt,
         ]);
     }

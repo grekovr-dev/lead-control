@@ -107,9 +107,8 @@ final class EloquentAttributionFunnelReportReadModel implements AttributionFunne
     {
         /** @var Collection<int, object> $results */
         $results = LeadModel::query()
-            ->join('visits', 'visits.id', '=', 'leads.visit_id')
-            ->selectRaw('visits.first_attribution_source as attribution_source, visits.first_attribution_medium as attribution_medium, visits.first_attribution_campaign as attribution_campaign, COUNT(*) as aggregate')
-            ->groupBy('visits.first_attribution_source', 'visits.first_attribution_medium', 'visits.first_attribution_campaign')
+            ->selectRaw('visit_attribution_source as attribution_source, visit_attribution_medium as attribution_medium, visit_attribution_campaign as attribution_campaign, COUNT(*) as aggregate')
+            ->groupBy('visit_attribution_source', 'visit_attribution_medium', 'visit_attribution_campaign')
             ->get();
 
         return $this->mapGroupedCounts(

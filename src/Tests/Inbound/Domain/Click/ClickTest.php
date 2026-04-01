@@ -9,6 +9,7 @@ use Inbound\Domain\Click\Click;
 use Inbound\Domain\Click\ClickId;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
+use Inbound\Domain\Visit\VisitId;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -18,7 +19,8 @@ final class ClickTest extends TestCase
     {
         $id = new ClickId('click-123');
         $visitorId = new VisitorId('visitor-456');
-        $attribution = new Attribution(' google ', ' cpc ', null, null, null, null, null, null);
+        $visitId = new VisitId('visit-789');
+        $attribution = new Attribution(' google ', ' cpc ', null, null, null, null, null, null, ' https://google.com/ ');
         $occurredAt = new DateTimeImmutable('2026-03-19T10:00:00+02:00');
 
         $click = new Click(
@@ -26,15 +28,17 @@ final class ClickTest extends TestCase
             $visitorId,
             $attribution,
             ' https://example.com/landing ',
-            ' https://google.com/ ',
             $occurredAt,
+            $visitId,
         );
 
         $this->assertSame($id, $click->id());
         $this->assertSame($visitorId, $click->visitorId());
-        $this->assertSame($attribution, $click->attribution());
+        $this->assertSame($visitId, $click->visitId());
+        $this->assertSame('google', $click->attribution()->source());
+        $this->assertSame('cpc', $click->attribution()->medium());
         $this->assertSame('https://example.com/landing', $click->landingUrl());
-        $this->assertSame('https://google.com/', $click->referrer());
+        $this->assertSame('https://google.com/', $click->attribution()->referrer());
         $this->assertSame($occurredAt, $click->occurredAt());
     }
 
@@ -45,11 +49,10 @@ final class ClickTest extends TestCase
             new VisitorId('visitor-456'),
             Attribution::empty(),
             'https://example.com/landing',
-            '   ',
             new DateTimeImmutable('2026-03-19T10:00:00+02:00'),
         );
 
-        $this->assertNull($click->referrer());
+        $this->assertNull($click->attribution()->referrer());
     }
 
     public function test_it_allows_missing_referrer(): void
@@ -61,12 +64,10 @@ final class ClickTest extends TestCase
             new VisitorId('visitor-456'),
             Attribution::empty(),
             'https://example.com/landing',
-            null,
             $occurredAt,
         );
 
         $this->assertSame('https://example.com/landing', $click->landingUrl());
-        $this->assertNull($click->referrer());
         $this->assertSame($occurredAt, $click->occurredAt());
     }
 
@@ -79,7 +80,6 @@ final class ClickTest extends TestCase
             new VisitorId('visitor-456'),
             Attribution::empty(),
             '',
-            null,
             new DateTimeImmutable('2026-03-19T10:00:00+02:00'),
         );
     }
@@ -93,7 +93,6 @@ final class ClickTest extends TestCase
             new VisitorId('visitor-456'),
             Attribution::empty(),
             '   ',
-            null,
             new DateTimeImmutable('2026-03-19T10:00:00+02:00'),
         );
     }

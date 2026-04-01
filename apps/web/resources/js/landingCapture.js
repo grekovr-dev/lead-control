@@ -134,9 +134,9 @@ export default function landingCapture() {
                     return;
                 }
 
-                if (response.status === 409 && data?.code === 'active_visit_not_found') {
+                if (response.status === 409 && data?.code === 'current_visit_not_found') {
                     this.leadFormState = 'server-error';
-                    this.leadFormMessage = this.config.formConflictMessage ?? 'Не вдалося зберегти заявку без активного візиту.';
+                    this.leadFormMessage = this.config.formConflictMessage ?? 'Не вдалося зберегти заявку без поточного візиту.';
                     return;
                 }
 

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Inbound\Application\Actions\Capture\CreateLeadFromForm;
 
-use Inbound\Application\Actions\Capture\ResolveVisitForCapture\VisitSessionRule;
+use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
+use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitCommand;
+use Inbound\Application\Actions\Capture\ContinueCurrentVisit\CurrentVisitNotFoundException as ContinueCurrentVisitNotFoundException;
+use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Lead\Lead;
 use Inbound\Domain\Lead\LeadRepository;
 use Inbound\Domain\Lead\LeadStatus;
@@ -15,32 +18,46 @@ final class CreateLeadFromFormAction
     public function __construct(
         private LeadRepository $leadRepository,
         private VisitRepository $visitRepository,
-        private VisitSessionRule $visitSessionRule,
+        private ContinueCurrentVisitAction $continueCurrentVisitAction,
+        private TransactionManager $transactionManager,
     ) {
     }
 
     public function __invoke(CreateLeadFromFormCommand $command): Lead
     {
-        $visit = $this->visitRepository->findLastByVisitorId($command->visitorId);
+        return $this->transactionManager->run(function () use ($command): Lead {
+            try {
+                $visit = ($this->continueCurrentVisitAction)(new ContinueCurrentVisitCommand(
+                    $command->visitorId,
+                    $command->occurredAt,
+                ));
+            } catch (ContinueCurrentVisitNotFoundException $exception) {
+                throw new CurrentVisitNotFoundException('Cannot create lead from form without a current visit.');
+            }
 
-        if ($visit === null || !$this->visitSessionRule->continues($visit, $command->occurredAt)) {
-            throw new ActiveVisitNotFoundException('Cannot create lead from form without an active visit.');
-        }
+            $firstVisit = $this->visitRepository->findFirstByVisitorId($command->visitorId);
 
-        $lead = new Lead(
-            $command->leadId,
-            $command->visitorId,
-            $visit->id(),
-            $command->name,
-            $command->phone,
-            $command->attribution,
-            LeadStatus::NEW,
-            'form',
-            $command->occurredAt,
-        );
+            if ($firstVisit === null) {
+                throw new \RuntimeException('Cannot create lead from form without a first visit for the visitor.');
+            }
 
-        $this->leadRepository->save($lead);
+            $lead = new Lead(
+                $command->leadId,
+                $command->visitorId,
+                $visit->id(),
+                $command->name,
+                $command->phone,
+                $visit->firstAttribution(),
+                LeadStatus::NEW,
+                'form',
+                $command->occurredAt,
+                $firstVisit->firstAttribution(),
+                $visit->landingUrl(),
+            );
 
-        return $lead;
+            $this->leadRepository->save($lead);
+
+            return $lead;
+        });
     }
 }

@@ -4,13 +4,13 @@ namespace App\Http\Controllers\Inbound\Capture;
 
 use App\Http\Controllers\Controller;
 use App\Http\Cookies\Inbound\Capture\AttributionCookieStore;
-use App\Http\Cookies\Inbound\Capture\ReferrerCookieStore;
 use App\Http\Requests\Inbound\Capture\RegisterTouchRequest;
-use App\Http\Resolvers\Inbound\Capture\VisitorIdCookieResolver;
+use App\Http\Resolvers\Inbound\Capture\VisitorIdResolver;
 use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Inbound\Application\Actions\Capture\ContinueCurrentVisit\CurrentVisitNotFoundException;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickAction;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickCommand;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchAction;
@@ -23,28 +23,32 @@ use Inbound\Domain\Visit\VisitId;
 class RegisterController extends Controller
 {
     public function __construct(
-        private VisitorIdCookieResolver $visitorIdCookieResolver,
+        private VisitorIdResolver $visitorIdResolver,
         private AttributionCookieStore $attributionCookieStore,
-        private ReferrerCookieStore $referrerCookieStore,
-    ) {
-    }
+    ) {}
 
     public function click(Request $request, RegisterClickAction $action): JsonResponse
     {
-        $visitorId = $this->visitorIdCookieResolver->resolve($request);
+        $visitorId = $this->visitorIdResolver->resolve($request);
+
+        if ($visitorId === null) {
+            return $this->visitorIdNotFoundResponse();
+        }
+
+        $attribution = $this->attributionCookieStore->resolve($request);
+
         $command = new RegisterClickCommand(
             new ClickId((string) Str::uuid()),
             new VisitId((string) Str::uuid()),
             $visitorId,
-            $this->attributionCookieStore->resolve($request),
+            $attribution,
             url('/'),
-            $this->referrerCookieStore->resolve($request),
-            new DateTimeImmutable(),
+            new DateTimeImmutable,
         );
 
         $visit = $action($command);
 
-        return response()->json([
+        $response = response()->json([
             'ok' => true,
             'data' => [
                 'clickId' => $command->clickId->value(),
@@ -52,21 +56,36 @@ class RegisterController extends Controller
                 'visitorId' => $visitorId->value(),
             ],
         ]);
+
+        $response->headers->setCookie($this->attributionCookieStore->forget());
+
+        return $response;
     }
 
     public function touch(RegisterTouchRequest $request, RegisterTouchAction $action): JsonResponse
     {
-        $visitorId = $this->visitorIdCookieResolver->resolve($request);
+        $visitorId = $this->visitorIdResolver->resolve($request);
+
+        if ($visitorId === null) {
+            return $this->visitorIdNotFoundResponse();
+        }
+
         $command = new RegisterTouchCommand(
             new TouchId((string) Str::uuid()),
-            new VisitId((string) Str::uuid()),
             $visitorId,
             TouchType::from((string) $request->validated('type')),
-            $this->attributionCookieStore->resolve($request),
-            new DateTimeImmutable(),
+            new DateTimeImmutable,
         );
 
-        $touch = $action($command);
+        try {
+            $touch = $action($command);
+        } catch (CurrentVisitNotFoundException $exception) {
+            return response()->json([
+                'ok' => false,
+                'code' => 'current_visit_not_found',
+                'message' => $exception->getMessage(),
+            ], 409);
+        }
 
         return response()->json([
             'ok' => true,
@@ -77,5 +96,14 @@ class RegisterController extends Controller
                 'type' => $touch->type()->value,
             ],
         ]);
+    }
+
+    private function visitorIdNotFoundResponse(): JsonResponse
+    {
+        return response()->json([
+            'ok' => false,
+            'code' => 'visitor_id_not_found',
+            'message' => 'Visitor context is missing.',
+        ], 409);
     }
 }
