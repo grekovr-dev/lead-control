@@ -48,7 +48,7 @@
                     {{ $filters }}
                 @else
                     <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-                        Delivery-layer фільтри з’являться тут, коли конкретний звіт отримає свій request contract.
+                        Фільтри цього звіту з’являться тут, коли він отримає окремий request-контракт.
                     </div>
                 @endisset
             </div>

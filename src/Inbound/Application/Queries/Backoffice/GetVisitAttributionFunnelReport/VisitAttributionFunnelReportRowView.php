@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Inbound\Application\Queries\Backoffice\GetAttributionFunnelReport;
+namespace Inbound\Application\Queries\Backoffice\GetVisitAttributionFunnelReport;
 
-final readonly class AttributionFunnelReportRowView
+final readonly class VisitAttributionFunnelReportRowView
 {
     public function __construct(
         public ?string $source,
@@ -13,6 +13,7 @@ final readonly class AttributionFunnelReportRowView
         public int $rawClicksCount,
         public int $visitsCount,
         public int $leadsCount,
+        public float $rawClicksPerVisitRate,
         public float $visitsToLeadsConversionRate,
     ) {
     }

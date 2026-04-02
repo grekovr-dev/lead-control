@@ -73,7 +73,7 @@ Do not restart this pattern.
 Continue it.
 
 Reporting foundation read-side is also implemented on this branch:
-- GetAttributionFunnelReport
+- GetVisitAttributionFunnelReport
 - GetOriginFunnelReport
 - GetLeadStatusReport
 - GetFunnelTrends
@@ -150,7 +150,7 @@ The main continuity concern is preserving their agreed semantics, especially for
 
 The planned order for this branch was:
 
-1. `GetAttributionFunnelReport`
+1. `GetVisitAttributionFunnelReport`
 2. `GetOriginFunnelReport`
 3. `GetLeadStatusReport`
 4. `GetFunnelTrends`
@@ -177,14 +177,14 @@ If work continues inside the reporting core, it should be incremental and semant
 
 ## Reporting Slices Already Implemented
 
-### `GetAttributionFunnelReport`
+### `GetVisitAttributionFunnelReport`
 
 This report was refined after implementation and must now be treated with the following semantics:
 
-- it is a first-touch acquisition report
+- it is a visit-level attribution report
 - attribution buckets are based on `Visit.firstAttribution`
 - `visitsCount` is grouped by `Visit.firstAttribution`
-- `leadsCount` is grouped via `lead.visit_id -> visit.firstAttribution`
+- `leadsCount` is grouped by `Lead.visitAttribution`
 - `visitsToLeadsConversionRate` is the core funnel conversion
 - `rawClicksCount` is included only as a reference metric
 
@@ -194,7 +194,7 @@ Important:
 - do NOT mix `Click.attribution`, `Visit.firstAttribution`, and `Lead.attribution` into one funnel bucket again
 
 Practical meaning:
-- this report is suitable for first-touch acquisition analysis
+- this report is suitable for visit-level attribution analysis
 - it is suitable for metrics such as `cost per lead` once spend data exists
 - it is NOT a strict click-cohort funnel
 

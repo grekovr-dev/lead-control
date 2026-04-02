@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use DateTimeImmutable;
 use Illuminate\Http\Request;
 use Inbound\Domain\Shared\DateRange;
+use InvalidArgumentException;
 
 final class DateRangeQueryResolver
 {
@@ -75,10 +76,14 @@ final class DateRangeQueryResolver
             return null;
         }
 
-        return new DateRange(
-            fromInclusive: $fromInclusive,
-            toExclusive: $toExclusive,
-        );
+        try {
+            return new DateRange(
+                fromInclusive: $fromInclusive,
+                toExclusive: $toExclusive,
+            );
+        } catch (InvalidArgumentException) {
+            return null;
+        }
     }
 
     private function parseBoundaryStart(?string $value): ?DateTimeImmutable
@@ -114,7 +119,7 @@ final class DateRangeQueryResolver
     {
         $value = $request->query($key);
 
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return null;
         }
 

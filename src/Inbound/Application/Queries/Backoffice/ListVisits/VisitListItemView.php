@@ -13,6 +13,7 @@ final readonly class VisitListItemView
         public string $visitorId,
         public ?string $firstAttributionSource,
         public ?string $firstAttributionMedium,
+        public ?string $firstAttributionCampaign,
         public ?string $lastAttributionSource,
         public ?string $lastAttributionMedium,
         public DateTimeImmutable $startedAt,

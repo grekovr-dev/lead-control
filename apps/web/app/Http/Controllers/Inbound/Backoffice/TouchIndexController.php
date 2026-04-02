@@ -17,9 +17,7 @@ final class TouchIndexController extends Controller
 
         return view('admin.touches.index', [
             'touches' => $touches,
-            'filters' => $request->filters(),
-            'perPageOptions' => $request->perPageOptions(),
-            'typeOptions' => $request->typeOptions(),
+            'drillContextItems' => $request->drillContextItems(),
             'paginationQuery' => $request->paginationQuery(),
         ]);
     }

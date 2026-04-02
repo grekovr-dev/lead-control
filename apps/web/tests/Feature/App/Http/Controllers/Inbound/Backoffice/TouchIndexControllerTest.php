@@ -6,9 +6,9 @@ namespace Tests\Feature\App\Http\Controllers\Inbound\Backoffice;
 
 use DateTimeImmutable;
 use Inbound\Application\Queries\Backoffice\ListTouches\ListTouchesQuery;
-use Inbound\Application\Queries\Backoffice\ListTouches\TouchListItemView;
 use Inbound\Application\Queries\Backoffice\ListTouches\TouchesListReadModel;
 use Inbound\Application\Queries\Backoffice\ListTouches\TouchesListView;
+use Inbound\Application\Queries\Backoffice\ListTouches\TouchListItemView;
 use Mockery;
 use Tests\TestCase;
 
@@ -57,15 +57,19 @@ final class TouchIndexControllerTest extends TestCase
             ->assertSeeText([
                 'Дотики',
                 'Список дотиків',
+                'Контекст переходу',
+                'ID візиту',
                 'visit-123',
+                'ID відвідувача',
                 'visitor-123',
+                'Тип дотику',
                 'Клік по месенджеру',
                 'Показано 51–51 із 64.',
             ])
-            ->assertSee('value="visit-123"', false)
-            ->assertSee('value="visitor-123"', false)
-            ->assertSee('option value="messenger_click" selected', false)
-            ->assertSee('option value="50" selected', false)
+            ->assertDontSee('name="visitId"', false)
+            ->assertDontSee('name="visitorId"', false)
+            ->assertDontSee('name="type"', false)
+            ->assertDontSeeText('Застосувати')
             ->assertSee(route('admin.touches.index', [
                 'visitId' => 'visit-123',
                 'visitorId' => 'visitor-123',

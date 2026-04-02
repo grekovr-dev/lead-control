@@ -63,7 +63,8 @@ final class EloquentLeadDetailsReadModel implements LeadDetailsReadModel
             origin: (string) $leadModel->getAttribute('origin'),
             originLabel: $this->originLabel((string) $leadModel->getAttribute('origin')),
             createdAt: $this->toDateTimeImmutable($leadModel->getAttribute('created_at')),
-            attribution: $this->mapAttributionSnapshot($leadModel, 'visit_attribution'),
+            visitAttribution: $this->mapAttributionSnapshot($leadModel, 'visit_attribution'),
+            visitorAttribution: $this->mapAttributionSnapshot($leadModel, 'visitor_attribution'),
         );
     }
 

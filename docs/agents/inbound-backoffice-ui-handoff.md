@@ -43,17 +43,18 @@ Important:
 ### Reporting Foundation
 
 Already implemented:
-- `GetAttributionFunnelReport`
+- `GetVisitAttributionFunnelReport`
 - `GetOriginFunnelReport`
 - `GetLeadStatusReport`
 - `GetFunnelTrends`
 
 Important reporting semantics already agreed:
-- `GetAttributionFunnelReport` is a first-touch acquisition report
-- `visits` are grouped by `Visit.firstAttribution`
-- `leads` are grouped via `lead.visit_id -> visit.firstAttribution`
+- `GetVisitAttributionFunnelReport` is a visit-level attribution report
+- `rawClicksCount` is grouped by `Click.attribution`
+- `visitsCount` is grouped by `Visit.firstAttribution`
+- `leadsCount` is grouped by `Lead.visitAttribution`
 - `rawClicksCount` is only a reference metric there
-- do NOT reintroduce mixed attribution semantics into that report
+- do NOT reintroduce mixed visit-level and visitor-level attribution semantics into that report
 
 ### Testing Baseline
 

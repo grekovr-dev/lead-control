@@ -33,10 +33,20 @@ final class GetLeadDetailsHandlerTest extends TestCase
                 origin: 'form',
                 originLabel: 'Форма',
                 createdAt: new DateTimeImmutable('2026-03-26T12:00:00+02:00'),
-                attribution: new AttributionSnapshotView(
+                visitAttribution: new AttributionSnapshotView(
                     source: 'google',
                     medium: 'cpc',
                     campaign: 'spring-sale',
+                    content: null,
+                    term: null,
+                    gclid: null,
+                    fbclid: null,
+                    msclkid: null,
+                ),
+                visitorAttribution: new AttributionSnapshotView(
+                    source: 'facebook',
+                    medium: 'paid-social',
+                    campaign: 'lookalike',
                     content: null,
                     term: null,
                     gclid: null,

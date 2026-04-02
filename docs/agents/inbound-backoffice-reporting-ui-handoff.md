@@ -55,18 +55,18 @@ Important:
 ### Reporting Foundation In `src/Inbound`
 
 Already implemented:
-- `GetAttributionFunnelReport`
+- `GetVisitAttributionFunnelReport`
 - `GetOriginFunnelReport`
 - `GetLeadStatusReport`
 - `GetFunnelTrends`
 
 Important reporting semantics already agreed:
-- `GetAttributionFunnelReport` is a first-touch acquisition report
+- `GetVisitAttributionFunnelReport` is a visit-level attribution report
 - attribution buckets are based on `Visit.firstAttribution`
 - `visitsCount` is grouped by `Visit.firstAttribution`
-- `leadsCount` is grouped via `lead.visit_id -> visit.firstAttribution`
+- `leadsCount` is grouped by `Lead.visitAttribution`
 - `rawClicksCount` is only a reference metric there
-- do NOT reintroduce mixed attribution semantics into that report
+- do NOT reintroduce mixed visit-level and visitor-level attribution semantics into that report
 
 ### Testing Baseline
 
@@ -112,8 +112,16 @@ Expected reporting UI slices:
 - reports index
 - lead status report
 - origin funnel report
-- attribution funnel report
+- visit attribution funnel report
 - funnel trends
+
+Follow-up reporting slice after this branch:
+- visitor acquisition funnel report
+
+Important:
+- it is a separate report, not a variant of visit attribution
+- its period should mean the period of the visitor's first visit
+- its leads should be counted as leads of those visitors, even if created later
 
 ### Drill-Down Targets
 
@@ -154,7 +162,7 @@ Expected direction:
   - `admin.reports.index`
   - `admin.reports.lead-status`
   - `admin.reports.origin-funnel`
-  - `admin.reports.attribution-funnel`
+- `admin.reports.visit-attribution-funnel`
   - `admin.reports.funnel-trends`
 - add drill routes:
   - `admin.clicks.index`
@@ -229,7 +237,7 @@ Important:
 
 ### 8. Implement Attribution Funnel Report With Drill
 
-Use `GetAttributionFunnelReport`.
+Use `GetVisitAttributionFunnelReport`.
 
 Expected direction:
 - preserve its agreed first-touch acquisition semantics
@@ -252,7 +260,22 @@ Expected direction:
 Important:
 - do NOT overstate same-day ratios as cohort conversion without new modeling
 
-### 10. Define A Query-Param Contract For Drill Navigation
+### 10. Plan Visitor Acquisition Funnel As A Separate Slice
+
+Do not squeeze this into the existing visit attribution report.
+
+Expected direction:
+- model it as a separate query/report
+- build it around first visit per visitor
+- use cohort semantics:
+  - denominator = new visitors whose first visit started in the period
+  - numerator = leads of those visitors, even if the lead was created later
+
+Important:
+- do NOT filter this report by `Lead.created_at`
+- do NOT mix it with visit-level funnel semantics
+
+### 11. Define A Query-Param Contract For Drill Navigation
 
 This is the most important navigation rule of this branch.
 

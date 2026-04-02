@@ -26,9 +26,9 @@ final class EloquentOriginFunnelReportReadModelTest extends TestCase
         $this->createLead('lead-1', 'visitor-1', 'visit-1', 'form');
         $this->createLead('lead-2', 'visitor-3', 'visit-3', 'phone_click');
 
-        $readModel = new EloquentOriginFunnelReportReadModel();
+        $readModel = new EloquentOriginFunnelReportReadModel;
 
-        $report = $readModel(new GetOriginFunnelReportQuery());
+        $report = $readModel(new GetOriginFunnelReportQuery);
 
         $this->assertSame(4, $report->touchesCount);
         $this->assertSame(2, $report->leadsCount);
@@ -41,6 +41,7 @@ final class EloquentOriginFunnelReportReadModelTest extends TestCase
         $this->assertSame(2, $formRow->touchesCount);
         $this->assertSame(1, $formRow->leadsCount);
         $this->assertSame(50.0, $formRow->touchesToLeadsConversionRate);
+        $this->assertSame('lead_form_click', $formRow->touchDrillType);
 
         $phoneRow = $report->rows[1];
         $this->assertSame('phone_click', $phoneRow->origin);
@@ -48,6 +49,7 @@ final class EloquentOriginFunnelReportReadModelTest extends TestCase
         $this->assertSame(1, $phoneRow->touchesCount);
         $this->assertSame(1, $phoneRow->leadsCount);
         $this->assertSame(100.0, $phoneRow->touchesToLeadsConversionRate);
+        $this->assertSame('phone_click', $phoneRow->touchDrillType);
 
         $messengerRow = $report->rows[2];
         $this->assertSame('messenger_click', $messengerRow->origin);
@@ -55,15 +57,16 @@ final class EloquentOriginFunnelReportReadModelTest extends TestCase
         $this->assertSame(1, $messengerRow->touchesCount);
         $this->assertSame(0, $messengerRow->leadsCount);
         $this->assertSame(0.0, $messengerRow->touchesToLeadsConversionRate);
+        $this->assertSame('messenger_click', $messengerRow->touchDrillType);
     }
 
     public function test_it_returns_an_empty_origin_report_when_no_mappable_data_exists(): void
     {
         $this->createTouch('touch-1', 'visit-1', 'visitor-1', 'works_click');
 
-        $readModel = new EloquentOriginFunnelReportReadModel();
+        $readModel = new EloquentOriginFunnelReportReadModel;
 
-        $report = $readModel(new GetOriginFunnelReportQuery());
+        $report = $readModel(new GetOriginFunnelReportQuery);
 
         $this->assertSame(0, $report->touchesCount);
         $this->assertSame(0, $report->leadsCount);

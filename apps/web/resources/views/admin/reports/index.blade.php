@@ -2,21 +2,21 @@
 
 @section('document_title', 'Звіти • Lead Control')
 @section('page_title', 'Звіти')
-@section('page_subtitle', 'Точка входу в аналітичний розділ бекофісу з майбутніми звітами та drill-down екранами.')
+@section('page_subtitle', 'Точка входу в аналітичний розділ бекофісу з готовими звітами та переходами до детальних списків.')
 @section('active_nav', 'reports')
 
 @section('content')
     <x-admin.reports.screen-layout
         intro-title="Розділ звітів"
-        intro-description="Тут збиратимуться аналітичні екрани для оцінки воронки, атрибуції та розшифровки даних через переходи до кліків, візитів і дотиків."
+        intro-description="Тут зібрано аналітичні екрани для оцінки воронки, атрибуції та перевірки сирих даних через переходи до кліків, візитів і дотиків."
         :show-filters="false"
         filters-description="Кожен звіт отримає власний delivery-layer request і набір дозволених фільтрів."
-        content-title="Заплановані звіти"
-        content-description="Поки що це навігаційні заглушки, які фіксують майбутню структуру reporting section."
+        content-title="Доступні звіти"
+        content-description="Усі звіти нижче вже доступні в розділі та ведуть до окремих аналітичних екранів."
         :show-aside="true"
         aside-title="Стан розділу"
-        aside-heading="Підготовка"
-        aside-description="Перший reporting slice буде додано наступними кроками."
+        aside-heading="5 звітів"
+        aside-description="У розділі вже доступні статуси лідів, походження, дві окремі атрибуційні воронки та динаміка воронки."
     >
         <div class="grid gap-4 md:grid-cols-2">
             <a
@@ -31,26 +31,53 @@
                 </div>
             </a>
 
-            @foreach ([
-                'Воронка за походженням' => 'Зріз по origin з майбутнім drill-down у події.',
-                'Воронка за атрибуцією' => 'First-touch acquisition funnel на базі вже погодженої семантики.',
-                'Динаміка воронки' => 'Тренди за періодами для основних етапів funnel.',
-            ] as $title => $description)
-                <a
-                    href="{{ route('admin.reports.index') }}"
-                    aria-disabled="true"
-                    class="pointer-events-none block rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4"
-                >
-                    <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <div class="font-medium text-slate-900">{{ $title }}</div>
-                            <div class="mt-1 text-sm text-slate-500">{{ $description }}</div>
-                        </div>
-
-                        <span class="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-500">Незабаром</span>
+            <a
+                href="{{ route('admin.reports.origin-funnel') }}"
+                class="block rounded-xl border border-slate-200 bg-white px-4 py-4 transition hover:border-slate-300 hover:bg-slate-50"
+            >
+                <div>
+                    <div>
+                        <div class="font-medium text-slate-900">Воронка за походженням</div>
+                        <div class="mt-1 text-sm text-slate-500">Зріз по origin з мапованими дотиками, лідами та переходом у список дотиків.</div>
                     </div>
-                </a>
-            @endforeach
+                </div>
+            </a>
+
+            <a
+                href="{{ route('admin.reports.visit-attribution-funnel') }}"
+                class="block rounded-xl border border-slate-200 bg-white px-4 py-4 transition hover:border-slate-300 hover:bg-slate-50"
+            >
+                <div>
+                    <div>
+                        <div class="font-medium text-slate-900">Воронка атрибуції візитів</div>
+                        <div class="mt-1 text-sm text-slate-500">Візитний зріз: сирі кліки як контекст, візити й ліди як основа конверсії в межах вибраного періоду.</div>
+                    </div>
+                </div>
+            </a>
+
+            <a
+                href="{{ route('admin.reports.visitor-acquisition-funnel') }}"
+                class="block rounded-xl border border-slate-200 bg-white px-4 py-4 transition hover:border-slate-300 hover:bg-slate-50"
+            >
+                <div>
+                    <div>
+                        <div class="font-medium text-slate-900">Воронка залучення відвідувачів</div>
+                        <div class="mt-1 text-sm text-slate-500">Когортний зріз за першим візитом: які джерела вперше приводять людей, що згодом стають лідами, навіть якщо лід створено пізніше.</div>
+                    </div>
+                </div>
+            </a>
+
+            <a
+                href="{{ route('admin.reports.funnel-trends') }}"
+                class="block rounded-xl border border-slate-200 bg-white px-4 py-4 transition hover:border-slate-300 hover:bg-slate-50"
+            >
+                <div>
+                    <div>
+                        <div class="font-medium text-slate-900">Динаміка воронки</div>
+                        <div class="mt-1 text-sm text-slate-500">Денний зріз кліків, візитів і лідів із акцентом на співвідношення кліків до лідів та конверсію візитів у ліди.</div>
+                    </div>
+                </div>
+            </a>
         </div>
     </x-admin.reports.screen-layout>
 @endsection

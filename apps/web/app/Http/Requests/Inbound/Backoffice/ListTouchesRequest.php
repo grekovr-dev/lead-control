@@ -69,19 +69,26 @@ final class ListTouchesRequest extends FormRequest
     }
 
     /**
-     * @return list<int>
+     * @return list<array{label: string, value: string}>
      */
-    public function perPageOptions(): array
+    public function drillContextItems(): array
     {
-        return self::PER_PAGE_OPTIONS;
-    }
+        $filters = $this->filters();
+        $items = [];
 
-    /**
-     * @return array<string, string>
-     */
-    public function typeOptions(): array
-    {
-        return self::TYPE_OPTIONS;
+        if ($filters['visitId'] !== null) {
+            $items[] = ['label' => 'ID візиту', 'value' => $filters['visitId']];
+        }
+
+        if ($filters['visitorId'] !== null) {
+            $items[] = ['label' => 'ID відвідувача', 'value' => $filters['visitorId']];
+        }
+
+        if ($filters['type'] !== null) {
+            $items[] = ['label' => 'Тип дотику', 'value' => self::TYPE_OPTIONS[$filters['type']]];
+        }
+
+        return $items;
     }
 
     /**
@@ -126,7 +133,7 @@ final class ListTouchesRequest extends FormRequest
     {
         $value = filter_var($this->input('page'), FILTER_VALIDATE_INT);
 
-        if (!is_int($value) || $value < 1) {
+        if (! is_int($value) || $value < 1) {
             return 1;
         }
 
@@ -137,7 +144,7 @@ final class ListTouchesRequest extends FormRequest
     {
         $value = filter_var($this->input('perPage'), FILTER_VALIDATE_INT);
 
-        if (!is_int($value) || !in_array($value, self::PER_PAGE_OPTIONS, true)) {
+        if (! is_int($value) || ! in_array($value, self::PER_PAGE_OPTIONS, true)) {
             return self::DEFAULT_PER_PAGE;
         }
 
@@ -148,7 +155,7 @@ final class ListTouchesRequest extends FormRequest
     {
         $value = $this->input($key);
 
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return null;
         }
 

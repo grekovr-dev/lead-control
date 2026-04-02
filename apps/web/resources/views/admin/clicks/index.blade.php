@@ -2,7 +2,7 @@
 
 @section('document_title', 'Кліки • Lead Control')
 @section('page_title', 'Кліки')
-@section('page_subtitle', 'Drill-down список кліків для перевірки сирих подій верхнього рівня воронки.')
+@section('page_subtitle', 'Детальний список кліків для перевірки сирих подій верхнього рівня воронки.')
 @section('active_nav', 'reports')
 
 @section('content')
@@ -14,10 +14,10 @@
 
     <x-admin.reports.screen-layout
         intro-title="Список кліків"
-        intro-description="Цей екран показує сирі кліки, які можуть бути ціллю drill-down переходів із funnel-звітів. Він не замінює сам звіт, а допомагає перевірити записи, що стоять за його метриками."
+        intro-description="Цей екран показує сирі кліки як ціль переходів зі звітів. Він не замінює сам звіт, а допомагає перевірити записи, що стоять за його метриками."
         :show-filters="true"
-        filters-title="Фільтри кліків"
-        filters-description="Фільтруйте перелік за visitor ID та атрибуцією. Пізніше ці самі параметри прийматимуть drill-переходи зі звітів."
+        filters-title="Контекст переходу"
+        filters-description="Екран показує нормалізовані параметри переходу, з якими відкрито цей список. Це контекст лише для перегляду, а не окрема форма пошуку."
         content-title="Кліки"
         content-description="Список показує кліки у зворотному хронологічному порядку з базовим атрибуційним контекстом."
         :show-aside="true"
@@ -26,88 +26,10 @@
         aside-description="Кількість записів, що відповідають поточному набору фільтрів."
     >
         <x-slot:filters>
-            <form method="GET" action="{{ route('admin.clicks.index') }}" class="space-y-4">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h3 class="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Поточний набір</h3>
-                        <p class="mt-1 text-sm text-slate-500">Фільтри застосовуються до сирих подій кліку та зберігаються в query string для майбутніх drill-переходів.</p>
-                    </div>
-
-                    <a
-                        href="{{ route('admin.clicks.index') }}"
-                        class="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                    >
-                        Скинути
-                    </a>
-                </div>
-
-                <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_10rem_auto]">
-                    <label class="block">
-                        <span class="mb-2 block text-sm font-medium text-slate-700">Visitor ID</span>
-                        <input
-                            type="text"
-                            name="visitorId"
-                            value="{{ $filters['visitorId'] ?? '' }}"
-                            class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                            placeholder="Наприклад, visitor-123"
-                        >
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-2 block text-sm font-medium text-slate-700">Джерело атрибуції</span>
-                        <input
-                            type="text"
-                            name="attributionSource"
-                            value="{{ $filters['attributionSource'] ?? '' }}"
-                            class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                            placeholder="Наприклад, google"
-                        >
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-2 block text-sm font-medium text-slate-700">Канал атрибуції</span>
-                        <input
-                            type="text"
-                            name="attributionMedium"
-                            value="{{ $filters['attributionMedium'] ?? '' }}"
-                            class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                            placeholder="Наприклад, cpc"
-                        >
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-2 block text-sm font-medium text-slate-700">Кампанія</span>
-                        <input
-                            type="text"
-                            name="attributionCampaign"
-                            value="{{ $filters['attributionCampaign'] ?? '' }}"
-                            class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                            placeholder="Наприклад, spring-sale"
-                        >
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-2 block text-sm font-medium text-slate-700">На сторінці</span>
-                        <select
-                            name="perPage"
-                            class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                        >
-                            @foreach ($perPageOptions as $perPage)
-                                <option value="{{ $perPage }}" @selected($filters['perPage'] === $perPage)>{{ $perPage }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-
-                    <div class="flex items-end gap-3">
-                        <button
-                            type="submit"
-                            class="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-                        >
-                            Застосувати
-                        </button>
-                    </div>
-                </div>
-            </form>
+            <x-admin.reports.drill-context
+                :items="$drillContextItems"
+                empty-message="Кліки можна відкрити й напряму, але основний сценарій для цього екрана — перехід зі звіту з уже сформованим контекстом."
+            />
         </x-slot:filters>
 
         @if ($clicks->items === [])
@@ -124,7 +46,7 @@
                     <thead class="bg-slate-50 text-left text-slate-500">
                         <tr>
                             <th class="px-4 py-3 font-medium">Клік</th>
-                            <th class="px-4 py-3 font-medium">Visitor ID</th>
+                            <th class="px-4 py-3 font-medium">ID відвідувача</th>
                             <th class="px-4 py-3 font-medium">Landing / referrer</th>
                             <th class="px-4 py-3 font-medium">Атрибуція</th>
                             <th class="px-4 py-3 font-medium">Сталося</th>

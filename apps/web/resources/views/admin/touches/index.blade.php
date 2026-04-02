@@ -2,7 +2,7 @@
 
 @section('document_title', 'Дотики • Lead Control')
 @section('page_title', 'Дотики')
-@section('page_subtitle', 'Drill-down список дотиків для перевірки подій усередині візитів.')
+@section('page_subtitle', 'Детальний список дотиків для перевірки подій усередині візитів.')
 @section('active_nav', 'reports')
 
 @section('content')
@@ -14,10 +14,10 @@
 
     <x-admin.reports.screen-layout
         intro-title="Список дотиків"
-        intro-description="Цей екран показує події всередині візитів і служить ціллю для майбутнього drill-down із funnel-звітів. Він допомагає перевірити конкретні дії, які стоять за агрегованими показниками."
+        intro-description="Цей екран показує події всередині візитів і служить ціллю для переходів зі звітів. Він допомагає перевірити конкретні дії, які стоять за агрегованими показниками."
         :show-filters="true"
-        filters-title="Фільтри дотиків"
-        filters-description="Фільтруйте записи за visit ID, visitor ID та типом дотику. Надалі ці параметри стануть основою для report → drill переходів."
+        filters-title="Контекст переходу"
+        filters-description="Екран показує нормалізовані параметри переходу, з якими відкрито цей список. Це контекст лише для перегляду, а не самостійна форма пошуку."
         content-title="Дотики"
         content-description="Список показує дотики у зворотному хронологічному порядку, щоб найновіші взаємодії були зверху."
         :show-aside="true"
@@ -26,79 +26,10 @@
         aside-description="Кількість подій дотику, що відповідають поточним умовам відбору."
     >
         <x-slot:filters>
-            <form method="GET" action="{{ route('admin.touches.index') }}" class="space-y-4">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h3 class="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Поточний набір</h3>
-                        <p class="mt-1 text-sm text-slate-500">Фільтри застосовуються до конкретних touch events і зберігаються в query string для майбутнього drill-down контракту.</p>
-                    </div>
-
-                    <a
-                        href="{{ route('admin.touches.index') }}"
-                        class="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                    >
-                        Скинути
-                    </a>
-                </div>
-
-                <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_10rem_auto]">
-                    <label class="block">
-                        <span class="mb-2 block text-sm font-medium text-slate-700">Visit ID</span>
-                        <input
-                            type="text"
-                            name="visitId"
-                            value="{{ $filters['visitId'] ?? '' }}"
-                            class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                            placeholder="Наприклад, visit-123"
-                        >
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-2 block text-sm font-medium text-slate-700">Visitor ID</span>
-                        <input
-                            type="text"
-                            name="visitorId"
-                            value="{{ $filters['visitorId'] ?? '' }}"
-                            class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                            placeholder="Наприклад, visitor-123"
-                        >
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-2 block text-sm font-medium text-slate-700">Тип дотику</span>
-                        <select
-                            name="type"
-                            class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                        >
-                            <option value="">Усі типи</option>
-                            @foreach ($typeOptions as $value => $label)
-                                <option value="{{ $value }}" @selected($filters['type'] === $value)>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-
-                    <label class="block">
-                        <span class="mb-2 block text-sm font-medium text-slate-700">На сторінці</span>
-                        <select
-                            name="perPage"
-                            class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-                        >
-                            @foreach ($perPageOptions as $perPage)
-                                <option value="{{ $perPage }}" @selected($filters['perPage'] === $perPage)>{{ $perPage }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-
-                    <div class="flex items-end gap-3">
-                        <button
-                            type="submit"
-                            class="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-                        >
-                            Застосувати
-                        </button>
-                    </div>
-                </div>
-            </form>
+            <x-admin.reports.drill-context
+                :items="$drillContextItems"
+                empty-message="Дотики можна відкрити й напряму, але основний сценарій для цього екрана — перехід зі звіту з уже сформованим контекстом."
+            />
         </x-slot:filters>
 
         @if ($touches->items === [])
@@ -115,8 +46,8 @@
                     <thead class="bg-slate-50 text-left text-slate-500">
                         <tr>
                             <th class="px-4 py-3 font-medium">Дотик</th>
-                            <th class="px-4 py-3 font-medium">Visit ID</th>
-                            <th class="px-4 py-3 font-medium">Visitor ID</th>
+                            <th class="px-4 py-3 font-medium">ID візиту</th>
+                            <th class="px-4 py-3 font-medium">ID відвідувача</th>
                             <th class="px-4 py-3 font-medium">Тип</th>
                             <th class="px-4 py-3 font-medium">Сталося</th>
                         </tr>
