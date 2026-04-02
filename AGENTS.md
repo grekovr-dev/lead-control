@@ -347,6 +347,39 @@ Operational screen rules:
 
 ---
 
+## Formatting / Pint
+
+Before finalizing PHP changes in `apps/web`, run `Pint` for the touched files.
+
+Preferred command from the repository root:
+
+```bash
+docker compose exec app php /var/www/apps/web/vendor/bin/pint /var/www/apps/web/path/to/file.php
+```
+
+For multiple files:
+
+```bash
+docker compose exec app php /var/www/apps/web/vendor/bin/pint \
+    /var/www/apps/web/path/to/first.php \
+    /var/www/apps/web/path/to/second.php
+```
+
+Important notes:
+- the container mounts the monorepo root at `/var/www`
+- the Laravel app lives at `/var/www/apps/web`
+- do not assume `vendor/bin/pint` exists at `/var/www/vendor/bin/pint`
+- do not assume local `php` is available on the host machine
+- prefer running `Pint` inside the `app` container
+
+If only style needs to be checked, `Pint` may also be run in test mode:
+
+```bash
+docker compose exec app php /var/www/apps/web/vendor/bin/pint --test /var/www/apps/web/path/to/file.php
+```
+
+---
+
 ## Coding Rules for Agents
 
 ### DO

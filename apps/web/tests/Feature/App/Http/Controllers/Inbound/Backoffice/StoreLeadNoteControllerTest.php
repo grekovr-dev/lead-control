@@ -92,9 +92,9 @@ final class StoreLeadNoteControllerTest extends TestCase
             'status' => 'new',
             'origin' => 'form',
             'created_at' => '2026-03-28 12:00:00',
-            'attribution_source' => 'google',
-            'attribution_medium' => 'cpc',
-            'attribution_campaign' => 'spring-sale',
+            'visit_attribution_source' => 'google',
+            'visit_attribution_medium' => 'cpc',
+            'visit_attribution_campaign' => 'spring-sale',
         ]);
     }
 }

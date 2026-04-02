@@ -11,6 +11,7 @@ use Inbound\Application\Queries\Backoffice\ListClicks\ClickListItemView;
 use Inbound\Application\Queries\Backoffice\ListClicks\ClicksListReadModel;
 use Inbound\Application\Queries\Backoffice\ListClicks\ClicksListView;
 use Inbound\Application\Queries\Backoffice\ListClicks\ListClicksQuery;
+use Inbound\Domain\Shared\DateRange;
 use Inbound\Infrastructure\Persistence\Eloquent\ClickModel;
 use UnexpectedValueException;
 
@@ -41,7 +42,7 @@ final class EloquentClicksListReadModel implements ClicksListReadModel
                 clickId: (string) $model->getAttribute('id'),
                 visitorId: (string) $model->getAttribute('visitor_id'),
                 landingUrl: (string) $model->getAttribute('landing_url'),
-                referrer: $this->nullableString($model->getAttribute('referrer')),
+                referrer: $this->nullableString($model->getAttribute('attribution_referrer')),
                 attributionSource: $this->nullableString($model->getAttribute('attribution_source')),
                 attributionMedium: $this->nullableString($model->getAttribute('attribution_medium')),
                 attributionCampaign: $this->nullableString($model->getAttribute('attribution_campaign')),
@@ -66,15 +67,23 @@ final class EloquentClicksListReadModel implements ClicksListReadModel
 
         if ($query->attributionSource !== null) {
             $clickQuery->where('attribution_source', $query->attributionSource);
+        } elseif ($query->attributionSourceMissing) {
+            $clickQuery->whereNull('attribution_source');
         }
 
         if ($query->attributionMedium !== null) {
             $clickQuery->where('attribution_medium', $query->attributionMedium);
+        } elseif ($query->attributionMediumMissing) {
+            $clickQuery->whereNull('attribution_medium');
         }
 
         if ($query->attributionCampaign !== null) {
             $clickQuery->where('attribution_campaign', $query->attributionCampaign);
+        } elseif ($query->attributionCampaignMissing) {
+            $clickQuery->whereNull('attribution_campaign');
         }
+
+        $this->applyOccurredAtRange($clickQuery, $query->occurredAtRange);
     }
 
     private function nullableString(mixed $value): ?string
@@ -89,5 +98,20 @@ final class EloquentClicksListReadModel implements ClicksListReadModel
         }
 
         return DateTimeImmutable::createFromInterface($value);
+    }
+
+    private function applyOccurredAtRange(Builder $clickQuery, ?DateRange $range): void
+    {
+        if ($range === null) {
+            return;
+        }
+
+        if ($range->fromInclusive() !== null) {
+            $clickQuery->where('occurred_at', '>=', $range->fromInclusive());
+        }
+
+        if ($range->toExclusive() !== null) {
+            $clickQuery->where('occurred_at', '<', $range->toExclusive());
+        }
     }
 }

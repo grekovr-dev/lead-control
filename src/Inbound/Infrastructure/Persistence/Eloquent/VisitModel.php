@@ -19,6 +19,7 @@ class VisitModel extends Model
     protected $fillable = [
         'id',
         'visitor_id',
+        'landing_url',
         'started_at',
         'last_touched_at',
         'first_attribution_source',
@@ -29,6 +30,7 @@ class VisitModel extends Model
         'first_attribution_gclid',
         'first_attribution_fbclid',
         'first_attribution_msclkid',
+        'first_attribution_referrer',
         'last_attribution_source',
         'last_attribution_medium',
         'last_attribution_campaign',
@@ -37,6 +39,7 @@ class VisitModel extends Model
         'last_attribution_gclid',
         'last_attribution_fbclid',
         'last_attribution_msclkid',
+        'last_attribution_referrer',
     ];
 
     protected $casts = [

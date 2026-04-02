@@ -12,6 +12,6 @@ final readonly class OriginFunnelReportRowView
         public int $touchesCount,
         public int $leadsCount,
         public float $touchesToLeadsConversionRate,
-    ) {
-    }
+        public ?string $touchDrillType = null,
+    ) {}
 }

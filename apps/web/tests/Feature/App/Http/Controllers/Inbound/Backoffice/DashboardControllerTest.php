@@ -31,6 +31,7 @@ final class DashboardControllerTest extends TestCase
             'Візити',
             'Дотики',
             'Ліди',
+            'Звіти',
             'Новий',
             'Статуси лідів',
             'Типи дотиків',
@@ -45,6 +46,8 @@ final class DashboardControllerTest extends TestCase
         $response->assertSee('aria-label="Закрити бокову навігацію"', false);
         $response->assertSee('title="Ліди"', false);
         $response->assertSee('href="' . route('admin.leads.index') . '"', false);
+        $response->assertSee('title="Звіти"', false);
+        $response->assertSee('href="' . route('admin.reports.index') . '"', false);
     }
 
     public function test_it_renders_dashboard_metrics_from_the_backoffice_overview_read_model(): void
@@ -53,7 +56,7 @@ final class DashboardControllerTest extends TestCase
             'id' => 'click-1',
             'visitor_id' => 'visitor-1',
             'landing_url' => 'https://example.com/landing-1',
-            'referrer' => null,
+            'attribution_referrer' => null,
             'occurred_at' => '2026-03-28 11:00:00',
         ]);
 
@@ -61,7 +64,7 @@ final class DashboardControllerTest extends TestCase
             'id' => 'click-2',
             'visitor_id' => 'visitor-2',
             'landing_url' => 'https://example.com/landing-2',
-            'referrer' => null,
+            'attribution_referrer' => null,
             'occurred_at' => '2026-03-28 11:05:00',
         ]);
 
@@ -88,8 +91,8 @@ final class DashboardControllerTest extends TestCase
             'phone' => '+380501112233',
             'status' => 'new',
             'origin' => 'form',
-            'attribution_source' => 'google',
-            'attribution_medium' => 'cpc',
+            'visit_attribution_source' => 'google',
+            'visit_attribution_medium' => 'cpc',
             'created_at' => '2026-03-28 11:30:00',
         ]);
 

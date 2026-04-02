@@ -16,7 +16,7 @@ function makeComponent(overrides = {}) {
         leadPhoneCountryCode: '+380',
         formSuccessMessage: 'Дякуємо! Заявку отримано, ми зв\'яжемося з вами найближчим часом.',
         formValidationMessage: 'Перевірте правильність заповнення форми та надішліть заявку ще раз.',
-        formConflictMessage: 'Не вдалося зберегти заявку без активного візиту. Оновіть сторінку та спробуйте ще раз.',
+        formConflictMessage: 'Не вдалося зберегти заявку без поточного візиту. Оновіть сторінку та спробуйте ще раз.',
         formFailureMessage: 'Не вдалося надіслати заявку. Спробуйте ще раз або зателефонуйте нам.',
         leadPhoneRequiredMessage: 'Вкажіть номер телефону.',
         leadPhoneFormatMessage: 'Введіть 9 цифр після +380, наприклад 50 111 22 33.',
@@ -759,7 +759,7 @@ test('landingCapture trims a pasted full phone number with +380 to the local nin
     assert.equal(phoneField.value, '50 111 22 33');
 });
 
-test('landingCapture shows the active visit conflict message when the form endpoint returns 409', async () => {
+test('landingCapture shows the current visit conflict message when the form endpoint returns 409', async () => {
     const component = makeComponent({
         config: {
             clickUrl: '',
@@ -767,7 +767,7 @@ test('landingCapture shows the active visit conflict message when the form endpo
             leadPhoneCountryCode: '+380',
             formSuccessMessage: 'Дякуємо! Заявку отримано, ми зв\'яжемося з вами найближчим часом.',
             formValidationMessage: 'Перевірте правильність заповнення форми та надішліть заявку ще раз.',
-            formConflictMessage: 'Не вдалося зберегти заявку без активного візиту. Оновіть сторінку та спробуйте ще раз.',
+            formConflictMessage: 'Не вдалося зберегти заявку без поточного візиту. Оновіть сторінку та спробуйте ще раз.',
             formFailureMessage: 'Не вдалося надіслати заявку. Спробуйте ще раз або зателефонуйте нам.',
             leadPhoneRequiredMessage: 'Вкажіть номер телефону.',
             leadPhoneFormatMessage: 'Введіть 9 цифр після +380, наприклад 50 111 22 33.',
@@ -776,8 +776,8 @@ test('landingCapture shows the active visit conflict message when the form endpo
             status: 409,
             json: async () => ({
                 ok: false,
-                code: 'active_visit_not_found',
-                message: 'Cannot create lead from form without an active visit.',
+                code: 'current_visit_not_found',
+                message: 'Cannot create lead from form without a current visit.',
             }),
         }),
         location: {
@@ -817,5 +817,5 @@ test('landingCapture shows the active visit conflict message when the form endpo
     await component.submitLeadForm(event);
 
     assert.equal(component.leadFormState, 'server-error');
-    assert.equal(component.leadFormMessage, 'Не вдалося зберегти заявку без активного візиту. Оновіть сторінку та спробуйте ще раз.');
+    assert.equal(component.leadFormMessage, 'Не вдалося зберегти заявку без поточного візиту. Оновіть сторінку та спробуйте ще раз.');
 });

@@ -151,8 +151,8 @@ final class EloquentDashboardOverviewReadModel implements DashboardOverviewReadM
                 statusLabel: $leadStatus->label(),
                 origin: (string) $model->getAttribute('origin'),
                 originLabel: $this->leadOriginLabel((string) $model->getAttribute('origin')),
-                attributionSource: $this->nullableString($model->getAttribute('attribution_source')),
-                attributionMedium: $this->nullableString($model->getAttribute('attribution_medium')),
+                attributionSource: $this->nullableString($model->getAttribute('visit_attribution_source')),
+                attributionMedium: $this->nullableString($model->getAttribute('visit_attribution_medium')),
                 createdAt: $this->toDateTimeImmutable($model->getAttribute('created_at')),
             );
         }

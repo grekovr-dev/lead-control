@@ -20,6 +20,7 @@ final class AttributionTest extends TestCase
             ' gclid-123 ',
             ' ',
             null,
+            ' https://google.com/search?q=ceilings ',
         );
 
         $this->assertSame('google', $attribution->source());
@@ -30,6 +31,7 @@ final class AttributionTest extends TestCase
         $this->assertSame('gclid-123', $attribution->gclid());
         $this->assertNull($attribution->fbclid());
         $this->assertNull($attribution->msclkid());
+        $this->assertSame('https://google.com/search?q=ceilings', $attribution->referrer());
         $this->assertFalse($attribution->isEmpty());
     }
 
@@ -47,16 +49,26 @@ final class AttributionTest extends TestCase
             'gclid' => null,
             'fbclid' => null,
             'msclkid' => null,
+            'referrer' => null,
         ], $attribution->toArray());
     }
 
     public function test_it_compares_by_all_values(): void
     {
-        $left = new Attribution('google', 'cpc', 'spring', null, null, null, null, null);
-        $same = new Attribution(' google ', ' cpc ', ' spring ', null, null, null, null, null);
-        $different = new Attribution('facebook', 'cpc', 'spring', null, null, null, null, null);
+        $left = new Attribution('google', 'cpc', 'spring', null, null, null, null, null, 'https://google.com');
+        $same = new Attribution(' google ', ' cpc ', ' spring ', null, null, null, null, null, ' https://google.com ');
+        $different = new Attribution('facebook', 'cpc', 'spring', null, null, null, null, null, 'https://google.com');
 
         $this->assertTrue($left->equals($same));
         $this->assertFalse($left->equals($different));
+    }
+
+    public function test_direct_factory_creates_explicit_direct_attribution(): void
+    {
+        $attribution = Attribution::direct();
+
+        $this->assertSame('direct', $attribution->source());
+        $this->assertSame('none', $attribution->medium());
+        $this->assertNull($attribution->referrer());
     }
 }

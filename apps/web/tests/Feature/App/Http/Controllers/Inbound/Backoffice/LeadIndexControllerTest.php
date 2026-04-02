@@ -41,7 +41,8 @@ final class LeadIndexControllerTest extends TestCase
             'Усього лідів',
             'Показано 1–20 із 21.',
             'Фільтри',
-            'Швидкі фільтри застосовуються одразу',
+            'Атрибуція в таблиці означає атрибуцію візиту',
+            'Швидкі фільтри застосовуються одразу, а пошук за атрибуцією візиту працює через окрему кнопку.',
             'Ірина',
             'Lead 02',
             'Новий',
@@ -56,6 +57,7 @@ final class LeadIndexControllerTest extends TestCase
         $response->assertSee('name="perPage"', false);
         $response->assertSee('@change="$el.form.requestSubmit()"', false);
         $response->assertSeeText('Шукати');
+        $response->assertSeeText('Атрибуція візиту');
         $response->assertSeeText('e8f6b531-3d52');
         $response->assertSee('href="' . route('admin.leads.show', ['leadId' => 'e8f6b531-3d52-4d8b-b9d8-2f5e4937e51c']) . '"', false);
         $response->assertSee('data-lead-details-source-link', false);
@@ -140,8 +142,10 @@ final class LeadIndexControllerTest extends TestCase
         ]);
         $response->assertSee('option value="new" selected', false);
         $response->assertSee('option value="form" selected', false);
+        $response->assertSeeText('Джерело атрибуції візиту');
         $response->assertSee('name="attributionSource"', false);
         $response->assertSee('value="google"', false);
+        $response->assertSeeText('Канал атрибуції візиту');
         $response->assertSee('name="attributionMedium"', false);
         $response->assertSee('value="cpc"', false);
         $response->assertSee('option value="10" selected', false);
@@ -210,8 +214,8 @@ final class LeadIndexControllerTest extends TestCase
             'phone' => '+380501112233',
             'status' => $status,
             'origin' => $origin,
-            'attribution_source' => $attributionSource,
-            'attribution_medium' => $attributionMedium,
+            'visit_attribution_source' => $attributionSource,
+            'visit_attribution_medium' => $attributionMedium,
             'created_at' => sprintf('2026-03-28 10:%02d:00', $minute),
         ]);
     }

@@ -19,8 +19,9 @@ class ClickModel extends Model
     protected $fillable = [
         'id',
         'visitor_id',
+        'visit_id',
         'landing_url',
-        'referrer',
+        'attribution_referrer',
         'occurred_at',
         'attribution_source',
         'attribution_medium',

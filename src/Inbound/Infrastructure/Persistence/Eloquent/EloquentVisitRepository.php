@@ -37,6 +37,21 @@ final class EloquentVisitRepository implements VisitRepository
         return $this->mapModelToVisit($model);
     }
 
+    public function findFirstByVisitorId(VisitorId $visitorId): ?Visit
+    {
+        $model = VisitModel::query()
+            ->where('visitor_id', $visitorId->value())
+            ->orderBy('started_at')
+            ->orderBy('id')
+            ->first();
+
+        if (!$model instanceof VisitModel) {
+            return null;
+        }
+
+        return $this->mapModelToVisit($model);
+    }
+
     public function findLastByVisitorId(VisitorId $visitorId): ?Visit
     {
         $model = VisitModel::query()
@@ -59,6 +74,7 @@ final class EloquentVisitRepository implements VisitRepository
         return [
             'id' => $visit->id()->value(),
             'visitor_id' => $visit->visitorId()->value(),
+            'landing_url' => $visit->landingUrl(),
             'started_at' => $visit->startedAt(),
             'last_touched_at' => $visit->lastTouchedAt(),
             ...$this->mapAttributionToAttributes($visit->firstAttribution(), 'first_attribution'),
@@ -75,6 +91,7 @@ final class EloquentVisitRepository implements VisitRepository
             $this->mapAttributesToAttribution($model, 'last_attribution'),
             $this->toDateTimeImmutable($model->getAttribute('started_at')),
             $this->toDateTimeImmutable($model->getAttribute('last_touched_at')),
+            $this->nullableString($model->getAttribute('landing_url')),
         );
     }
 
@@ -84,6 +101,7 @@ final class EloquentVisitRepository implements VisitRepository
     private function mapAttributionToAttributes(Attribution $attribution, string $prefix): array
     {
         return [
+            $prefix.'_referrer' => $attribution->referrer(),
             $prefix.'_source' => $attribution->source(),
             $prefix.'_medium' => $attribution->medium(),
             $prefix.'_campaign' => $attribution->campaign(),
@@ -106,7 +124,13 @@ final class EloquentVisitRepository implements VisitRepository
             $model->getAttribute($prefix.'_gclid'),
             $model->getAttribute($prefix.'_fbclid'),
             $model->getAttribute($prefix.'_msclkid'),
+            $model->getAttribute($prefix.'_referrer'),
         );
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        return is_string($value) ? $value : null;
     }
 
     private function toDateTimeImmutable(mixed $value): DateTimeImmutable

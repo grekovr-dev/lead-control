@@ -103,13 +103,13 @@ final class EloquentOriginFunnelReportReadModel implements OriginFunnelReportRea
     }
 
     /**
-     * @param array<string, array{origin: string, touchesCount: int, leadsCount: int}> $rows
-     * @param list<array{origin: string, count: int}> $counts
+     * @param  array<string, array{origin: string, touchesCount: int, leadsCount: int}>  $rows
+     * @param  list<array{origin: string, count: int}>  $counts
      */
     private function mergeTouchCounts(array &$rows, array $counts): void
     {
         foreach ($counts as $item) {
-            if (!isset($rows[$item['origin']])) {
+            if (! isset($rows[$item['origin']])) {
                 $rows[$item['origin']] = [
                     'origin' => $item['origin'],
                     'touchesCount' => 0,
@@ -122,13 +122,13 @@ final class EloquentOriginFunnelReportReadModel implements OriginFunnelReportRea
     }
 
     /**
-     * @param array<string, array{origin: string, touchesCount: int, leadsCount: int}> $rows
-     * @param list<array{origin: string, count: int}> $counts
+     * @param  array<string, array{origin: string, touchesCount: int, leadsCount: int}>  $rows
+     * @param  list<array{origin: string, count: int}>  $counts
      */
     private function mergeLeadCounts(array &$rows, array $counts): void
     {
         foreach ($counts as $item) {
-            if (!isset($rows[$item['origin']])) {
+            if (! isset($rows[$item['origin']])) {
                 $rows[$item['origin']] = [
                     'origin' => $item['origin'],
                     'touchesCount' => 0,
@@ -141,7 +141,7 @@ final class EloquentOriginFunnelReportReadModel implements OriginFunnelReportRea
     }
 
     /**
-     * @param array<string, array{origin: string, touchesCount: int, leadsCount: int}> $rows
+     * @param  array<string, array{origin: string, touchesCount: int, leadsCount: int}>  $rows
      * @return list<OriginFunnelReportRowView>
      */
     private function buildRows(array $rows): array
@@ -153,6 +153,7 @@ final class EloquentOriginFunnelReportReadModel implements OriginFunnelReportRea
                 touchesCount: $row['touchesCount'],
                 leadsCount: $row['leadsCount'],
                 touchesToLeadsConversionRate: $this->calculateConversionRate($row['touchesCount'], $row['leadsCount']),
+                touchDrillType: $this->touchTypeFromOrigin($row['origin'])?->value,
             ),
             array_values($rows),
         );
@@ -193,6 +194,16 @@ final class EloquentOriginFunnelReportReadModel implements OriginFunnelReportRea
             'phone_click' => 'Клік по телефону',
             'messenger_click' => 'Клік по месенджеру',
             default => $origin,
+        };
+    }
+
+    private function touchTypeFromOrigin(string $origin): ?TouchType
+    {
+        return match ($origin) {
+            'form' => TouchType::LeadFormClick,
+            'phone_click' => TouchType::PhoneClick,
+            'messenger_click' => TouchType::MessengerClick,
+            default => null,
         };
     }
 

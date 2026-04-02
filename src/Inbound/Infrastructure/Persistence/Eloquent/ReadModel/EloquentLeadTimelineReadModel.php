@@ -129,7 +129,7 @@ final class EloquentLeadTimelineReadModel implements LeadTimelineReadModel
                 title: 'Клік по лендингу',
                 description: $this->nullableString($model->getAttribute('landing_url')),
                 landingUrl: $this->nullableString($model->getAttribute('landing_url')),
-                referrer: $this->nullableString($model->getAttribute('referrer')),
+                referrer: $this->nullableString($model->getAttribute('attribution_referrer')),
             );
         }
 

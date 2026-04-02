@@ -7,13 +7,22 @@ namespace Inbound\Domain\Shared;
 final readonly class Attribution
 {
     private ?string $source;
+
     private ?string $medium;
+
     private ?string $campaign;
+
     private ?string $content;
+
     private ?string $term;
+
     private ?string $gclid;
+
     private ?string $fbclid;
+
     private ?string $msclkid;
+
+    private ?string $referrer;
 
     public function __construct(
         ?string $source,
@@ -24,6 +33,7 @@ final readonly class Attribution
         ?string $gclid,
         ?string $fbclid,
         ?string $msclkid,
+        ?string $referrer = null,
     ) {
         $this->source = self::normalize($source);
         $this->medium = self::normalize($medium);
@@ -33,11 +43,17 @@ final readonly class Attribution
         $this->gclid = self::normalize($gclid);
         $this->fbclid = self::normalize($fbclid);
         $this->msclkid = self::normalize($msclkid);
+        $this->referrer = self::normalize($referrer);
     }
 
     public static function empty(): self
     {
-        return new self(null, null, null, null, null, null, null, null);
+        return new self(null, null, null, null, null, null, null, null, null);
+    }
+
+    public static function direct(): self
+    {
+        return new self('direct', 'none', null, null, null, null, null, null, null);
     }
 
     public function source(): ?string
@@ -80,6 +96,11 @@ final readonly class Attribution
         return $this->msclkid;
     }
 
+    public function referrer(): ?string
+    {
+        return $this->referrer;
+    }
+
     public function isEmpty(): bool
     {
         return $this->source === null
@@ -89,7 +110,8 @@ final readonly class Attribution
             && $this->term === null
             && $this->gclid === null
             && $this->fbclid === null
-            && $this->msclkid === null;
+            && $this->msclkid === null
+            && $this->referrer === null;
     }
 
     /**
@@ -101,7 +123,8 @@ final readonly class Attribution
      *     term: ?string,
      *     gclid: ?string,
      *     fbclid: ?string,
-     *     msclkid: ?string
+     *     msclkid: ?string,
+     *     referrer: ?string
      * }
      */
     public function toArray(): array
@@ -115,7 +138,23 @@ final readonly class Attribution
             'gclid' => $this->gclid,
             'fbclid' => $this->fbclid,
             'msclkid' => $this->msclkid,
+            'referrer' => $this->referrer,
         ];
+    }
+
+    public function withReferrer(?string $referrer): self
+    {
+        return new self(
+            $this->source,
+            $this->medium,
+            $this->campaign,
+            $this->content,
+            $this->term,
+            $this->gclid,
+            $this->fbclid,
+            $this->msclkid,
+            $referrer,
+        );
     }
 
     public function equals(self $other): bool
@@ -127,7 +166,8 @@ final readonly class Attribution
             && $this->term === $other->term
             && $this->gclid === $other->gclid
             && $this->fbclid === $other->fbclid
-            && $this->msclkid === $other->msclkid;
+            && $this->msclkid === $other->msclkid
+            && $this->referrer === $other->referrer;
     }
 
     private static function normalize(?string $value): ?string

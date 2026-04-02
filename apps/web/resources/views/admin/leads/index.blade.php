@@ -2,7 +2,7 @@
 
 @section('document_title', 'Ліди • Lead Control')
 @section('page_title', 'Ліди')
-@section('page_subtitle', 'Поточний операційний список лідів з фільтрами та керованою пагінацією.')
+@section('page_subtitle', 'Поточний операційний список лідів із session-level атрибуцією візиту та керованою пагінацією.')
 @section('active_nav', 'leads')
 
 @section('content')
@@ -16,7 +16,7 @@
         <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
             <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h2 class="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Поточний список</h2>
-                <p class="mt-2 text-sm text-slate-500">Операційний перелік нових і вже оброблюваних лідів без історії змін на цьому екрані.</p>
+                <p class="mt-2 text-sm text-slate-500">Операційний перелік нових і вже оброблюваних лідів без історії змін на цьому екрані. Атрибуція в таблиці означає атрибуцію візиту, у межах якого був створений лід.</p>
             </div>
 
             <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -30,7 +30,7 @@
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <h2 class="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Фільтри</h2>
-                    <p class="mt-1 text-sm text-slate-500">Швидкі фільтри застосовуються одразу, а пошук за атрибуцією працює через окрему кнопку.</p>
+                    <p class="mt-1 text-sm text-slate-500">Швидкі фільтри застосовуються одразу, а пошук за атрибуцією візиту працює через окрему кнопку.</p>
                 </div>
 
                 <a
@@ -104,7 +104,7 @@
                 <input type="hidden" name="perPage" value="{{ $filters['perPage'] }}">
 
                 <label class="block">
-                    <span class="mb-2 block text-sm font-medium text-slate-700">Джерело атрибуції</span>
+                    <span class="mb-2 block text-sm font-medium text-slate-700">Джерело атрибуції візиту</span>
                     <input
                         type="text"
                         name="attributionSource"
@@ -115,7 +115,7 @@
                 </label>
 
                 <label class="block">
-                    <span class="mb-2 block text-sm font-medium text-slate-700">Канал атрибуції</span>
+                    <span class="mb-2 block text-sm font-medium text-slate-700">Канал атрибуції візиту</span>
                     <input
                         type="text"
                         name="attributionMedium"
@@ -163,7 +163,7 @@
                                 <th class="px-4 py-3 font-medium">Контакт</th>
                                 <th class="px-4 py-3 font-medium">Статус</th>
                                 <th class="px-4 py-3 font-medium">Походження</th>
-                                <th class="px-4 py-3 font-medium">Атрибуція</th>
+                                <th class="px-4 py-3 font-medium">Атрибуція візиту</th>
                                 <th class="px-4 py-3 font-medium">Створено</th>
                             </tr>
                         </thead>

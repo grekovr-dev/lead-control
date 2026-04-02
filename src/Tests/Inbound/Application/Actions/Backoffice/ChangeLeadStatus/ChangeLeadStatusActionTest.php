@@ -148,6 +148,7 @@ final class ChangeLeadStatusActionTest extends TestCase
             $status,
             'form',
             new DateTimeImmutable('2026-03-28T11:45:00+02:00'),
+            Attribution::empty(),
         );
     }
 }

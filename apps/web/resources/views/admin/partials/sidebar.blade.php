@@ -53,6 +53,20 @@
             ></span>
             <span x-cloak x-show="showSidebarText()" class="flex-1">Ліди</span>
         </a>
+
+        <a
+            href="{{ route('admin.reports.index') }}"
+            class="{{ $activeNav === 'reports' ? 'bg-slate-800 text-white' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }} flex h-10 items-center gap-3 overflow-hidden rounded-lg px-2.5 py-2 transition"
+            :class="sidebarCollapsed ? 'lg:mx-auto lg:w-10 lg:justify-center lg:px-0' : ''"
+            title="Звіти"
+        >
+            <span
+                class="icon-mask h-5 w-5 shrink-0"
+                style="--icon-url: url('{{ asset('images/backoffice/reports.svg') }}');"
+                aria-hidden="true"
+            ></span>
+            <span x-cloak x-show="showSidebarText()" class="flex-1">Звіти</span>
+        </a>
     </nav>
 
     <div x-cloak x-show="showSidebarText()" class="mt-auto rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-sm text-slate-400">

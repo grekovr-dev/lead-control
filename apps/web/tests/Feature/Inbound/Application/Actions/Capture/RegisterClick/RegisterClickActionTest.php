@@ -27,9 +27,8 @@ final class RegisterClickActionTest extends TestCase
             new ClickId('click-new'),
             new VisitId('visit-new'),
             new VisitorId('550e8400-e29b-41d4-a716-446655440000'),
-            new Attribution('google', 'cpc', null, null, null, null, null, null),
+            new Attribution('google', 'cpc', null, null, null, null, null, null, ' https://example.com/catalog?utm_source=google '),
             'https://example.com/stretch-ceiling',
-            ' https://example.com/catalog?utm_source=google ',
             $occurredAt,
         );
 
@@ -39,13 +38,16 @@ final class RegisterClickActionTest extends TestCase
         $this->assertInstanceOf(Visit::class, $visit);
         $this->assertSame('visit-new', $visit->id()->value());
         $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $visit->visitorId()->value());
+        $this->assertSame('https://example.com/stretch-ceiling', $visit->landingUrl());
+        $this->assertSame('https://example.com/catalog?utm_source=google', $visit->firstAttribution()->referrer());
 
         $this->assertDatabaseCount('clicks', 1);
         $this->assertDatabaseHas('clicks', [
             'id' => 'click-new',
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'visit_id' => 'visit-new',
             'landing_url' => 'https://example.com/stretch-ceiling',
-            'referrer' => 'https://example.com/catalog?utm_source=google',
+            'attribution_referrer' => 'https://example.com/catalog?utm_source=google',
             'attribution_source' => 'google',
             'attribution_medium' => 'cpc',
         ]);
@@ -54,10 +56,13 @@ final class RegisterClickActionTest extends TestCase
         $this->assertDatabaseHas('visits', [
             'id' => 'visit-new',
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'landing_url' => 'https://example.com/stretch-ceiling',
             'started_at' => '2026-03-23 10:10:00',
             'last_touched_at' => '2026-03-23 10:10:00',
             'first_attribution_source' => 'google',
+            'first_attribution_referrer' => 'https://example.com/catalog?utm_source=google',
             'last_attribution_source' => 'google',
+            'last_attribution_referrer' => 'https://example.com/catalog?utm_source=google',
         ]);
     }
 
@@ -81,7 +86,6 @@ final class RegisterClickActionTest extends TestCase
             new VisitorId('550e8400-e29b-41d4-a716-446655440000'),
             new Attribution('google', 'remarketing', null, null, null, null, null, null),
             'https://example.com/stretch-ceiling',
-            null,
             $occurredAt,
         );
 
@@ -96,8 +100,9 @@ final class RegisterClickActionTest extends TestCase
         $this->assertDatabaseHas('clicks', [
             'id' => 'click-existing',
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'visit_id' => 'visit-existing',
             'landing_url' => 'https://example.com/stretch-ceiling',
-            'referrer' => null,
+            'attribution_referrer' => null,
             'attribution_source' => 'google',
             'attribution_medium' => 'remarketing',
         ]);
@@ -106,12 +111,15 @@ final class RegisterClickActionTest extends TestCase
         $this->assertDatabaseHas('visits', [
             'id' => 'visit-existing',
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'landing_url' => null,
             'started_at' => '2026-03-23 10:00:00',
             'last_touched_at' => '2026-03-23 10:10:00',
             'first_attribution_source' => 'google',
             'first_attribution_medium' => 'cpc',
+            'first_attribution_referrer' => null,
             'last_attribution_source' => 'google',
             'last_attribution_medium' => 'remarketing',
+            'last_attribution_referrer' => null,
         ]);
     }
 }

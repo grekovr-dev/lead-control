@@ -64,51 +64,23 @@
                 <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <div class="flex items-start justify-between gap-3">
                         <div>
-                            <h2 class="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Атрибуційний зріз ліда</h2>
-                            <p class="mt-1 text-sm text-slate-500">Знімок атрибуції, який був зафіксований на момент створення ліда.</p>
+                            <h2 class="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Атрибуційний контекст ліда</h2>
+                            <p class="mt-1 text-sm text-slate-500">Лід тепер зберігає окремо атрибуцію візиту, у межах якого відбулася конверсія, та атрибуцію першого візиту цього відвідувача.</p>
                         </div>
                     </div>
 
-                    <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        <div class="rounded-lg bg-slate-50 px-3 py-3">
-                            <div class="text-xs uppercase tracking-[0.12em] text-slate-500">Джерело</div>
-                            <div class="mt-1 text-sm text-slate-900">{{ $details->lead->attribution->source ?? '—' }}</div>
-                        </div>
+                    <div class="mt-4 space-y-4">
+                        @include('admin.leads.partials.attribution-snapshot', [
+                            'title' => 'Атрибуція візиту ліда',
+                            'description' => 'Саме цей контекст зараз використовується в операційному списку лідів і session-level funnel-звітах.',
+                            'attribution' => $details->lead->visitAttribution,
+                        ])
 
-                        <div class="rounded-lg bg-slate-50 px-3 py-3">
-                            <div class="text-xs uppercase tracking-[0.12em] text-slate-500">Канал</div>
-                            <div class="mt-1 text-sm text-slate-900">{{ $details->lead->attribution->medium ?? '—' }}</div>
-                        </div>
-
-                        <div class="rounded-lg bg-slate-50 px-3 py-3">
-                            <div class="text-xs uppercase tracking-[0.12em] text-slate-500">Кампанія</div>
-                            <div class="mt-1 text-sm text-slate-900">{{ $details->lead->attribution->campaign ?? '—' }}</div>
-                        </div>
-
-                        <div class="rounded-lg bg-slate-50 px-3 py-3">
-                            <div class="text-xs uppercase tracking-[0.12em] text-slate-500">Оголошення</div>
-                            <div class="mt-1 text-sm text-slate-900">{{ $details->lead->attribution->content ?? '—' }}</div>
-                        </div>
-
-                        <div class="rounded-lg bg-slate-50 px-3 py-3">
-                            <div class="text-xs uppercase tracking-[0.12em] text-slate-500">Ключове слово</div>
-                            <div class="mt-1 text-sm text-slate-900">{{ $details->lead->attribution->term ?? '—' }}</div>
-                        </div>
-
-                        <div class="rounded-lg bg-slate-50 px-3 py-3">
-                            <div class="text-xs uppercase tracking-[0.12em] text-slate-500">GCLID</div>
-                            <div class="mt-1 break-all text-sm text-slate-900">{{ $details->lead->attribution->gclid ?? '—' }}</div>
-                        </div>
-
-                        <div class="rounded-lg bg-slate-50 px-3 py-3">
-                            <div class="text-xs uppercase tracking-[0.12em] text-slate-500">FBCLID</div>
-                            <div class="mt-1 break-all text-sm text-slate-900">{{ $details->lead->attribution->fbclid ?? '—' }}</div>
-                        </div>
-
-                        <div class="rounded-lg bg-slate-50 px-3 py-3">
-                            <div class="text-xs uppercase tracking-[0.12em] text-slate-500">MSCLKID</div>
-                            <div class="mt-1 break-all text-sm text-slate-900">{{ $details->lead->attribution->msclkid ?? '—' }}</div>
-                        </div>
+                        @include('admin.leads.partials.attribution-snapshot', [
+                            'title' => 'Атрибуція першого візиту відвідувача',
+                            'description' => 'Це контекст першого джерела, яке привело цього відвідувача в систему.',
+                            'attribution' => $details->lead->visitorAttribution,
+                        ])
                     </div>
                 </section>
 
@@ -360,7 +332,7 @@
 
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <div class="rounded-lg bg-slate-50 px-3 py-3">
-                                    <div class="text-xs uppercase tracking-[0.12em] text-slate-500">Перша атрибуція</div>
+                                    <div class="text-xs uppercase tracking-[0.12em] text-slate-500">Перша атрибуція візиту</div>
                                     <div class="mt-3 space-y-2 text-sm text-slate-900">
                                         <div>Джерело: {{ $details->visit->firstAttribution->source ?? '—' }}</div>
                                         <div>Канал: {{ $details->visit->firstAttribution->medium ?? '—' }}</div>
@@ -369,7 +341,7 @@
                                 </div>
 
                                 <div class="rounded-lg bg-slate-50 px-3 py-3">
-                                    <div class="text-xs uppercase tracking-[0.12em] text-slate-500">Остання атрибуція</div>
+                                    <div class="text-xs uppercase tracking-[0.12em] text-slate-500">Остання атрибуція візиту</div>
                                     <div class="mt-3 space-y-2 text-sm text-slate-900">
                                         <div>Джерело: {{ $details->visit->lastAttribution->source ?? '—' }}</div>
                                         <div>Канал: {{ $details->visit->lastAttribution->medium ?? '—' }}</div>

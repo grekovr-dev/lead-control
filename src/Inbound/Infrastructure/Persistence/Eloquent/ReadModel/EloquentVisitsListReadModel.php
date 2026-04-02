@@ -11,6 +11,7 @@ use Inbound\Application\Queries\Backoffice\ListVisits\ListVisitsQuery;
 use Inbound\Application\Queries\Backoffice\ListVisits\VisitListItemView;
 use Inbound\Application\Queries\Backoffice\ListVisits\VisitsListReadModel;
 use Inbound\Application\Queries\Backoffice\ListVisits\VisitsListView;
+use Inbound\Domain\Shared\DateRange;
 use Inbound\Infrastructure\Persistence\Eloquent\VisitModel;
 use UnexpectedValueException;
 
@@ -42,6 +43,7 @@ final class EloquentVisitsListReadModel implements VisitsListReadModel
                 visitorId: (string) $model->getAttribute('visitor_id'),
                 firstAttributionSource: $this->nullableString($model->getAttribute('first_attribution_source')),
                 firstAttributionMedium: $this->nullableString($model->getAttribute('first_attribution_medium')),
+                firstAttributionCampaign: $this->nullableString($model->getAttribute('first_attribution_campaign')),
                 lastAttributionSource: $this->nullableString($model->getAttribute('last_attribution_source')),
                 lastAttributionMedium: $this->nullableString($model->getAttribute('last_attribution_medium')),
                 startedAt: $this->toDateTimeImmutable($model->getAttribute('started_at')),
@@ -66,10 +68,20 @@ final class EloquentVisitsListReadModel implements VisitsListReadModel
 
         if ($query->firstAttributionSource !== null) {
             $visitQuery->where('first_attribution_source', $query->firstAttributionSource);
+        } elseif ($query->firstAttributionSourceMissing) {
+            $visitQuery->whereNull('first_attribution_source');
         }
 
         if ($query->firstAttributionMedium !== null) {
             $visitQuery->where('first_attribution_medium', $query->firstAttributionMedium);
+        } elseif ($query->firstAttributionMediumMissing) {
+            $visitQuery->whereNull('first_attribution_medium');
+        }
+
+        if ($query->firstAttributionCampaign !== null) {
+            $visitQuery->where('first_attribution_campaign', $query->firstAttributionCampaign);
+        } elseif ($query->firstAttributionCampaignMissing) {
+            $visitQuery->whereNull('first_attribution_campaign');
         }
 
         if ($query->lastAttributionSource !== null) {
@@ -79,6 +91,8 @@ final class EloquentVisitsListReadModel implements VisitsListReadModel
         if ($query->lastAttributionMedium !== null) {
             $visitQuery->where('last_attribution_medium', $query->lastAttributionMedium);
         }
+
+        $this->applyStartedAtRange($visitQuery, $query->startedAtRange);
     }
 
     private function nullableString(mixed $value): ?string
@@ -93,5 +107,20 @@ final class EloquentVisitsListReadModel implements VisitsListReadModel
         }
 
         return DateTimeImmutable::createFromInterface($value);
+    }
+
+    private function applyStartedAtRange(Builder $visitQuery, ?DateRange $range): void
+    {
+        if ($range === null) {
+            return;
+        }
+
+        if ($range->fromInclusive() !== null) {
+            $visitQuery->where('started_at', '>=', $range->fromInclusive());
+        }
+
+        if ($range->toExclusive() !== null) {
+            $visitQuery->where('started_at', '<', $range->toExclusive());
+        }
     }
 }

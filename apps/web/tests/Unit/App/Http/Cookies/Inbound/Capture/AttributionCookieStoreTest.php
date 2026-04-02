@@ -13,7 +13,7 @@ final class AttributionCookieStoreTest extends TestCase
 {
     public function test_it_resolves_attribution_from_cookie_snapshot(): void
     {
-        $store = new AttributionCookieStore();
+        $store = new AttributionCookieStore;
         $request = Request::create('/', 'GET', [], [
             $store->cookieName() => json_encode([
                 'source' => 'google',
@@ -24,6 +24,7 @@ final class AttributionCookieStoreTest extends TestCase
                 'gclid' => 'gclid-1',
                 'fbclid' => 'fbclid-1',
                 'msclkid' => 'msclkid-1',
+                'referrer' => 'https://google.com/search?q=stretch+ceiling',
             ], JSON_THROW_ON_ERROR),
         ]);
 
@@ -37,11 +38,12 @@ final class AttributionCookieStoreTest extends TestCase
         $this->assertSame('gclid-1', $result->gclid());
         $this->assertSame('fbclid-1', $result->fbclid());
         $this->assertSame('msclkid-1', $result->msclkid());
+        $this->assertSame('https://google.com/search?q=stretch+ceiling', $result->referrer());
     }
 
     public function test_it_returns_empty_attribution_when_cookie_is_missing_or_invalid(): void
     {
-        $store = new AttributionCookieStore();
+        $store = new AttributionCookieStore;
 
         $missingCookieRequest = Request::create('/');
         $invalidCookieRequest = Request::create('/', 'GET', [], [
@@ -54,7 +56,7 @@ final class AttributionCookieStoreTest extends TestCase
 
     public function test_it_creates_cookie_with_serialized_attribution_snapshot(): void
     {
-        $store = new AttributionCookieStore();
+        $store = new AttributionCookieStore;
         $attribution = new Attribution(
             'google',
             'cpc',
@@ -64,6 +66,7 @@ final class AttributionCookieStoreTest extends TestCase
             'gclid-1',
             'fbclid-1',
             'msclkid-1',
+            'https://google.com/search?q=stretch+ceiling',
         );
 
         $cookie = $store->make($attribution);
@@ -73,5 +76,19 @@ final class AttributionCookieStoreTest extends TestCase
         $this->assertTrue($cookie->isHttpOnly());
         $this->assertSame('lax', strtolower((string) $cookie->getSameSite()));
         $this->assertSame($attribution->toArray(), json_decode((string) $cookie->getValue(), true, 512, JSON_THROW_ON_ERROR));
+    }
+
+    public function test_it_creates_expired_cookie_for_forget(): void
+    {
+        $store = new AttributionCookieStore;
+
+        $cookie = $store->forget();
+
+        $this->assertSame($store->cookieName(), $cookie->getName());
+        $this->assertSame('', $cookie->getValue());
+        $this->assertLessThan(time(), $cookie->getExpiresTime());
+        $this->assertSame('/', $cookie->getPath());
+        $this->assertTrue($cookie->isHttpOnly());
+        $this->assertSame('lax', strtolower((string) $cookie->getSameSite()));
     }
 }

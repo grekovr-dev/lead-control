@@ -7,15 +7,21 @@ namespace Inbound\Domain\Click;
 use DateTimeImmutable;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
+use Inbound\Domain\Visit\VisitId;
 use InvalidArgumentException;
 
 final class Click
 {
     private ClickId $id;
+
     private VisitorId $visitorId;
+
+    private ?VisitId $visitId;
+
     private Attribution $attribution;
+
     private string $landingUrl;
-    private ?string $referrer;
+
     private DateTimeImmutable $occurredAt;
 
     public function __construct(
@@ -23,8 +29,8 @@ final class Click
         VisitorId $visitorId,
         Attribution $attribution,
         string $landingUrl,
-        ?string $referrer,
         DateTimeImmutable $occurredAt,
+        ?VisitId $visitId = null,
     ) {
         $landingUrl = trim($landingUrl);
 
@@ -34,9 +40,9 @@ final class Click
 
         $this->id = $id;
         $this->visitorId = $visitorId;
+        $this->visitId = $visitId;
         $this->attribution = $attribution;
         $this->landingUrl = $landingUrl;
-        $this->referrer = self::normalizeNullableString($referrer);
         $this->occurredAt = $occurredAt;
     }
 
@@ -50,6 +56,11 @@ final class Click
         return $this->visitorId;
     }
 
+    public function visitId(): ?VisitId
+    {
+        return $this->visitId;
+    }
+
     public function attribution(): Attribution
     {
         return $this->attribution;
@@ -60,24 +71,8 @@ final class Click
         return $this->landingUrl;
     }
 
-    public function referrer(): ?string
-    {
-        return $this->referrer;
-    }
-
     public function occurredAt(): DateTimeImmutable
     {
         return $this->occurredAt;
-    }
-
-    private static function normalizeNullableString(?string $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim($value);
-
-        return $value === '' ? null : $value;
     }
 }

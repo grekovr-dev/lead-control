@@ -36,11 +36,24 @@ final class LeadShowControllerTest extends TestCase
             'last_attribution_campaign' => 'spring-sale',
         ]);
 
+        VisitModel::query()->create([
+            'id' => 'visit-first',
+            'visitor_id' => 'visitor-123',
+            'started_at' => '2026-03-20 09:00:00',
+            'last_touched_at' => '2026-03-20 09:15:00',
+            'first_attribution_source' => 'facebook',
+            'first_attribution_medium' => 'paid-social',
+            'first_attribution_campaign' => 'lookalike',
+            'last_attribution_source' => 'facebook',
+            'last_attribution_medium' => 'paid-social',
+            'last_attribution_campaign' => 'lookalike',
+        ]);
+
         ClickModel::query()->create([
             'id' => 'click-123',
             'visitor_id' => 'visitor-123',
             'landing_url' => 'https://example.com/landing',
-            'referrer' => 'https://google.com/',
+            'attribution_referrer' => 'https://google.com/',
             'occurred_at' => '2026-03-28 11:40:00',
         ]);
 
@@ -60,10 +73,14 @@ final class LeadShowControllerTest extends TestCase
             'phone' => '+380501112233',
             'status' => 'new',
             'origin' => 'form',
+            'landing_url' => 'https://example.com/landing',
             'created_at' => '2026-03-28 12:00:00',
-            'attribution_source' => 'google',
-            'attribution_medium' => 'cpc',
-            'attribution_campaign' => 'spring-sale',
+            'visit_attribution_source' => 'google',
+            'visit_attribution_medium' => 'cpc',
+            'visit_attribution_campaign' => 'spring-sale',
+            'visitor_attribution_source' => 'facebook',
+            'visitor_attribution_medium' => 'paid-social',
+            'visitor_attribution_campaign' => 'lookalike',
         ]);
 
         LeadStatusTransitionModel::query()->create([
@@ -91,7 +108,8 @@ final class LeadShowControllerTest extends TestCase
                 && $details->lead->leadId === 'lead-123'
                 && $details->lead->statusLabel === 'Новий'
                 && $details->lead->originLabel === 'Форма'
-                && $details->lead->attribution->source === 'google'
+                && $details->lead->visitAttribution->source === 'google'
+                && $details->lead->visitorAttribution->source === 'facebook'
                 && $details->visit?->visitId === 'visit-123'
                 && $details->preLeadTouchSummary->count === 1
                 && $details->preLeadVisitorClickSummary->count === 1;
@@ -113,14 +131,18 @@ final class LeadShowControllerTest extends TestCase
             'Форма',
             'ID відвідувача',
             'Походження',
-            'Атрибуційний зріз ліда',
+            'Атрибуційний контекст ліда',
+            'Атрибуція візиту ліда',
+            'Атрибуція першого візиту відвідувача',
             'google',
+            'facebook',
             'spring-sale',
+            'lookalike',
             'Операційний зріз',
             'Пов’язаний візит',
             'visit-123',
-            'Перша атрибуція',
-            'Остання атрибуція',
+            'Перша атрибуція візиту',
+            'Остання атрибуція візиту',
             'Дотики до створення ліда',
             'Кліки відвідувача до створення ліда',
             'Таймлайн',
