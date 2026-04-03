@@ -12,5 +12,7 @@ interface VisitRepository
 
     public function findById(VisitId $id): ?Visit;
 
+    public function findFirstByVisitorId(VisitorId $visitorId): ?Visit;
+
     public function findLastByVisitorId(VisitorId $visitorId): ?Visit;
 }

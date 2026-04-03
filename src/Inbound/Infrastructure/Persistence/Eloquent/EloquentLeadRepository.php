@@ -20,8 +20,8 @@ final class EloquentLeadRepository implements LeadRepository
     {
         $model = LeadModel::query()->find($lead->id()->value());
 
-        if (!$model instanceof LeadModel) {
-            $model = new LeadModel();
+        if (! $model instanceof LeadModel) {
+            $model = new LeadModel;
         }
 
         $model->fill($this->mapLeadToAttributes($lead));
@@ -32,7 +32,21 @@ final class EloquentLeadRepository implements LeadRepository
     {
         $model = LeadModel::query()->find($id->value());
 
-        if (!$model instanceof LeadModel) {
+        if (! $model instanceof LeadModel) {
+            return null;
+        }
+
+        return $this->mapModelToLead($model);
+    }
+
+    public function findByVisitIdAndOrigin(VisitId $visitId, string $origin): ?Lead
+    {
+        $model = LeadModel::query()
+            ->where('visit_id', $visitId->value())
+            ->where('origin', $origin)
+            ->first();
+
+        if (! $model instanceof LeadModel) {
             return null;
         }
 
@@ -52,14 +66,18 @@ final class EloquentLeadRepository implements LeadRepository
             'phone' => $lead->phone(),
             'status' => $lead->status(),
             'origin' => $lead->origin(),
+            'landing_url' => $lead->landingUrl(),
             'created_at' => $lead->createdAt(),
-            ...$this->mapAttributionToAttributes($lead->attribution()),
+            ...$this->mapAttributionToAttributes($lead->visitAttribution(), 'visit_attribution'),
+            ...$this->mapAttributionToAttributes($lead->visitorAttribution(), 'visitor_attribution'),
         ];
     }
 
     private function mapModelToLead(LeadModel $model): Lead
     {
         $status = $model->getAttribute('status');
+        $visitAttribution = $this->mapAttributesToAttribution($model, 'visit_attribution');
+        $visitorAttribution = $this->mapAttributesToAttribution($model, 'visitor_attribution');
 
         return new Lead(
             new LeadId((string) $model->getAttribute('id')),
@@ -67,47 +85,56 @@ final class EloquentLeadRepository implements LeadRepository
             new VisitId((string) $model->getAttribute('visit_id')),
             $model->getAttribute('name'),
             $model->getAttribute('phone'),
-            $this->mapAttributesToAttribution($model),
+            $visitAttribution,
             $status instanceof LeadStatus ? $status : LeadStatus::from((string) $status),
             (string) $model->getAttribute('origin'),
             $this->toDateTimeImmutable($model->getAttribute('created_at')),
+            $visitorAttribution,
+            $this->nullableString($model->getAttribute('landing_url')),
         );
     }
 
     /**
      * @return array<string, string|null>
      */
-    private function mapAttributionToAttributes(Attribution $attribution): array
+    private function mapAttributionToAttributes(Attribution $attribution, string $prefix): array
     {
         return [
-            'attribution_source' => $attribution->source(),
-            'attribution_medium' => $attribution->medium(),
-            'attribution_campaign' => $attribution->campaign(),
-            'attribution_content' => $attribution->content(),
-            'attribution_term' => $attribution->term(),
-            'attribution_gclid' => $attribution->gclid(),
-            'attribution_fbclid' => $attribution->fbclid(),
-            'attribution_msclkid' => $attribution->msclkid(),
+            $prefix.'_source' => $attribution->source(),
+            $prefix.'_medium' => $attribution->medium(),
+            $prefix.'_campaign' => $attribution->campaign(),
+            $prefix.'_content' => $attribution->content(),
+            $prefix.'_term' => $attribution->term(),
+            $prefix.'_gclid' => $attribution->gclid(),
+            $prefix.'_fbclid' => $attribution->fbclid(),
+            $prefix.'_msclkid' => $attribution->msclkid(),
+            $prefix.'_referrer' => $attribution->referrer(),
         ];
     }
 
-    private function mapAttributesToAttribution(LeadModel $model): Attribution
+    private function mapAttributesToAttribution(LeadModel $model, string $prefix): Attribution
     {
         return new Attribution(
-            $model->getAttribute('attribution_source'),
-            $model->getAttribute('attribution_medium'),
-            $model->getAttribute('attribution_campaign'),
-            $model->getAttribute('attribution_content'),
-            $model->getAttribute('attribution_term'),
-            $model->getAttribute('attribution_gclid'),
-            $model->getAttribute('attribution_fbclid'),
-            $model->getAttribute('attribution_msclkid'),
+            $model->getAttribute($prefix.'_source'),
+            $model->getAttribute($prefix.'_medium'),
+            $model->getAttribute($prefix.'_campaign'),
+            $model->getAttribute($prefix.'_content'),
+            $model->getAttribute($prefix.'_term'),
+            $model->getAttribute($prefix.'_gclid'),
+            $model->getAttribute($prefix.'_fbclid'),
+            $model->getAttribute($prefix.'_msclkid'),
+            $model->getAttribute($prefix.'_referrer'),
         );
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        return is_string($value) ? $value : null;
     }
 
     private function toDateTimeImmutable(mixed $value): DateTimeImmutable
     {
-        if (!$value instanceof DateTimeInterface) {
+        if (! $value instanceof DateTimeInterface) {
             throw new \UnexpectedValueException('Expected a date/time value from LeadModel.');
         }
 

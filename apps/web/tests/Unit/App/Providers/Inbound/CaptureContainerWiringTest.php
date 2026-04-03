@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Unit\App\Providers\Inbound;
 
+use App\Http\Cookies\Inbound\Capture\VisitorIdCookieConfig;
 use DateTimeImmutable;
+use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormAction;
-use Inbound\Application\Actions\Capture\CreateLeadFromPhoneClick\CreateLeadFromPhoneClickAction;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickAction;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchAction;
-use Inbound\Application\Actions\Capture\ResolveVisitForCapture\ResolveVisitForCaptureAction;
-use Inbound\Application\Actions\Capture\ResolveVisitForCapture\VisitSessionRule;
+use Inbound\Application\Actions\Capture\ResolveCurrentVisit\ResolveCurrentVisitAction;
+use Inbound\Application\Actions\Capture\ResolveCurrentVisit\VisitSessionRule;
+use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Click\ClickRepository;
 use Inbound\Domain\Lead\LeadRepository;
 use Inbound\Domain\Shared\Attribution;
@@ -23,6 +25,7 @@ use Inbound\Infrastructure\Persistence\Eloquent\EloquentClickRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentLeadRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentTouchRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentVisitRepository;
+use Inbound\Infrastructure\Persistence\LaravelTransactionManager;
 use Tests\TestCase;
 
 final class CaptureContainerWiringTest extends TestCase
@@ -33,6 +36,7 @@ final class CaptureContainerWiringTest extends TestCase
         $this->assertInstanceOf(EloquentVisitRepository::class, $this->app->make(VisitRepository::class));
         $this->assertInstanceOf(EloquentTouchRepository::class, $this->app->make(TouchRepository::class));
         $this->assertInstanceOf(EloquentLeadRepository::class, $this->app->make(LeadRepository::class));
+        $this->assertInstanceOf(LaravelTransactionManager::class, $this->app->make(TransactionManager::class));
     }
 
     public function test_it_resolves_capture_actions_via_the_container(): void
@@ -40,8 +44,8 @@ final class CaptureContainerWiringTest extends TestCase
         $this->assertInstanceOf(RegisterClickAction::class, $this->app->make(RegisterClickAction::class));
         $this->assertInstanceOf(RegisterTouchAction::class, $this->app->make(RegisterTouchAction::class));
         $this->assertInstanceOf(CreateLeadFromFormAction::class, $this->app->make(CreateLeadFromFormAction::class));
-        $this->assertInstanceOf(CreateLeadFromPhoneClickAction::class, $this->app->make(CreateLeadFromPhoneClickAction::class));
-        $this->assertInstanceOf(ResolveVisitForCaptureAction::class, $this->app->make(ResolveVisitForCaptureAction::class));
+        $this->assertInstanceOf(ContinueCurrentVisitAction::class, $this->app->make(ContinueCurrentVisitAction::class));
+        $this->assertInstanceOf(ResolveCurrentVisitAction::class, $this->app->make(ResolveCurrentVisitAction::class));
     }
 
     public function test_it_binds_visit_session_rule_using_laravel_config(): void
@@ -60,5 +64,15 @@ final class CaptureContainerWiringTest extends TestCase
 
         $this->assertTrue($rule->continues($visit, new DateTimeImmutable('2026-03-23 10:45:00')));
         $this->assertFalse($rule->continues($visit, new DateTimeImmutable('2026-03-23 10:46:00')));
+    }
+
+    public function test_it_binds_visitor_id_cookie_config_using_laravel_config(): void
+    {
+        $this->app['config']->set('inbound.capture.visitor_cookie_lifetime_days', 45);
+
+        $config = $this->app->make(VisitorIdCookieConfig::class);
+
+        $this->assertSame('inbound_visitor_id', $config->cookieName());
+        $this->assertSame(45, $config->lifetimeDays());
     }
 }

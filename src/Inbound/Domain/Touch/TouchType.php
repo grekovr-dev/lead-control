@@ -7,7 +7,7 @@ namespace Inbound\Domain\Touch;
 enum TouchType: string
 {
     case PhoneClick = 'phone_click';
-    case FormSubmit = 'form_submit';
+    case LeadFormClick = 'lead_form_click';
     case MessengerClick = 'messenger_click';
-    case CtaClick = 'cta_click';
+    case WorksClick = 'works_click';
 }
