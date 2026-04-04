@@ -33,6 +33,7 @@ apps/web/bootstrap/cache/*
 .env
 .env.*
 !.env.example
+!.env.production.example
 
 # =========================
 # Logs
