@@ -1,0 +1,112 @@
+services:
+  public-assets-init:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: production
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: lead_public_assets_init
+    restart: "no"
+    user: root
+    command:
+      - sh
+      - -lc
+      - >
+        mkdir -p /public-assets &&
+        rm -rf /public-assets/* &&
+        cp -a /var/www/apps/web/public/. /public-assets/
+    volumes:
+      - lead_app_public_assets:/public-assets
+    networks:
+      - leadnet
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: production
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: lead_app
+    restart: unless-stopped
+    working_dir: /var/www
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      # This file must live on the VPS outside Git. The repository only keeps the template.
+      - .env.production
+    command:
+      ["php-fpm", "-F"]
+    depends_on:
+      - db
+      - redis
+    networks:
+      - leadnet
+
+  nginx:
+    image: nginx:alpine
+    container_name: lead_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Shared only for deploy-time public assets (index.php, static files, build output).
+      # It does not contain database data or Laravel storage, so it cannot replace persisted lead data.
+      - lead_app_public_assets:/var/www/apps/web/public:ro
+      - ./docker/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      public-assets-init:
+        condition: service_completed_successfully
+    networks:
+      - leadnet
+
+  db:
+    image: mysql:8
+    container_name: lead_db
+    restart: unless-stopped
+    env_file:
+      # This file must live on the VPS outside Git. The repository only keeps the template.
+      - .env.production
+    volumes:
+      - lead_db_data:/var/lib/mysql
+    networks:
+      - leadnet
+
+  redis:
+    image: redis:alpine
+    container_name: lead_redis
+    restart: unless-stopped
+    networks:
+      - leadnet
+
+  horizon:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: production
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: lead_horizon
+    restart: unless-stopped
+    working_dir: /var/www
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      # This file must live on the VPS outside Git. The repository only keeps the template.
+      - .env.production
+    command: ["php", "/var/www/apps/web/artisan", "horizon"]
+    depends_on:
+      - db
+      - redis
+    networks:
+      - leadnet
+
+networks:
+  leadnet:
+
+volumes:
+  lead_db_data:
+  lead_app_public_assets:

@@ -183,7 +183,7 @@ return [
     |
     */
 
-    'memory_limit' => 64,
+    'memory_limit' => (int) env('HORIZON_MEMORY_LIMIT', 128),
 
     /*
     |--------------------------------------------------------------------------
@@ -215,9 +215,16 @@ return [
     'environments' => [
         'production' => [
             'supervisor-1' => [
-                'maxProcesses' => 10,
-                'balanceMaxShift' => 1,
-                'balanceCooldown' => 3,
+                'connection' => 'redis',
+                'queue' => ['default'],
+                'balance' => env('HORIZON_BALANCE', 'simple'),
+                'maxProcesses' => (int) env('HORIZON_MAX_PROCESSES', 1),
+                'maxTime' => 0,
+                'maxJobs' => 0,
+                'memory' => (int) env('HORIZON_WORKER_MEMORY', 128),
+                'tries' => (int) env('HORIZON_TRIES', 3),
+                'timeout' => (int) env('HORIZON_TIMEOUT', 60),
+                'nice' => 0,
             ],
         ],
 
