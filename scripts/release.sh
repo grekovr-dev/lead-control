@@ -36,14 +36,16 @@ docker compose -f "$COMPOSE_FILE" up -d --build --remove-orphans \
     db \
     redis
 
+docker compose -f "$COMPOSE_FILE" restart nginx
+
 echo "[4/5] Clearing caches and running database migrations"
-docker compose -f "$COMPOSE_FILE" exec -T app php artisan optimize:clear
-docker compose -f "$COMPOSE_FILE" exec -T app php artisan migrate --force
+docker compose -f "$COMPOSE_FILE" exec -T app php /var/www/apps/web/artisan optimize:clear
+docker compose -f "$COMPOSE_FILE" exec -T app php /var/www/apps/web/artisan migrate --force
 
 echo "[5/5] Rebuilding Laravel caches and restarting Horizon"
-docker compose -f "$COMPOSE_FILE" exec -T app php artisan config:cache
-docker compose -f "$COMPOSE_FILE" exec -T app php artisan route:cache
-docker compose -f "$COMPOSE_FILE" exec -T app php artisan view:cache
+docker compose -f "$COMPOSE_FILE" exec -T app php /var/www/apps/web/artisan config:cache
+docker compose -f "$COMPOSE_FILE" exec -T app php /var/www/apps/web/artisan route:cache
+docker compose -f "$COMPOSE_FILE" exec -T app php /var/www/apps/web/artisan view:cache
 docker compose -f "$COMPOSE_FILE" restart horizon
 
 docker compose -f "$COMPOSE_FILE" ps
