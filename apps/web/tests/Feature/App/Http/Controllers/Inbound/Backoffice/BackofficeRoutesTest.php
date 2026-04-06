@@ -116,6 +116,25 @@ final class BackofficeRoutesTest extends TestCase
         $this->assertSame(url('/admin/visits'), route('admin.visits.index'));
     }
 
+    public function test_it_wires_permission_middleware_to_backoffice_routes(): void
+    {
+        $dashboardRoute = Route::getRoutes()->getByName('admin.dashboard');
+        $reportsIndexRoute = Route::getRoutes()->getByName('admin.reports.index');
+        $leadNoteStoreRoute = Route::getRoutes()->getByName('admin.leads.notes.store');
+        $leadStatusUpdateRoute = Route::getRoutes()->getByName('admin.leads.status.update');
+        $clicksIndexRoute = Route::getRoutes()->getByName('admin.clicks.index');
+        $visitsIndexRoute = Route::getRoutes()->getByName('admin.visits.index');
+        $touchesIndexRoute = Route::getRoutes()->getByName('admin.touches.index');
+
+        $this->assertContains('backoffice.permission:dashboard.view', $dashboardRoute?->gatherMiddleware() ?? []);
+        $this->assertContains('backoffice.permission:reports.view', $reportsIndexRoute?->gatherMiddleware() ?? []);
+        $this->assertContains('backoffice.permission:leads.note.create', $leadNoteStoreRoute?->gatherMiddleware() ?? []);
+        $this->assertContains('backoffice.permission:leads.status.update', $leadStatusUpdateRoute?->gatherMiddleware() ?? []);
+        $this->assertContains('backoffice.permission:clicks.view', $clicksIndexRoute?->gatherMiddleware() ?? []);
+        $this->assertContains('backoffice.permission:visits.view', $visitsIndexRoute?->gatherMiddleware() ?? []);
+        $this->assertContains('backoffice.permission:touches.view', $touchesIndexRoute?->gatherMiddleware() ?? []);
+    }
+
     public function test_it_protects_the_backoffice_flow_with_authentication(): void
     {
         $this->app['session']->flush();
@@ -123,6 +142,36 @@ final class BackofficeRoutesTest extends TestCase
 
         $this->get(route('admin.dashboard'))
             ->assertRedirect(route('login'));
+    }
+
+    public function test_it_denies_backoffice_screens_without_the_required_permissions(): void
+    {
+        $this->withSession([
+            'backoffice_role_name' => 'guest',
+            'backoffice_permissions' => [],
+        ]);
+
+        $this->get(route('admin.dashboard'))
+            ->assertForbidden();
+
+        $this->get(route('admin.reports.index'))
+            ->assertForbidden();
+    }
+
+    public function test_it_denies_backoffice_actions_without_the_action_permissions(): void
+    {
+        $this->withSession([
+            'backoffice_role_name' => 'guest',
+            'backoffice_permissions' => [
+                'leads.view',
+            ],
+        ]);
+
+        $this->post(route('admin.leads.notes.store', ['leadId' => 'lead-1']))
+            ->assertForbidden();
+
+        $this->patch(route('admin.leads.status.update', ['leadId' => 'lead-1']))
+            ->assertForbidden();
     }
 
     public function test_it_keeps_the_first_reporting_route_available_via_a_dedicated_controller(): void

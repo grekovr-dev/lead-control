@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature\App\Http\Controllers\Auth;
 
 use App\Models\User;
+use App\Support\BackofficePermissions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 final class BackofficeSessionControllerTest extends TestCase
@@ -39,6 +41,12 @@ final class BackofficeSessionControllerTest extends TestCase
         $user = User::factory()->create([
             'password' => Hash::make('password'),
         ]);
+        $role = Role::query()->create([
+            'name' => 'manager',
+            'guard_name' => 'web',
+        ]);
+
+        $user->syncRoles([$role]);
 
         $this->from(route('login'))
             ->post(route('login.store'), [
@@ -48,6 +56,8 @@ final class BackofficeSessionControllerTest extends TestCase
             ->assertRedirect(route('admin.dashboard'));
 
         $this->assertAuthenticatedAs($user);
+        $this->assertSame('manager', session('backoffice_role_name'));
+        $this->assertSame(BackofficePermissions::rolePermissions('manager'), session('backoffice_permissions'));
     }
 
     public function test_it_rejects_invalid_credentials_with_a_ukrainian_error(): void

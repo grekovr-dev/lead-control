@@ -1,6 +1,5 @@
 @php
-    $currentUser = auth()->user();
-    $currentRole = session('backoffice_role_name', 'Користувач');
+    $currentRole = \App\Support\BackofficePermissions::roleName();
 @endphp
 
 <div class="flex h-full flex-col space-y-6">
@@ -31,47 +30,53 @@
     </div>
 
     <nav class="space-y-2">
-        <a
-            href="{{ route('admin.dashboard') }}"
-            class="{{ $activeNav === 'dashboard' ? 'bg-slate-800 text-white' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }} flex h-10 items-center gap-3 overflow-hidden rounded-lg px-2.5 py-2 transition"
-            :class="sidebarCollapsed ? 'lg:mx-auto lg:w-10 lg:justify-center lg:px-0' : ''"
-            title="Огляд"
-        >
-            <span
-                class="icon-mask h-5 w-5 shrink-0"
-                style="--icon-url: url('{{ asset('images/backoffice/dashboard.svg') }}');"
-                aria-hidden="true"
-            ></span>
-            <span x-cloak x-show="showSidebarText()" class="flex-1">Огляд</span>
-        </a>
+        @backofficeCan('dashboard.view')
+            <a
+                href="{{ route('admin.dashboard') }}"
+                class="{{ $activeNav === 'dashboard' ? 'bg-slate-800 text-white' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }} flex h-10 items-center gap-3 overflow-hidden rounded-lg px-2.5 py-2 transition"
+                :class="sidebarCollapsed ? 'lg:mx-auto lg:w-10 lg:justify-center lg:px-0' : ''"
+                title="Огляд"
+            >
+                <span
+                    class="icon-mask h-5 w-5 shrink-0"
+                    style="--icon-url: url('{{ asset('images/backoffice/dashboard.svg') }}');"
+                    aria-hidden="true"
+                ></span>
+                <span x-cloak x-show="showSidebarText()" class="flex-1">Огляд</span>
+            </a>
+        @endbackofficeCan
 
-        <a
-            href="{{ route('admin.leads.index') }}"
-            class="{{ $activeNav === 'leads' ? 'bg-slate-800 text-white' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }} flex h-10 items-center gap-3 overflow-hidden rounded-lg px-2.5 py-2 transition"
-            :class="sidebarCollapsed ? 'lg:mx-auto lg:w-10 lg:justify-center lg:px-0' : ''"
-            title="Ліди"
-        >
-            <span
-                class="icon-mask h-5 w-5 shrink-0"
-                style="--icon-url: url('{{ asset('images/backoffice/leads.svg') }}');"
-                aria-hidden="true"
-            ></span>
-            <span x-cloak x-show="showSidebarText()" class="flex-1">Ліди</span>
-        </a>
+        @backofficeCan('leads.view')
+            <a
+                href="{{ route('admin.leads.index') }}"
+                class="{{ $activeNav === 'leads' ? 'bg-slate-800 text-white' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }} flex h-10 items-center gap-3 overflow-hidden rounded-lg px-2.5 py-2 transition"
+                :class="sidebarCollapsed ? 'lg:mx-auto lg:w-10 lg:justify-center lg:px-0' : ''"
+                title="Ліди"
+            >
+                <span
+                    class="icon-mask h-5 w-5 shrink-0"
+                    style="--icon-url: url('{{ asset('images/backoffice/leads.svg') }}');"
+                    aria-hidden="true"
+                ></span>
+                <span x-cloak x-show="showSidebarText()" class="flex-1">Ліди</span>
+            </a>
+        @endbackofficeCan
 
-        <a
-            href="{{ route('admin.reports.index') }}"
-            class="{{ $activeNav === 'reports' ? 'bg-slate-800 text-white' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }} flex h-10 items-center gap-3 overflow-hidden rounded-lg px-2.5 py-2 transition"
-            :class="sidebarCollapsed ? 'lg:mx-auto lg:w-10 lg:justify-center lg:px-0' : ''"
-            title="Звіти"
-        >
-            <span
-                class="icon-mask h-5 w-5 shrink-0"
-                style="--icon-url: url('{{ asset('images/backoffice/reports.svg') }}');"
-                aria-hidden="true"
-            ></span>
-            <span x-cloak x-show="showSidebarText()" class="flex-1">Звіти</span>
-        </a>
+        @backofficeCan('reports.view')
+            <a
+                href="{{ route('admin.reports.index') }}"
+                class="{{ $activeNav === 'reports' ? 'bg-slate-800 text-white' : 'text-slate-200 hover:bg-slate-800 hover:text-white' }} flex h-10 items-center gap-3 overflow-hidden rounded-lg px-2.5 py-2 transition"
+                :class="sidebarCollapsed ? 'lg:mx-auto lg:w-10 lg:justify-center lg:px-0' : ''"
+                title="Звіти"
+            >
+                <span
+                    class="icon-mask h-5 w-5 shrink-0"
+                    style="--icon-url: url('{{ asset('images/backoffice/reports.svg') }}');"
+                    aria-hidden="true"
+                ></span>
+                <span x-cloak x-show="showSidebarText()" class="flex-1">Звіти</span>
+            </a>
+        @endbackofficeCan
     </nav>
 
     <div class="mt-auto space-y-3">
@@ -94,7 +99,7 @@
                         {{ $currentRole }}
                     </span>
                     <span class="mt-1 block truncate text-sm font-medium text-white">
-                        {{ $currentUser?->email }}
+                        {{ auth()->user()?->email }}
                     </span>
                 </span>
             </button>

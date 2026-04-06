@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Support\BackofficePermissions;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -19,33 +20,6 @@ final class BackofficeAccessSeeder extends Seeder
 
     private const RESERVED_PLACEHOLDER = 'CHANGE_ME';
 
-    /**
-     * @var list<string>
-     */
-    private const PERMISSIONS = [
-        'dashboard.view',
-        'reports.view',
-        'leads.view',
-        'leads.note.create',
-        'leads.status.update',
-        'users.manage',
-        'horizon.view',
-    ];
-
-    /**
-     * @var array<string, list<string>>
-     */
-    private const ROLE_PERMISSIONS = [
-        'admin' => self::PERMISSIONS,
-        'manager' => [
-            'dashboard.view',
-            'reports.view',
-            'leads.view',
-            'leads.note.create',
-            'leads.status.update',
-        ],
-    ];
-
     public function run(): void
     {
         $guardName = (string) config('auth.defaults.guard', 'web');
@@ -58,7 +32,7 @@ final class BackofficeAccessSeeder extends Seeder
 
     private function seedPermissions(string $guardName): void
     {
-        foreach (self::PERMISSIONS as $permissionName) {
+        foreach (BackofficePermissions::all() as $permissionName) {
             Permission::query()->firstOrCreate([
                 'name' => $permissionName,
                 'guard_name' => $guardName,
@@ -68,7 +42,7 @@ final class BackofficeAccessSeeder extends Seeder
 
     private function seedRoles(string $guardName): void
     {
-        foreach (self::ROLE_PERMISSIONS as $roleName => $permissionNames) {
+        foreach (BackofficePermissions::ROLE_PERMISSIONS as $roleName => $permissionNames) {
             $role = Role::query()->firstOrCreate([
                 'name' => $roleName,
                 'guard_name' => $guardName,

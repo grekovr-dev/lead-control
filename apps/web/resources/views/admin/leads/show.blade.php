@@ -150,48 +150,54 @@
                         <p class="mt-1 text-sm text-slate-500">Ручна зміна поточного статусу ліда з фіксацією переходу в історії.</p>
                     </div>
 
-                    <form method="POST" action="{{ route('admin.leads.status.update', ['leadId' => $details->lead->leadId]) }}" class="mt-4 space-y-3">
-                        @csrf
-                        @method('PATCH')
+                    @backofficeCan('leads.status.update')
+                        <form method="POST" action="{{ route('admin.leads.status.update', ['leadId' => $details->lead->leadId]) }}" class="mt-4 space-y-3">
+                            @csrf
+                            @method('PATCH')
 
-                        <label class="block">
-                            <span class="mb-2 block text-sm font-medium text-slate-700">Новий статус</span>
-                            <select
-                                name="status"
-                                @if ($errors->has('status')) autofocus @endif
-                                @class([
-                                    'block w-full rounded-lg bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none',
-                                    'border-red-300 focus:border-red-500' => $errors->has('status'),
-                                    'border-slate-200 focus:border-teal-500' => !$errors->has('status'),
-                                ])
-                            >
-                                @foreach ($statusOptions as $value => $label)
-                                    <option value="{{ $value }}" @selected(old('status', $details->lead->status) === $value)>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </label>
+                            <label class="block">
+                                <span class="mb-2 block text-sm font-medium text-slate-700">Новий статус</span>
+                                <select
+                                    name="status"
+                                    @if ($errors->has('status')) autofocus @endif
+                                    @class([
+                                        'block w-full rounded-lg bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none',
+                                        'border-red-300 focus:border-red-500' => $errors->has('status'),
+                                        'border-slate-200 focus:border-teal-500' => !$errors->has('status'),
+                                    ])
+                                >
+                                    @foreach ($statusOptions as $value => $label)
+                                        <option value="{{ $value }}" @selected(old('status', $details->lead->status) === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </label>
 
-                        @if (session('success') && session('success_context') === 'lead_status')
-                            <div class="rounded-lg bg-green-100 px-3 py-2 text-sm text-green-800">
-                                {{ session('success') }}
+                            @if (session('success') && session('success_context') === 'lead_status')
+                                <div class="rounded-lg bg-green-100 px-3 py-2 text-sm text-green-800">
+                                    {{ session('success') }}
+                                </div>
+                            @endif
+
+                            @error('status')
+                                <div class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+
+                            <div class="flex items-center justify-end">
+                                <button
+                                    type="submit"
+                                    class="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+                                >
+                                    Зберегти статус
+                                </button>
                             </div>
-                        @endif
-
-                        @error('status')
-                            <div class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-                                {{ $message }}
-                            </div>
-                        @enderror
-
-                        <div class="flex items-center justify-end">
-                            <button
-                                type="submit"
-                                class="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-                            >
-                                Зберегти статус
-                            </button>
+                        </form>
+                    @elsebackofficeCan
+                        <div class="mt-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                            У вас немає прав на зміну статусу цього ліда.
                         </div>
-                    </form>
+                    @endbackofficeCan
                 </section>
 
                 <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -255,45 +261,51 @@
                         <p class="mt-1 text-sm text-slate-500">Короткий операційний контекст, який залишиться в таймлайні цього ліда.</p>
                     </div>
 
-                    <form method="POST" action="{{ route('admin.leads.notes.store', ['leadId' => $details->lead->leadId]) }}" class="mt-4 space-y-3">
-                        @csrf
+                    @backofficeCan('leads.note.create')
+                        <form method="POST" action="{{ route('admin.leads.notes.store', ['leadId' => $details->lead->leadId]) }}" class="mt-4 space-y-3">
+                            @csrf
 
-                        <label class="block">
-                            <span class="mb-2 block text-sm font-medium text-slate-700">Текст нотатки</span>
-                            <textarea
-                                name="note"
-                                rows="5"
-                                @if ($errors->has('note')) autofocus @endif
-                                @class([
-                                    'block w-full rounded-lg bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:outline-none',
-                                    'border-red-300 focus:border-red-500' => $errors->has('note'),
-                                    'border-slate-200 focus:border-teal-500' => !$errors->has('note'),
-                                ])
-                                placeholder="Наприклад, уточнити бюджет або передзвонити після 18:00"
-                            >{{ old('note') }}</textarea>
-                        </label>
+                            <label class="block">
+                                <span class="mb-2 block text-sm font-medium text-slate-700">Текст нотатки</span>
+                                <textarea
+                                    name="note"
+                                    rows="5"
+                                    @if ($errors->has('note')) autofocus @endif
+                                    @class([
+                                        'block w-full rounded-lg bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:outline-none',
+                                        'border-red-300 focus:border-red-500' => $errors->has('note'),
+                                        'border-slate-200 focus:border-teal-500' => !$errors->has('note'),
+                                    ])
+                                    placeholder="Наприклад, уточнити бюджет або передзвонити після 18:00"
+                                >{{ old('note') }}</textarea>
+                            </label>
 
-                        @if (session('success') && session('success_context') === 'lead_note')
-                            <div class="rounded-lg bg-green-100 px-3 py-2 text-sm text-green-800">
-                                {{ session('success') }}
+                            @if (session('success') && session('success_context') === 'lead_note')
+                                <div class="rounded-lg bg-green-100 px-3 py-2 text-sm text-green-800">
+                                    {{ session('success') }}
+                                </div>
+                            @endif
+
+                            @error('note')
+                                <div class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+
+                            <div class="flex items-center justify-end">
+                                <button
+                                    type="submit"
+                                    class="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+                                >
+                                    Додати нотатку
+                                </button>
                             </div>
-                        @endif
-
-                        @error('note')
-                            <div class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-                                {{ $message }}
-                            </div>
-                        @enderror
-
-                        <div class="flex items-center justify-end">
-                            <button
-                                type="submit"
-                                class="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-                            >
-                                Додати нотатку
-                            </button>
+                        </form>
+                    @elsebackofficeCan
+                        <div class="mt-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                            У вас немає прав на додавання нотаток до цього ліда.
                         </div>
-                    </form>
+                    @endbackofficeCan
                 </section>
 
                 <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureBackofficePermission;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'backoffice.permission' => EnsureBackofficePermission::class,
+        ]);
+
         $middleware->trustProxies(
             at: env('TRUSTED_PROXIES', []),
             headers: Request::HEADER_X_FORWARDED_FOR
