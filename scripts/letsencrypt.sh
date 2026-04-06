@@ -118,6 +118,43 @@ primary_certificate_is_valid() {
     [[ -f "$CERTS_DIR/fullchain.pem" ]] && ! is_self_signed_certificate "$CERTS_DIR/fullchain.pem"
 }
 
+find_latest_certificate_lineage() {
+    local live_dir="$REPO_ROOT/docker/certbot/conf/live"
+    local candidate
+    local newest_candidate=""
+    local newest_suffix=-1
+    local suffix
+    local base_name
+
+    while IFS= read -r candidate; do
+        [[ -d "$candidate" ]] || continue
+        [[ -f "$candidate/fullchain.pem" ]] || continue
+        [[ "$(basename "$candidate")" != "$PRIMARY_DOMAIN" ]] || continue
+
+        if is_self_signed_certificate "$candidate/fullchain.pem"; then
+            continue
+        fi
+
+        base_name="$(basename "$candidate")"
+        suffix="${base_name#${PRIMARY_DOMAIN}-}"
+        if [[ "$suffix" == "$base_name" ]] || ! [[ "$suffix" =~ ^[0-9]+$ ]]; then
+            continue
+        fi
+
+        if (( suffix > newest_suffix )); then
+            newest_suffix="$suffix"
+            newest_candidate="$candidate"
+        fi
+    done < <(find "$live_dir" -mindepth 1 -maxdepth 1 -type d -name "${PRIMARY_DOMAIN}-*")
+
+    if [[ -n "$newest_candidate" ]]; then
+        printf '%s' "$newest_candidate"
+        return 0
+    fi
+
+    return 1
+}
+
 link_primary_certificate_to_lineage() {
     local source_dir="$1"
     local live_dir="$REPO_ROOT/docker/certbot/conf/live"
@@ -155,8 +192,6 @@ issue() {
         certonly
         --webroot
         --webroot-path /var/www/certbot
-        --cert-name "$PRIMARY_DOMAIN"
-        --force-renewal
         --email "$LETS_ENCRYPT_EMAIL"
         --agree-tos
         --no-eff-email
@@ -176,6 +211,14 @@ issue() {
     fi
 
     cleanup_bootstrap_certificate
+
+    local latest_lineage
+
+    if latest_lineage="$(find_latest_certificate_lineage)"; then
+        link_primary_certificate_to_lineage "$latest_lineage"
+        docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
+        return
+    fi
 
     local certbot_output
 
