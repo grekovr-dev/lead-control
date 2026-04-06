@@ -16,7 +16,8 @@ use App\Http\Controllers\Inbound\Backoffice\VisitIndexController;
 use App\Http\Controllers\Inbound\Backoffice\VisitorAcquisitionFunnelReportController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('admin')
+Route::middleware('auth')
+    ->prefix('admin')
     ->name('admin.')
     ->group(function (): void {
         Route::get('/', DashboardController::class)->name('dashboard');

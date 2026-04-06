@@ -116,6 +116,15 @@ final class BackofficeRoutesTest extends TestCase
         $this->assertSame(url('/admin/visits'), route('admin.visits.index'));
     }
 
+    public function test_it_protects_the_backoffice_flow_with_authentication(): void
+    {
+        $this->app['session']->flush();
+        $this->app['auth']->guard()->forgetUser();
+
+        $this->get(route('admin.dashboard'))
+            ->assertRedirect(route('login'));
+    }
+
     public function test_it_keeps_the_first_reporting_route_available_via_a_dedicated_controller(): void
     {
         $readModel = Mockery::mock(LeadStatusReportReadModel::class);

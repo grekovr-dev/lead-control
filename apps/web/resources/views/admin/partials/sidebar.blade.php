@@ -1,3 +1,8 @@
+@php
+    $currentUser = auth()->user();
+    $currentRole = session('backoffice_role_name', 'Користувач');
+@endphp
+
 <div class="flex h-full flex-col space-y-6">
     <div class="flex h-12 items-start justify-between gap-3">
         <div class="flex min-h-12 min-w-0 items-start gap-3">
@@ -69,7 +74,34 @@
         </a>
     </nav>
 
-    <div x-cloak x-show="showSidebarText()" class="mt-auto rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-sm text-slate-400">
-        Працюйте з бекофісом і на телефоні: меню можна відкрити, закрити або згорнути до режиму з іконками.
+    <div class="mt-auto space-y-3">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button
+                type="submit"
+                class="flex h-auto w-full items-center gap-3 overflow-hidden rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-3 text-left text-slate-200 transition hover:bg-slate-800 hover:text-white"
+                :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''"
+                title="Вийти"
+            >
+                <span
+                    class="icon-mask h-5 w-5 shrink-0"
+                    style="--icon-url: url('{{ asset('images/backoffice/logout.svg') }}');"
+                    aria-hidden="true"
+                ></span>
+
+                <span x-cloak x-show="showSidebarText()" class="min-w-0 flex-1 text-sm">
+                    <span class="block text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                        {{ $currentRole }}
+                    </span>
+                    <span class="mt-1 block truncate text-sm font-medium text-white">
+                        {{ $currentUser?->email }}
+                    </span>
+                </span>
+            </button>
+        </form>
+
+        <div x-cloak x-show="showSidebarText()" class="rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-sm text-slate-400">
+            Працюйте з бекофісом і на телефоні: меню можна відкрити, закрити або згорнути до режиму з іконками.
+        </div>
     </div>
 </div>
