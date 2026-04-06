@@ -84,6 +84,11 @@ is_self_signed_certificate() {
 bootstrap() {
     mkdir -p "$CERTS_DIR"
 
+    if primary_certificate_is_valid; then
+        echo "Primary certificate already exists for $PRIMARY_DOMAIN"
+        return
+    fi
+
     if [[ -s "$CERTS_DIR/fullchain.pem" && -s "$CERTS_DIR/privkey.pem" ]]; then
         echo "Temporary certificate already exists for $PRIMARY_DOMAIN"
         return
