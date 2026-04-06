@@ -57,7 +57,7 @@ PRIMARY_DOMAIN="${LETS_ENCRYPT_PRIMARY_DOMAIN}"
 CERTS_DIR="$REPO_ROOT/docker/certbot/conf/live/$PRIMARY_DOMAIN"
 CHALLENGE_DIR="$REPO_ROOT/docker/certbot/www/.well-known/acme-challenge"
 
-mkdir -p "$CERTS_DIR" "$CHALLENGE_DIR"
+mkdir -p "$REPO_ROOT/docker/certbot/conf/live" "$CHALLENGE_DIR"
 
 build_san_list() {
     local san=""
@@ -82,6 +82,8 @@ is_self_signed_certificate() {
 }
 
 bootstrap() {
+    mkdir -p "$CERTS_DIR"
+
     if [[ -s "$CERTS_DIR/fullchain.pem" && -s "$CERTS_DIR/privkey.pem" ]]; then
         echo "Temporary certificate already exists for $PRIMARY_DOMAIN"
         return
@@ -133,8 +135,12 @@ ensure_primary_certificate_link() {
     local live_dir="$REPO_ROOT/docker/certbot/conf/live"
     local target_dir="$live_dir/$PRIMARY_DOMAIN"
 
-    if [[ -e "$target_dir" ]]; then
+    if [[ -L "$target_dir" ]]; then
         return
+    fi
+
+    if [[ -d "$target_dir" ]]; then
+        rmdir "$target_dir"
     fi
 
     echo "Linking $PRIMARY_DOMAIN to $(basename "$source_dir")"
