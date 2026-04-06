@@ -118,37 +118,6 @@ primary_certificate_is_valid() {
     [[ -f "$CERTS_DIR/fullchain.pem" ]] && ! is_self_signed_certificate "$CERTS_DIR/fullchain.pem"
 }
 
-find_latest_certificate_lineage() {
-    local live_dir="$REPO_ROOT/docker/certbot/conf/live"
-    local candidate
-    local newest_candidate=""
-    local newest_mtime=-1
-    local candidate_mtime
-
-    for candidate in "$live_dir"/"$PRIMARY_DOMAIN"*; do
-        [[ -d "$candidate" ]] || continue
-        [[ "$(basename "$candidate")" != "$PRIMARY_DOMAIN" ]] || continue
-        [[ -f "$candidate/fullchain.pem" ]] || continue
-
-        if is_self_signed_certificate "$candidate/fullchain.pem"; then
-            continue
-        fi
-
-        candidate_mtime="$(stat -c '%Y' "$candidate/fullchain.pem")"
-        if (( candidate_mtime > newest_mtime )); then
-            newest_mtime="$candidate_mtime"
-            newest_candidate="$candidate"
-        fi
-    done
-
-    if [[ -n "$newest_candidate" ]]; then
-        printf '%s' "$newest_candidate"
-        return 0
-    fi
-
-    return 1
-}
-
 link_primary_certificate_to_lineage() {
     local source_dir="$1"
     local live_dir="$REPO_ROOT/docker/certbot/conf/live"
@@ -161,6 +130,24 @@ link_primary_certificate_to_lineage() {
         cd "$live_dir"
         ln -s "$(basename "$source_dir")" "$PRIMARY_DOMAIN"
     )
+}
+
+extract_lineage_from_certbot_output() {
+    local certbot_output="$1"
+    local lineage
+
+    lineage="$(
+        printf '%s\n' "$certbot_output" \
+            | sed -n 's#^Certificate is saved at: .*/live/\([^/]\+\)/fullchain\.pem$#\1#p' \
+            | tail -n 1
+    )"
+
+    if [[ -n "$lineage" ]]; then
+        printf '%s' "$lineage"
+        return 0
+    fi
+
+    return 1
 }
 
 issue() {
@@ -190,13 +177,22 @@ issue() {
 
     cleanup_bootstrap_certificate
 
-    docker compose -f "$COMPOSE_FILE" run --rm certbot \
-        "${certbot_args[@]}"
+    local certbot_output
 
-    if latest_lineage="$(find_latest_certificate_lineage)"; then
-        link_primary_certificate_to_lineage "$latest_lineage"
+    if ! certbot_output="$(
+        docker compose -f "$COMPOSE_FILE" run --rm certbot \
+            "${certbot_args[@]}" 2>&1
+    )"; then
+        printf '%s\n' "$certbot_output" >&2
+        exit 1
+    fi
+
+    printf '%s\n' "$certbot_output"
+
+    if lineage_name="$(extract_lineage_from_certbot_output "$certbot_output")"; then
+        link_primary_certificate_to_lineage "$REPO_ROOT/docker/certbot/conf/live/$lineage_name"
     else
-        echo "Could not find a non-bootstrap certificate lineage for $PRIMARY_DOMAIN" >&2
+        echo "Could not determine issued certificate lineage for $PRIMARY_DOMAIN" >&2
         exit 1
     fi
 
