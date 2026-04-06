@@ -118,6 +118,51 @@ primary_certificate_is_valid() {
     [[ -f "$CERTS_DIR/fullchain.pem" ]] && ! is_self_signed_certificate "$CERTS_DIR/fullchain.pem"
 }
 
+find_latest_certificate_lineage() {
+    local live_dir="$REPO_ROOT/docker/certbot/conf/live"
+    local candidate
+    local newest_candidate=""
+    local newest_mtime=-1
+    local candidate_mtime
+
+    for candidate in "$live_dir"/"$PRIMARY_DOMAIN"*; do
+        [[ -d "$candidate" ]] || continue
+        [[ "$(basename "$candidate")" != "$PRIMARY_DOMAIN" ]] || continue
+        [[ -f "$candidate/fullchain.pem" ]] || continue
+
+        if is_self_signed_certificate "$candidate/fullchain.pem"; then
+            continue
+        fi
+
+        candidate_mtime="$(stat -c '%Y' "$candidate/fullchain.pem")"
+        if (( candidate_mtime > newest_mtime )); then
+            newest_mtime="$candidate_mtime"
+            newest_candidate="$candidate"
+        fi
+    done
+
+    if [[ -n "$newest_candidate" ]]; then
+        printf '%s' "$newest_candidate"
+        return 0
+    fi
+
+    return 1
+}
+
+link_primary_certificate_to_lineage() {
+    local source_dir="$1"
+    local live_dir="$REPO_ROOT/docker/certbot/conf/live"
+    local target_dir="$live_dir/$PRIMARY_DOMAIN"
+
+    rm -rf "$target_dir"
+
+    echo "Linking $PRIMARY_DOMAIN to $(basename "$source_dir")"
+    (
+        cd "$live_dir"
+        ln -s "$(basename "$source_dir")" "$PRIMARY_DOMAIN"
+    )
+}
+
 issue() {
     local -a certbot_args=(
         certonly
@@ -148,8 +193,10 @@ issue() {
     docker compose -f "$COMPOSE_FILE" run --rm certbot \
         "${certbot_args[@]}"
 
-    if ! primary_certificate_is_valid; then
-        echo "Primary certificate was not created at $CERTS_DIR" >&2
+    if latest_lineage="$(find_latest_certificate_lineage)"; then
+        link_primary_certificate_to_lineage "$latest_lineage"
+    else
+        echo "Could not find a non-bootstrap certificate lineage for $PRIMARY_DOMAIN" >&2
         exit 1
     fi
 
