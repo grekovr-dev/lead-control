@@ -27,6 +27,13 @@ class CaptureServiceProvider extends ServiceProvider
         $this->app->bind(VisitorIdCookieConfig::class, function ($app): VisitorIdCookieConfig {
             return new VisitorIdCookieConfig(
                 lifetimeDays: (int) $app['config']->get('inbound.capture.visitor_cookie_lifetime_days', 30),
+                secure: (bool) $app['config']->get('inbound.capture.cookie_secure', true),
+            );
+        });
+
+        $this->app->bind(\App\Http\Cookies\Inbound\Capture\AttributionCookieStore::class, function ($app) {
+            return new \App\Http\Cookies\Inbound\Capture\AttributionCookieStore(
+                secure: (bool) $app['config']->get('inbound.capture.cookie_secure', true),
             );
         });
 

@@ -23,6 +23,7 @@ final class VisitorIdCookieStoreTest extends TestCase
         $this->assertSame($store->cookieName(), $cookie->getName());
         $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $cookie->getValue());
         $this->assertSame('/', $cookie->getPath());
+        $this->assertTrue($cookie->isSecure());
         $this->assertTrue($cookie->isHttpOnly());
         $this->assertSame('lax', strtolower((string) $cookie->getSameSite()));
         $this->assertGreaterThan(time(), $cookie->getExpiresTime());
