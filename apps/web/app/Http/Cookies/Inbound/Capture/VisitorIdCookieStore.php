@@ -25,7 +25,7 @@ final class VisitorIdCookieStore
             new DateTimeImmutable(sprintf('+%d days', $this->config->lifetimeDays())),
             '/',
             null,
-            false,
+            $this->config->secure(),
             true,
             false,
             Cookie::SAMESITE_LAX,

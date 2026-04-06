@@ -13,6 +13,7 @@ final class AttributionCookieStore
     public function __construct(
         private string $cookieName = 'inbound_attribution',
         private int $lifetimeMinutes = 43200,
+        private bool $secure = true,
     ) {}
 
     public function cookieName(): string
@@ -65,7 +66,7 @@ final class AttributionCookieStore
             new DateTimeImmutable(sprintf('+%d minutes', $this->lifetimeMinutes)),
             '/',
             null,
-            false,
+            $this->secure,
             true,
             false,
             Cookie::SAMESITE_LAX,
@@ -80,7 +81,7 @@ final class AttributionCookieStore
             new DateTimeImmutable('-1 day'),
             '/',
             null,
-            false,
+            $this->secure,
             true,
             false,
             Cookie::SAMESITE_LAX,
