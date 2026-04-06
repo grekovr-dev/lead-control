@@ -17,6 +17,7 @@ final class StoreLeadNoteControllerTest extends TestCase
     {
         $user = User::factory()->create([
             'id' => 42,
+            'name' => 'Test User 42',
         ]);
 
         $this->createLead('lead-123');
@@ -41,7 +42,7 @@ final class StoreLeadNoteControllerTest extends TestCase
             ->assertSeeText([
                 'Додати нотатку',
                 'Need to call back tomorrow.',
-                'Автор #42',
+                'Автор: Test User 42',
             ]);
     }
 
@@ -49,6 +50,7 @@ final class StoreLeadNoteControllerTest extends TestCase
     {
         $user = User::factory()->create([
             'id' => 42,
+            'name' => 'Test User 42',
         ]);
 
         $this->createLead('lead-123');
@@ -70,6 +72,7 @@ final class StoreLeadNoteControllerTest extends TestCase
     {
         $user = User::factory()->create([
             'id' => 42,
+            'name' => 'Test User 42',
         ]);
 
         $this->actingAs($user)

@@ -152,9 +152,10 @@ final class LeadShowControllerTest extends TestCase
             'Статус змінено',
             'Додано нотатку',
             'Need to call back tomorrow.',
+            'Автор: Test User 42',
         ]);
         $response->assertSee('data-lead-details-back-button', false);
-        $response->assertSee('href="' . route('admin.leads.index') . '"', false);
+        $response->assertSee('href="'.route('admin.leads.index').'"', false);
     }
 
     public function test_it_returns_not_found_when_the_lead_is_missing(): void

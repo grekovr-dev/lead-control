@@ -124,7 +124,9 @@
                                             @endif
 
                                             @if ($event->authorId !== null)
-                                                <span class="rounded-full bg-white px-2.5 py-1">Автор #{{ $event->authorId }}</span>
+                                                <span class="rounded-full bg-white px-2.5 py-1">
+                                                    Автор: {{ $event->authorLabel ?? ('#'.$event->authorId) }}
+                                                </span>
                                             @endif
 
                                             @if ($event->landingUrl !== null)
