@@ -73,6 +73,7 @@ final class AttributionCookieStoreTest extends TestCase
 
         $this->assertSame($store->cookieName(), $cookie->getName());
         $this->assertSame('/', $cookie->getPath());
+        $this->assertTrue($cookie->isSecure());
         $this->assertTrue($cookie->isHttpOnly());
         $this->assertSame('lax', strtolower((string) $cookie->getSameSite()));
         $this->assertSame($attribution->toArray(), json_decode((string) $cookie->getValue(), true, 512, JSON_THROW_ON_ERROR));
@@ -88,6 +89,7 @@ final class AttributionCookieStoreTest extends TestCase
         $this->assertSame('', $cookie->getValue());
         $this->assertLessThan(time(), $cookie->getExpiresTime());
         $this->assertSame('/', $cookie->getPath());
+        $this->assertTrue($cookie->isSecure());
         $this->assertTrue($cookie->isHttpOnly());
         $this->assertSame('lax', strtolower((string) $cookie->getSameSite()));
     }

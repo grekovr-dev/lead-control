@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\App\Providers\Inbound;
 
+use App\Http\Cookies\Inbound\Capture\AttributionCookieStore;
 use App\Http\Cookies\Inbound\Capture\VisitorIdCookieConfig;
 use DateTimeImmutable;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
@@ -69,10 +70,22 @@ final class CaptureContainerWiringTest extends TestCase
     public function test_it_binds_visitor_id_cookie_config_using_laravel_config(): void
     {
         $this->app['config']->set('inbound.capture.visitor_cookie_lifetime_days', 45);
+        $this->app['config']->set('inbound.capture.cookie_secure', false);
 
         $config = $this->app->make(VisitorIdCookieConfig::class);
 
         $this->assertSame('inbound_visitor_id', $config->cookieName());
         $this->assertSame(45, $config->lifetimeDays());
+        $this->assertFalse($config->secure());
+    }
+
+    public function test_it_binds_attribution_cookie_store_using_laravel_config(): void
+    {
+        $this->app['config']->set('inbound.capture.cookie_secure', false);
+
+        $store = $this->app->make(AttributionCookieStore::class);
+        $cookie = $store->make(Attribution::empty());
+
+        $this->assertFalse($cookie->isSecure());
     }
 }

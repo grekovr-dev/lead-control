@@ -45,6 +45,8 @@ apps/web/bootstrap/cache/*
 # =========================
 docker/certs/*
 !docker/certs/.gitignore
+docker/certbot/*
+!docker/certbot/.gitignore
 
 # =========================
 # Database
