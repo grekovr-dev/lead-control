@@ -114,36 +114,8 @@ cleanup_bootstrap_certificate() {
     rm -rf "$CERTS_DIR"
 }
 
-find_existing_certificate_lineage() {
-    local live_dir="$REPO_ROOT/docker/certbot/conf/live"
-    local candidate
-
-    for candidate in "$live_dir"/"$PRIMARY_DOMAIN"*; do
-        [[ -d "$candidate" ]] || continue
-
-        if [[ -f "$candidate/fullchain.pem" ]] && ! is_self_signed_certificate "$candidate/fullchain.pem"; then
-            printf '%s' "$candidate"
-            return 0
-        fi
-    done
-
-    return 1
-}
-
-ensure_primary_certificate_link() {
-    local source_dir="$1"
-    local live_dir="$REPO_ROOT/docker/certbot/conf/live"
-    local target_dir="$live_dir/$PRIMARY_DOMAIN"
-
-    if [[ -e "$target_dir" || -L "$target_dir" ]]; then
-        rm -rf "$target_dir"
-    fi
-
-    echo "Linking $PRIMARY_DOMAIN to $(basename "$source_dir")"
-    (
-        cd "$live_dir"
-        ln -s "$(basename "$source_dir")" "$PRIMARY_DOMAIN"
-    )
+primary_certificate_is_valid() {
+    [[ -f "$CERTS_DIR/fullchain.pem" ]] && ! is_self_signed_certificate "$CERTS_DIR/fullchain.pem"
 }
 
 issue() {
@@ -151,6 +123,8 @@ issue() {
         certonly
         --webroot
         --webroot-path /var/www/certbot
+        --cert-name "$PRIMARY_DOMAIN"
+        --force-renewal
         --email "$LETS_ENCRYPT_EMAIL"
         --agree-tos
         --no-eff-email
@@ -163,19 +137,20 @@ issue() {
         certbot_args+=(-d "$domain")
     done
 
-    cleanup_bootstrap_certificate
-
-    if existing_certificate_lineage="$(find_existing_certificate_lineage)"; then
-        ensure_primary_certificate_link "$existing_certificate_lineage"
+    if primary_certificate_is_valid; then
+        echo "Primary certificate already exists for $PRIMARY_DOMAIN"
         docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
         return
     fi
 
+    cleanup_bootstrap_certificate
+
     docker compose -f "$COMPOSE_FILE" run --rm certbot \
         "${certbot_args[@]}"
 
-    if existing_certificate_lineage="$(find_existing_certificate_lineage)"; then
-        ensure_primary_certificate_link "$existing_certificate_lineage"
+    if ! primary_certificate_is_valid; then
+        echo "Primary certificate was not created at $CERTS_DIR" >&2
+        exit 1
     fi
 
     docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
