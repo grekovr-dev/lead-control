@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\BackofficeLoginRequest;
+use App\Models\User;
 use App\Support\BackofficePermissions;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -26,7 +27,10 @@ class BackofficeSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
-        $roleName = $request->user()?->getRoleNames()->first() ?? 'Користувач';
+        $user = $request->user();
+        $roleName = $user instanceof User
+            ? ($user->getRoleNames()->first() ?? 'Користувач')
+            : 'Користувач';
         $request->session()->put('backoffice_role_name', $roleName);
         $request->session()->put('backoffice_permissions', BackofficePermissions::rolePermissions($roleName));
 

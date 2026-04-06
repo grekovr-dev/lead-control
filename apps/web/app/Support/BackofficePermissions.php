@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 final class BackofficePermissions
@@ -82,7 +83,7 @@ final class BackofficePermissions
 
         $user = Auth::user();
 
-        if ($user === null) {
+        if (! $user instanceof User) {
             return [];
         }
 
@@ -101,7 +102,7 @@ final class BackofficePermissions
 
         $user = Auth::user();
 
-        if ($user === null) {
+        if (! $user instanceof User) {
             return 'Користувач';
         }
 
