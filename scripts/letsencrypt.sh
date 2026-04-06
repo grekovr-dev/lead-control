@@ -112,6 +112,38 @@ cleanup_bootstrap_certificate() {
     rm -rf "$CERTS_DIR"
 }
 
+find_existing_certificate_lineage() {
+    local live_dir="$REPO_ROOT/docker/certbot/conf/live"
+    local candidate
+
+    for candidate in "$live_dir"/"$PRIMARY_DOMAIN"*; do
+        [[ -d "$candidate" ]] || continue
+
+        if [[ -f "$candidate/fullchain.pem" ]] && ! is_self_signed_certificate "$candidate/fullchain.pem"; then
+            printf '%s' "$candidate"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+ensure_primary_certificate_link() {
+    local source_dir="$1"
+    local live_dir="$REPO_ROOT/docker/certbot/conf/live"
+    local target_dir="$live_dir/$PRIMARY_DOMAIN"
+
+    if [[ -e "$target_dir" ]]; then
+        return
+    fi
+
+    echo "Linking $PRIMARY_DOMAIN to $(basename "$source_dir")"
+    (
+        cd "$live_dir"
+        ln -s "$(basename "$source_dir")" "$PRIMARY_DOMAIN"
+    )
+}
+
 issue() {
     local -a certbot_args=(
         certonly
@@ -131,8 +163,18 @@ issue() {
 
     cleanup_bootstrap_certificate
 
+    if existing_certificate_lineage="$(find_existing_certificate_lineage)"; then
+        ensure_primary_certificate_link "$existing_certificate_lineage"
+        docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
+        return
+    fi
+
     docker compose -f "$COMPOSE_FILE" run --rm certbot \
         "${certbot_args[@]}"
+
+    if existing_certificate_lineage="$(find_existing_certificate_lineage)"; then
+        ensure_primary_certificate_link "$existing_certificate_lineage"
+    fi
 
     docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
 }
