@@ -135,12 +135,8 @@ ensure_primary_certificate_link() {
     local live_dir="$REPO_ROOT/docker/certbot/conf/live"
     local target_dir="$live_dir/$PRIMARY_DOMAIN"
 
-    if [[ -L "$target_dir" ]]; then
-        return
-    fi
-
-    if [[ -d "$target_dir" ]]; then
-        rmdir "$target_dir"
+    if [[ -e "$target_dir" || -L "$target_dir" ]]; then
+        rm -rf "$target_dir"
     fi
 
     echo "Linking $PRIMARY_DOMAIN to $(basename "$source_dir")"
