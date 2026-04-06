@@ -11,23 +11,24 @@ This repository uses a monorepo layout:
 
 ## VPS bootstrap
 
-Use this flow for the first production deployment on a VPS.
+Use this flow for the first production deployment on a fresh VPS.
 
-### 1. Clone the repository into an existing directory
+### 1. Prepare an empty directory and clone the repository
 
 ```bash
+mkdir -p /srv/lead-control
 cd /srv/lead-control
 git clone git@github.com:<org>/<repo>.git .
 ```
 
-If the directory already exists and the repo is already cloned, update it instead:
+If the repository is already cloned, update it instead:
 
 ```bash
 cd /srv/lead-control
-git pull
+git pull --ff-only
 ```
 
-### 2. Prepare the production env file
+### 2. Create the production env file
 
 Copy the example file and fill in real production values:
 
@@ -42,47 +43,55 @@ At minimum, set:
 - `DB_PASSWORD`
 - `MYSQL_PASSWORD`
 - `MYSQL_ROOT_PASSWORD`
+- `LETS_ENCRYPT_PRIMARY_DOMAIN`
+- `LETS_ENCRYPT_DOMAINS`
+- `LETS_ENCRYPT_EMAIL`
 
-For the first bootstrap, `APP_URL` can point to the server IP address.
+For the very first bootstrap, `APP_URL` can temporarily point to the server IP address.
 
-### 3. Generate `APP_KEY`
+### 3. Make sure the production nginx template is present
 
-Build only the `app` service and print the key:
+The production stack uses:
 
-```bash
-docker compose -f docker-compose.prod.yml run --rm --no-deps app php /var/www/apps/web/artisan key:generate --show
-```
+- `docker/nginx.prod.conf.template`
 
-Copy the generated value into `.env.production` as `APP_KEY`.
+The certbot directories are already present in the repository checkout on the VPS, so you do not need to create them manually.
 
-### 4. Start the production stack
+### 4. Run the first production release
 
-```bash
-docker compose -f docker-compose.prod.yml up -d --build
-```
-
-### 5. Run migrations
+Use the release script for the initial bootstrap:
 
 ```bash
-docker compose -f docker-compose.prod.yml exec -T app php /var/www/apps/web/artisan migrate --force
+./scripts/release.sh
 ```
 
-### 6. Rebuild caches
+This script will:
+
+- skip the database backup if the database is not running yet
+- prepare temporary TLS material for nginx
+- start the production stack
+- run migrations
+- rebuild Laravel caches
+- restart Horizon
+
+### 5. Issue the real Let's Encrypt certificate
+
+After the stack is up and DNS points to the VPS, issue the production certificate:
 
 ```bash
-docker compose -f docker-compose.prod.yml exec -T app php /var/www/apps/web/artisan optimize:clear
-docker compose -f docker-compose.prod.yml exec -T app php /var/www/apps/web/artisan config:cache
-docker compose -f docker-compose.prod.yml exec -T app php /var/www/apps/web/artisan route:cache
-docker compose -f docker-compose.prod.yml exec -T app php /var/www/apps/web/artisan view:cache
+./scripts/letsencrypt.sh issue
 ```
 
-### 7. Make a backup before each later release
+### 6. Verify HTTPS
 
 ```bash
-./scripts/backup-db.sh
+curl -I http://your-domain
+curl -I https://your-domain
 ```
 
-### 8. Use the manual release flow for later deployments
+You should see HTTP redirecting to HTTPS and HTTPS serving the site normally.
+
+### 7. Use the manual release flow for later deployments
 
 ```bash
 ./scripts/release.sh

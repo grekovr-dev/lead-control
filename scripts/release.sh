@@ -21,13 +21,22 @@ if [[ -n "$(git status --porcelain)" ]]; then
     exit 1
 fi
 
-echo "[1/5] Creating database backup"
-"$SCRIPT_DIR/backup-db.sh"
+db_container_id="$(docker compose -f "$COMPOSE_FILE" ps -q db || true)"
 
-echo "[2/5] Updating code from ${GIT_REMOTE}/${GIT_BRANCH}"
+if [[ -n "$db_container_id" ]]; then
+    echo "[1/6] Creating database backup"
+    "$SCRIPT_DIR/backup-db.sh"
+else
+    echo "[1/6] Skipping database backup because the database service is not running yet"
+fi
+
+echo "[2/6] Updating code from ${GIT_REMOTE}/${GIT_BRANCH}"
 git pull --ff-only "$GIT_REMOTE" "$GIT_BRANCH"
 
-echo "[3/5] Rebuilding and starting production services"
+echo "[3/6] Preparing temporary TLS material for nginx"
+"$SCRIPT_DIR/letsencrypt.sh" bootstrap
+
+echo "[4/6] Rebuilding and starting production services"
 docker compose -f "$COMPOSE_FILE" up -d --build --remove-orphans \
     public-assets-init \
     app \
@@ -38,11 +47,11 @@ docker compose -f "$COMPOSE_FILE" up -d --build --remove-orphans \
 
 docker compose -f "$COMPOSE_FILE" restart nginx
 
-echo "[4/5] Clearing caches and running database migrations"
+echo "[5/6] Clearing caches and running database migrations"
 docker compose -f "$COMPOSE_FILE" exec -T app php /var/www/apps/web/artisan optimize:clear
 docker compose -f "$COMPOSE_FILE" exec -T app php /var/www/apps/web/artisan migrate --force
 
-echo "[5/5] Rebuilding Laravel caches and restarting Horizon"
+echo "[6/6] Rebuilding Laravel caches and restarting Horizon"
 docker compose -f "$COMPOSE_FILE" exec -T app php /var/www/apps/web/artisan config:cache
 docker compose -f "$COMPOSE_FILE" exec -T app php /var/www/apps/web/artisan route:cache
 docker compose -f "$COMPOSE_FILE" exec -T app php /var/www/apps/web/artisan view:cache
