@@ -55,7 +55,7 @@ services:
     restart: unless-stopped
     networks:
       - leadnet
-      
+
   horizon:
     build:
       context: .
@@ -73,22 +73,22 @@ services:
     networks:
       - leadnet
 
-  queue:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      args:
-        UID: ${UID}
-        GID: ${GID}
-    container_name: lead_queue
-    volumes:
-      - ./:/var/www
-    depends_on:
-      - redis
-      - db
-    networks:
-      - leadnet
-    command: ["php", "/var/www/apps/web/artisan", "queue:work", "redis", "--sleep=1", "--tries=3", "--timeout=90", "-v"]
+  # queue:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/Dockerfile
+  #     args:
+  #       UID: ${UID}
+  #       GID: ${GID}
+  #   container_name: lead_queue
+  #   volumes:
+  #     - ./:/var/www
+  #   depends_on:
+  #     - redis
+  #     - db
+  #   networks:
+  #     - leadnet
+  #   command: ["php", "/var/www/apps/web/artisan", "queue:work", "redis", "--sleep=1", "--tries=3", "--timeout=90", "-v"]
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
