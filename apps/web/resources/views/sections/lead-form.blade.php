@@ -4,7 +4,7 @@
 
 <section id="lead-form" class="px-6 pb-20 pt-12 md:pb-24">
     <div class="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <div class="rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.45)] md:p-8">
+        <div class="min-w-0 rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.45)] md:p-8">
             <p class="text-sm font-semibold uppercase tracking-[0.14em] text-teal-700">Заявка</p>
             <h2 class="mt-3 text-3xl font-semibold leading-tight text-slate-900">
                 Розрахуємо вартість під ваш запит
@@ -14,30 +14,30 @@
             </p>
 
             <ul class="mt-6 space-y-3 text-sm text-slate-600">
-                <li class="inline-flex items-center gap-2">
-                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
+                <li class="flex items-start gap-2">
+                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
                     Швидко уточнимо деталі вашого запиту
                 </li>
-                <li class="inline-flex items-center gap-2">
-                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
+                <li class="flex items-start gap-2">
+                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
                     Підбір матеріалу під бюджет
                 </li>
-                <li class="inline-flex items-center gap-2">
-                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
+                <li class="flex items-start gap-2">
+                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
                     Попередній кошторис до виїзду
                 </li>
-                <li class="inline-flex items-center gap-2">
-                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
+                <li class="flex items-start gap-2">
+                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
                     Підкажемо варіант без зайвих витрат
                 </li>
-                <li class="inline-flex items-center gap-2">
-                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
+                <li class="flex items-start gap-2">
+                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
                     Пояснимо, що впливає на кінцеву вартість
                 </li>
             </ul>
         </div>
 
-        <div class="rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_20px_40px_-28px_rgba(15,23,42,0.45)] md:p-8">
+        <div class="min-w-0 rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_20px_40px_-28px_rgba(15,23,42,0.45)] md:p-8">
             <div
                 x-cloak
                 x-show="leadFormState === 'success'"
@@ -106,7 +106,7 @@
                         >
                     </div>
                     <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                        Введіть 9 цифр після <span class="font-medium text-slate-700">{{ $leadPhoneCountryCode }}</span>, наприклад <span class="font-medium text-slate-700">50 111 22 33</span>.
+                        Введіть 9 цифр після <span class="font-medium text-slate-700">{{ $leadPhoneCountryCode }}</span>, наприклад <span class="whitespace-nowrap font-medium text-slate-700">50 111 22 33</span>.
                     </p>
                     <p x-cloak x-show="leadFormFieldErrors.phone" class="mt-2 text-xs text-rose-600" x-text="leadFormFieldErrors.phone ? leadFormFieldErrors.phone[0] : ''"></p>
                 </div>
