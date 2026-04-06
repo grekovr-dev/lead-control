@@ -19,6 +19,7 @@ apps/web/storage/*
 apps/web/bootstrap/cache/*
 
 docker/certs/
+docker/certbot/
 
 *.log
 *.sqlite
