@@ -6,7 +6,9 @@ namespace App\Http\Controllers\Inbound\Backoffice;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inbound\Backoffice\StoreLeadNoteRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Inbound\Application\Actions\Backoffice\AddLeadNote\AddLeadNoteAction;
 use Inbound\Application\Actions\Backoffice\AddLeadNote\LeadNotFoundException;
 use InvalidArgumentException;
@@ -17,8 +19,7 @@ final class StoreLeadNoteController extends Controller
         StoreLeadNoteRequest $request,
         AddLeadNoteAction $action,
         string $leadId,
-    ): RedirectResponse
-    {
+    ): RedirectResponse {
         try {
             $action($request->toCommand(
                 leadId: $leadId,
@@ -39,7 +40,13 @@ final class StoreLeadNoteController extends Controller
 
     private function resolveAuthorId(): ?int
     {
-        $authorId = auth()->id();
+        $user = Auth::user();
+
+        if (! $user instanceof User) {
+            return null;
+        }
+
+        $authorId = $user->getAuthIdentifier();
 
         if (is_int($authorId) && $authorId > 0) {
             return $authorId;

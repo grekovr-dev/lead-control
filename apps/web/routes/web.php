@@ -1,9 +1,14 @@
 <?php
 
-use App\Http\Controllers\Inbound\Capture\LandingController;
+use App\Http\Controllers\Auth\BackofficeSessionController;
 use App\Http\Controllers\Inbound\Capture\CreateLeadController;
+use App\Http\Controllers\Inbound\Capture\LandingController;
 use App\Http\Controllers\Inbound\Capture\RegisterController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/login', [BackofficeSessionController::class, 'create'])->name('login');
+Route::post('/login', [BackofficeSessionController::class, 'store'])->name('login.store');
+Route::post('/logout', [BackofficeSessionController::class, 'destroy'])->middleware('auth')->name('logout');
 
 Route::get('/', LandingController::class)->name('landing');
 

@@ -21,10 +21,10 @@ final readonly class LeadTimelineEventView
         public ?string $toStatusLabel = null,
         public ?string $ruleKey = null,
         public ?int $authorId = null,
+        public ?string $authorLabel = null,
         public ?string $touchType = null,
         public ?string $touchTypeLabel = null,
         public ?string $landingUrl = null,
         public ?string $referrer = null,
-    ) {
-    }
+    ) {}
 }

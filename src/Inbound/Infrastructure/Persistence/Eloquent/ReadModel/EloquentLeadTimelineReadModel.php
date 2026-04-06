@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inbound\Infrastructure\Persistence\Eloquent\ReadModel;
 
+use App\Models\User;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Inbound\Application\Queries\Backoffice\GetLeadTimeline\GetLeadTimelineQuery;
@@ -26,7 +27,7 @@ final class EloquentLeadTimelineReadModel implements LeadTimelineReadModel
     {
         $leadModel = LeadModel::query()->find($query->leadId->value());
 
-        if (!$leadModel instanceof LeadModel) {
+        if (! $leadModel instanceof LeadModel) {
             throw new LeadTimelineNotFoundException(sprintf(
                 'Lead timeline not found for lead id "%s".',
                 $query->leadId->value(),
@@ -188,6 +189,7 @@ final class EloquentLeadTimelineReadModel implements LeadTimelineReadModel
 
         /** @var list<LeadNoteModel> $models */
         $models = LeadNoteModel::query()
+            ->with(['author:id,name,email'])
             ->where('lead_id', $leadId)
             ->orderBy('created_at')
             ->orderBy('id')
@@ -203,6 +205,7 @@ final class EloquentLeadTimelineReadModel implements LeadTimelineReadModel
                 title: 'Додано нотатку',
                 description: (string) $model->getAttribute('note'),
                 authorId: $this->nullablePositiveInt($model->getAttribute('author_id')),
+                authorLabel: $this->authorLabel($model),
             );
         }
 
@@ -210,7 +213,7 @@ final class EloquentLeadTimelineReadModel implements LeadTimelineReadModel
     }
 
     /**
-     * @param list<LeadTimelineEventView> $events
+     * @param  list<LeadTimelineEventView>  $events
      * @return list<LeadTimelineEventView>
      */
     private function sortEvents(array $events): array
@@ -289,6 +292,33 @@ final class EloquentLeadTimelineReadModel implements LeadTimelineReadModel
         return is_string($value) ? $value : null;
     }
 
+    private function authorLabel(LeadNoteModel $model): ?string
+    {
+        $author = $model->author;
+
+        if (! $author instanceof User) {
+            $authorId = $this->nullablePositiveInt($model->getAttribute('author_id'));
+
+            return $authorId !== null ? sprintf('Автор #%d', $authorId) : null;
+        }
+
+        $name = trim((string) $author->getAttribute('name'));
+
+        if ($name !== '') {
+            return $name;
+        }
+
+        $email = trim((string) $author->getAttribute('email'));
+
+        if ($email !== '') {
+            return $email;
+        }
+
+        $authorId = $this->nullablePositiveInt($model->getAttribute('author_id'));
+
+        return $authorId !== null ? sprintf('Автор #%d', $authorId) : null;
+    }
+
     private function nullablePositiveInt(mixed $value): ?int
     {
         if ($value === null) {
@@ -310,7 +340,7 @@ final class EloquentLeadTimelineReadModel implements LeadTimelineReadModel
 
     private function toDateTimeImmutable(mixed $value): DateTimeImmutable
     {
-        if (!$value instanceof DateTimeInterface) {
+        if (! $value instanceof DateTimeInterface) {
             throw new UnexpectedValueException('Expected a date/time value from Eloquent model.');
         }
 

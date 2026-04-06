@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Inbound\Infrastructure\Persistence\Eloquent\ReadModel;
 
-use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inbound\Application\Queries\Backoffice\GetLeadTimeline\GetLeadTimelineQuery;
 use Inbound\Application\Queries\Backoffice\GetLeadTimeline\LeadTimelineNotFoundException;
+use Inbound\Domain\Lead\LeadId;
 use Inbound\Infrastructure\Persistence\Eloquent\ClickModel;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadModel;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadStatusTransitionModel;
 use Inbound\Infrastructure\Persistence\Eloquent\ReadModel\EloquentLeadTimelineReadModel;
 use Inbound\Infrastructure\Persistence\Eloquent\TouchModel;
 use Inbound\Infrastructure\Persistence\Eloquent\VisitModel;
-use Inbound\Domain\Lead\LeadId;
 use Tests\TestCase;
 
 final class EloquentLeadTimelineReadModelTest extends TestCase
@@ -99,7 +98,7 @@ final class EloquentLeadTimelineReadModelTest extends TestCase
             'updated_at' => '2026-03-28 12:25:00',
         ]);
 
-        $readModel = new EloquentLeadTimelineReadModel();
+        $readModel = new EloquentLeadTimelineReadModel;
 
         $timeline = $readModel(new GetLeadTimelineQuery(new LeadId('lead-123')));
 
@@ -110,6 +109,7 @@ final class EloquentLeadTimelineReadModelTest extends TestCase
             $timeline->events,
         ));
         $this->assertSame(42, $timeline->events[0]->authorId);
+        $this->assertSame('Test User 42', $timeline->events[0]->authorLabel);
         $this->assertSame('Need to call back tomorrow.', $timeline->events[0]->description);
         $this->assertSame('manual_backoffice', $timeline->events[1]->ruleKey);
         $this->assertSame('form', $timeline->events[2]->origin);
@@ -119,7 +119,7 @@ final class EloquentLeadTimelineReadModelTest extends TestCase
 
     public function test_it_throws_when_lead_is_missing(): void
     {
-        $readModel = new EloquentLeadTimelineReadModel();
+        $readModel = new EloquentLeadTimelineReadModel;
 
         $this->expectException(LeadTimelineNotFoundException::class);
 

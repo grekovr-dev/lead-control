@@ -8,7 +8,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
 DB_SERVICE="${DB_SERVICE:-db}"
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/lead-control/mysql}"
-TIMESTAMP="${TIMESTAMP:-$(date +%Y%m%d-%H%M%S)}"
+BACKUP_RETENTION_COUNT="${BACKUP_RETENTION_COUNT:-10}"
 
 cd "$REPO_ROOT"
 
@@ -25,7 +25,36 @@ fi
 
 mkdir -p "$BACKUP_DIR"
 
-backup_file="$BACKUP_DIR/lead-control-mysql-$TIMESTAMP.sql.gz"
+if ! [[ "$BACKUP_RETENTION_COUNT" =~ ^[0-9]+$ ]] || (( BACKUP_RETENTION_COUNT < 1 || BACKUP_RETENTION_COUNT > 100 )); then
+    echo "BACKUP_RETENTION_COUNT must be an integer between 1 and 100" >&2
+    exit 1
+fi
+
+rotate_backup_slot() {
+    local slot="$1"
+    local target_slot="$2"
+
+    local source_file="$BACKUP_DIR/lead-control-mysql-${slot}.sql.gz"
+    local source_hash="$source_file.sha256"
+    local target_file="$BACKUP_DIR/lead-control-mysql-${target_slot}.sql.gz"
+    local target_hash="$target_file.sha256"
+
+    if [[ -f "$source_file" ]]; then
+        mv "$source_file" "$target_file"
+    fi
+
+    if [[ -f "$source_hash" ]]; then
+        mv "$source_hash" "$target_hash"
+    fi
+}
+
+for ((slot = BACKUP_RETENTION_COUNT - 2; slot >= 0; slot--)); do
+    current_slot="$(printf '%02d' "$slot")"
+    next_slot="$(printf '%02d' "$((slot + 1))")"
+    rotate_backup_slot "$current_slot" "$next_slot"
+done
+
+backup_file="$BACKUP_DIR/lead-control-mysql-00.sql.gz"
 tmp_backup_file="${backup_file}.tmp"
 
 trap 'rm -f "$tmp_backup_file"' EXIT
