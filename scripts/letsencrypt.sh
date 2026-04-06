@@ -70,6 +70,17 @@ build_san_list() {
     printf '%s' "${san%,}"
 }
 
+is_self_signed_certificate() {
+    local cert_file="$1"
+    local issuer
+    local subject
+
+    issuer="$(openssl x509 -in "$cert_file" -noout -issuer | sed 's/^issuer=//')"
+    subject="$(openssl x509 -in "$cert_file" -noout -subject | sed 's/^subject=//')"
+
+    [[ "$issuer" == "$subject" ]]
+}
+
 bootstrap() {
     if [[ -s "$CERTS_DIR/fullchain.pem" && -s "$CERTS_DIR/privkey.pem" ]]; then
         echo "Temporary certificate already exists for $PRIMARY_DOMAIN"
@@ -88,6 +99,19 @@ bootstrap() {
         -addext "subjectAltName=$(build_san_list)"
 }
 
+cleanup_bootstrap_certificate() {
+    if [[ ! -f "$CERTS_DIR/fullchain.pem" ]]; then
+        return
+    fi
+
+    if ! is_self_signed_certificate "$CERTS_DIR/fullchain.pem"; then
+        return
+    fi
+
+    echo "Removing temporary certificate for $PRIMARY_DOMAIN before issuing Let's Encrypt"
+    rm -rf "$CERTS_DIR"
+}
+
 issue() {
     local -a certbot_args=(
         certonly
@@ -104,6 +128,8 @@ issue() {
     for domain in "${LETS_ENCRYPT_DOMAIN_LIST[@]}"; do
         certbot_args+=(-d "$domain")
     done
+
+    cleanup_bootstrap_certificate
 
     docker compose -f "$COMPOSE_FILE" run --rm certbot \
         "${certbot_args[@]}"
