@@ -70,26 +70,17 @@ build_san_list() {
     printf '%s' "${san%,}"
 }
 
-is_self_signed_certificate() {
-    local cert_file="$1"
-    local issuer
-    local subject
-
-    issuer="$(openssl x509 -in "$cert_file" -noout -issuer | sed 's/^issuer=//')"
-    subject="$(openssl x509 -in "$cert_file" -noout -subject | sed 's/^subject=//')"
-
-    [[ "$issuer" == "$subject" ]]
-}
-
 bootstrap() {
     mkdir -p "$CERTS_DIR"
 
-    if primary_certificate_is_valid; then
-        echo "Primary certificate already exists for $PRIMARY_DOMAIN"
+    local latest_lineage
+
+    if latest_lineage="$(find_latest_certificate_lineage)"; then
+        link_primary_certificate_to_lineage "$latest_lineage"
         return
     fi
 
-    if [[ -s "$CERTS_DIR/fullchain.pem" && -s "$CERTS_DIR/privkey.pem" ]]; then
+    if [[ -e "$CERTS_DIR/fullchain.pem" && -e "$CERTS_DIR/privkey.pem" ]]; then
         echo "Temporary certificate already exists for $PRIMARY_DOMAIN"
         return
     fi
@@ -111,16 +102,16 @@ cleanup_bootstrap_certificate() {
         return
     fi
 
-    if ! is_self_signed_certificate "$CERTS_DIR/fullchain.pem"; then
+    if ! openssl x509 -in "$CERTS_DIR/fullchain.pem" -noout -issuer >/dev/null 2>&1; then
+        return
+    fi
+
+    if [[ "$(openssl x509 -in "$CERTS_DIR/fullchain.pem" -noout -issuer | sed 's/^issuer=//')" != "$(openssl x509 -in "$CERTS_DIR/fullchain.pem" -noout -subject | sed 's/^subject=//')" ]]; then
         return
     fi
 
     echo "Removing temporary certificate for $PRIMARY_DOMAIN before issuing Let's Encrypt"
     rm -rf "$CERTS_DIR"
-}
-
-primary_certificate_is_valid() {
-    [[ -f "$CERTS_DIR/fullchain.pem" ]] && ! is_self_signed_certificate "$CERTS_DIR/fullchain.pem"
 }
 
 find_latest_certificate_lineage() {
@@ -133,12 +124,7 @@ find_latest_certificate_lineage() {
 
     while IFS= read -r candidate; do
         [[ -d "$candidate" ]] || continue
-        [[ -f "$candidate/fullchain.pem" ]] || continue
         [[ "$(basename "$candidate")" != "$PRIMARY_DOMAIN" ]] || continue
-
-        if is_self_signed_certificate "$candidate/fullchain.pem"; then
-            continue
-        fi
 
         base_name="$(basename "$candidate")"
         suffix="${base_name#${PRIMARY_DOMAIN}-}"
@@ -209,14 +195,6 @@ issue() {
         certbot_args+=(-d "$domain")
     done
 
-    if primary_certificate_is_valid; then
-        echo "Primary certificate already exists for $PRIMARY_DOMAIN"
-        docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
-        return
-    fi
-
-    cleanup_bootstrap_certificate
-
     local latest_lineage
 
     if latest_lineage="$(find_latest_certificate_lineage)"; then
@@ -224,6 +202,8 @@ issue() {
         docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
         return
     fi
+
+    cleanup_bootstrap_certificate
 
     local certbot_output
 
