@@ -6,7 +6,7 @@
         <div>
             <div class="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <span class="text-base font-semibold tracking-[0.08em] text-slate-800">
-                    Добро стелі. Київ
+                    Добрі стелі. Київ
                 </span>
 
                 <div class="flex flex-wrap items-center gap-3 lg:justify-end">
