@@ -8,6 +8,10 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
 ENV_FILE="${ENV_FILE:-.env.production}"
 ACTION="${1:-}"
+if [[ $# -gt 0 ]]; then
+    shift
+fi
+RENEW_ARGS=("$@")
 
 cd "$REPO_ROOT"
 
@@ -58,6 +62,20 @@ CERTS_DIR="$REPO_ROOT/docker/certbot/conf/live/$PRIMARY_DOMAIN"
 CHALLENGE_DIR="$REPO_ROOT/docker/certbot/www/.well-known/acme-challenge"
 
 mkdir -p "$REPO_ROOT/docker/certbot/conf/live" "$CHALLENGE_DIR"
+
+log() {
+    printf '[letsencrypt] %s\n' "$*"
+}
+
+log_command() {
+    local arg
+
+    printf '[letsencrypt] Running command:'
+    for arg in "$@"; do
+        printf ' %q' "$arg"
+    done
+    printf '\n'
+}
 
 build_san_list() {
     local san=""
@@ -228,11 +246,40 @@ issue() {
 }
 
 renew() {
-    docker compose -f "$COMPOSE_FILE" run --rm certbot renew \
-        --webroot \
+    local -a certbot_args=(
+        renew
+        --webroot
         --webroot-path /var/www/certbot
+        "${RENEW_ARGS[@]}"
+    )
 
-    docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
+    log "Starting certificate renewal"
+    log "Compose file: $COMPOSE_FILE"
+    log "Environment file: $ENV_FILE"
+    log "Primary domain: $PRIMARY_DOMAIN"
+    log "All domains: ${LETS_ENCRYPT_DOMAIN_LIST[*]}"
+    log "Challenge directory: $CHALLENGE_DIR"
+    log "Certificate directory: $CERTS_DIR"
+    log_command docker compose -f "$COMPOSE_FILE" run --rm certbot "${certbot_args[@]}"
+
+    if docker compose -f "$COMPOSE_FILE" run --rm certbot "${certbot_args[@]}"; then
+        log "Certbot renew completed successfully"
+    else
+        local exit_code=$?
+        log "Certbot renew failed with exit code $exit_code"
+        return "$exit_code"
+    fi
+
+    log "Reloading nginx to pick up certificate changes"
+    log_command docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
+
+    if docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload; then
+        log "Nginx reload completed successfully"
+    else
+        local exit_code=$?
+        log "Nginx reload failed with exit code $exit_code"
+        return "$exit_code"
+    fi
 }
 
 case "$ACTION" in
@@ -246,7 +293,7 @@ case "$ACTION" in
         renew
         ;;
     *)
-        echo "Usage: $0 {bootstrap|issue|renew}" >&2
+        echo "Usage: $0 {bootstrap|issue|renew [certbot-renew-args...]}" >&2
         exit 1
         ;;
 esac
