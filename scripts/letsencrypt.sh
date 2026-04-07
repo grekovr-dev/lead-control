@@ -294,21 +294,49 @@ issue() {
     done
 
     local current_source
+    local certbot_output
+    local issued_source
+    local lineage_name
+
+    log "Starting certificate issue flow"
+    log "Compose file: $COMPOSE_FILE"
+    log "Environment file: $ENV_FILE"
+    log "Primary domain: $PRIMARY_DOMAIN"
+    log "All domains: ${LETS_ENCRYPT_DOMAIN_LIST[*]}"
+    log "Challenge directory: $CHALLENGE_DIR"
+    log "Primary certificate directory: $PRIMARY_CERT_DIR"
+    log "Active certificate directory: $ACTIVE_CERT_DIR"
+    log "Bootstrap certificate directory: $BOOTSTRAP_CERT_DIR"
 
     if current_source="$(find_current_certificate_source)"; then
+        log "Found existing real certificate source: $current_source"
         sync_certificate_aliases "$current_source"
-        docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
+        log "Reloading nginx to pick up current certificate source"
+        log_command docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
+
+        if docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload; then
+            log "Nginx reload completed successfully"
+        else
+            local exit_code=$?
+            log "Nginx reload failed with exit code $exit_code"
+            return "$exit_code"
+        fi
+
+        log "Issue flow finished without requesting a new certificate"
         return
     fi
 
+    log "No existing real certificate source found"
+    log "Cleaning up bootstrap certificate before issuing Let's Encrypt"
     cleanup_bootstrap_certificate
 
-    local certbot_output
+    log_command docker compose -f "$COMPOSE_FILE" run --rm certbot "${certbot_args[@]}"
 
     if ! certbot_output="$(
         docker compose -f "$COMPOSE_FILE" run --rm certbot \
             "${certbot_args[@]}" 2>&1
     )"; then
+        log "Certbot certificate issuance failed"
         printf '%s\n' "$certbot_output" >&2
         exit 1
     fi
@@ -316,13 +344,29 @@ issue() {
     printf '%s\n' "$certbot_output"
 
     if lineage_name="$(extract_lineage_from_certbot_output "$certbot_output")"; then
-        sync_certificate_aliases "$LIVE_DIR/$lineage_name"
+        issued_source="$LIVE_DIR/$lineage_name"
+        log "Detected issued lineage from certbot output: $issued_source"
+    elif current_source="$(find_current_certificate_source)"; then
+        issued_source="$current_source"
+        log "Could not parse issued lineage from certbot output; using detected current certificate source: $issued_source"
     else
         echo "Could not determine issued certificate lineage for $PRIMARY_DOMAIN" >&2
         exit 1
     fi
 
-    docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
+    sync_certificate_aliases "$issued_source"
+    log "Reloading nginx to pick up issued certificate"
+    log_command docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload
+
+    if docker compose -f "$COMPOSE_FILE" exec -T nginx nginx -s reload; then
+        log "Nginx reload completed successfully"
+    else
+        local exit_code=$?
+        log "Nginx reload failed with exit code $exit_code"
+        return "$exit_code"
+    fi
+
+    log "Issue flow finished successfully"
 }
 
 renew() {
