@@ -169,17 +169,6 @@ sync_certificate_aliases() {
     local source_dir="$1"
 
     link_certificate_alias "$ACTIVE_CERT_DIR" "$source_dir"
-
-    if [[ "$(basename "$source_dir")" == "$PRIMARY_DOMAIN" ]]; then
-        return
-    fi
-
-    if has_certificate_material "$PRIMARY_CERT_DIR" && ! is_self_signed_certificate "$PRIMARY_CERT_DIR" && [[ ! -L "$PRIMARY_CERT_DIR" ]]; then
-        echo "Keeping existing real certificate directory at $PRIMARY_CERT_DIR for compatibility"
-        return
-    fi
-
-    link_certificate_alias "$PRIMARY_CERT_DIR" "$source_dir"
 }
 
 bootstrap() {
@@ -234,7 +223,6 @@ cleanup_bootstrap_certificate() {
 
     echo "Removing temporary certificate for $PRIMARY_DOMAIN before issuing Let's Encrypt"
     remove_certificate_alias_if_pointing_to_source "$ACTIVE_CERT_DIR" "$BOOTSTRAP_CERT_DIR"
-    remove_certificate_alias_if_pointing_to_source "$PRIMARY_CERT_DIR" "$BOOTSTRAP_CERT_DIR"
     rm -rf "$BOOTSTRAP_CERT_DIR"
 }
 
