@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Inbound\Infrastructure\Notifications;
 
-use App\Jobs\SendManagerLeadCreatedTelegramJob;
+use App\Jobs\Inbound\Notifications\SendManagerLeadCreatedTelegramJob;
 use Illuminate\Support\Facades\Queue;
 use Inbound\Domain\Lead\LeadId;
 use Inbound\Infrastructure\Notifications\LaravelManagerLeadNotificationScheduler;
