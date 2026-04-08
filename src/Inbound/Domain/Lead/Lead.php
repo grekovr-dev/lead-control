@@ -40,6 +40,11 @@ final class Lead
 
     private DateTimeImmutable $createdAt;
 
+    /**
+     * @var list<object>
+     */
+    private array $recordedEvents = [];
+
     public function __construct(
         LeadId $id,
         VisitorId $visitorId,
@@ -138,6 +143,22 @@ final class Lead
     public function changeStatus(LeadStatus $status): void
     {
         $this->status = $status;
+    }
+
+    public function recordThat(object $event): void
+    {
+        $this->recordedEvents[] = $event;
+    }
+
+    /**
+     * @return list<object>
+     */
+    public function releaseEvents(): array
+    {
+        $events = $this->recordedEvents;
+        $this->recordedEvents = [];
+
+        return $events;
     }
 
     private static function normalizeNullableString(?string $value): ?string

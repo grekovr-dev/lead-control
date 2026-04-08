@@ -130,4 +130,29 @@ final class LeadTest extends TestCase
             Attribution::empty(),
         );
     }
+
+    public function test_it_records_and_releases_events(): void
+    {
+        $lead = new Lead(
+            new LeadId('lead-123'),
+            new VisitorId('visitor-456'),
+            new VisitId('visit-789'),
+            null,
+            null,
+            Attribution::empty(),
+            LeadStatus::NEW,
+            'form',
+            new DateTimeImmutable('2026-03-19T12:00:00+02:00'),
+            Attribution::empty(),
+        );
+
+        $firstEvent = new \stdClass;
+        $secondEvent = new \stdClass;
+
+        $lead->recordThat($firstEvent);
+        $lead->recordThat($secondEvent);
+
+        $this->assertSame([$firstEvent, $secondEvent], $lead->releaseEvents());
+        $this->assertSame([], $lead->releaseEvents());
+    }
 }
