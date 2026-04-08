@@ -9,7 +9,9 @@ use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisi
 use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickAction;
 use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickCommand;
 use Inbound\Application\Actions\Capture\PhoneClick\CurrentVisitNotFoundException;
+use Inbound\Application\Events\EventBus;
 use Inbound\Application\Transactions\TransactionManager;
+use Inbound\Domain\Lead\Events\LeadCreated;
 use Inbound\Domain\Lead\Lead;
 use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Lead\LeadRepository;
@@ -60,6 +62,7 @@ final class CapturePhoneClickActionTest extends TestCase
         $leadRepository = $this->createMock(LeadRepository::class);
         $touchRepository = $this->createMock(TouchRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
 
         $transactionManager
@@ -115,11 +118,21 @@ final class CapturePhoneClickActionTest extends TestCase
             ->expects($this->never())
             ->method('save');
 
+        $eventBus
+            ->expects($this->once())
+            ->method('publish')
+            ->with($this->callback(function (object $event) use ($command, $occurredAt): bool {
+                return $event instanceof LeadCreated
+                    && $event->leadId->equals($command->leadId)
+                    && $event->occurredAt == $occurredAt;
+            }));
+
         $action = new CapturePhoneClickAction(
             $leadRepository,
             $touchRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $eventBus,
             $transactionManager,
         );
 
@@ -165,6 +178,7 @@ final class CapturePhoneClickActionTest extends TestCase
         $leadRepository = $this->createMock(LeadRepository::class);
         $touchRepository = $this->createMock(TouchRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
 
         $transactionManager
@@ -213,11 +227,16 @@ final class CapturePhoneClickActionTest extends TestCase
                     && $touch->occurredAt() == $occurredAt;
             }));
 
+        $eventBus
+            ->expects($this->never())
+            ->method('publish');
+
         $action = new CapturePhoneClickAction(
             $leadRepository,
             $touchRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $eventBus,
             $transactionManager,
         );
 
@@ -251,6 +270,7 @@ final class CapturePhoneClickActionTest extends TestCase
         $leadRepository = $this->createMock(LeadRepository::class);
         $touchRepository = $this->createMock(TouchRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
 
         $transactionManager
@@ -302,11 +322,21 @@ final class CapturePhoneClickActionTest extends TestCase
             ->expects($this->never())
             ->method('save');
 
+        $eventBus
+            ->expects($this->once())
+            ->method('publish')
+            ->with($this->callback(function (object $event) use ($command, $occurredAt): bool {
+                return $event instanceof LeadCreated
+                    && $event->leadId->equals($command->leadId)
+                    && $event->occurredAt == $occurredAt;
+            }));
+
         $action = new CapturePhoneClickAction(
             $leadRepository,
             $touchRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $eventBus,
             $transactionManager,
         );
 
@@ -329,6 +359,7 @@ final class CapturePhoneClickActionTest extends TestCase
         $leadRepository = $this->createMock(LeadRepository::class);
         $touchRepository = $this->createMock(TouchRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
 
         $transactionManager
@@ -363,11 +394,16 @@ final class CapturePhoneClickActionTest extends TestCase
             ->expects($this->never())
             ->method('save');
 
+        $eventBus
+            ->expects($this->never())
+            ->method('publish');
+
         $action = new CapturePhoneClickAction(
             $leadRepository,
             $touchRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $eventBus,
             $transactionManager,
         );
 
