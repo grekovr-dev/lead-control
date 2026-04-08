@@ -6,11 +6,13 @@ use App\Http\Cookies\Inbound\Capture\VisitorIdCookieConfig;
 use DateInterval;
 use Illuminate\Support\ServiceProvider;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\VisitSessionRule;
+use Inbound\Application\Events\EventBus;
 use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Click\ClickRepository;
 use Inbound\Domain\Lead\LeadRepository;
 use Inbound\Domain\Touch\TouchRepository;
 use Inbound\Domain\Visit\VisitRepository;
+use Inbound\Infrastructure\Events\NullEventBus;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentClickRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentLeadRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentTouchRepository;
@@ -47,6 +49,7 @@ class CaptureServiceProvider extends ServiceProvider
         $this->app->bind(VisitRepository::class, EloquentVisitRepository::class);
         $this->app->bind(TouchRepository::class, EloquentTouchRepository::class);
         $this->app->bind(LeadRepository::class, EloquentLeadRepository::class);
+        $this->app->bind(EventBus::class, NullEventBus::class);
         $this->app->bind(TransactionManager::class, LaravelTransactionManager::class);
     }
 

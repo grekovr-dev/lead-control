@@ -13,6 +13,7 @@ use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickAction;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchAction;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\ResolveCurrentVisitAction;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\VisitSessionRule;
+use Inbound\Application\Events\EventBus;
 use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Click\ClickRepository;
 use Inbound\Domain\Lead\LeadRepository;
@@ -22,6 +23,7 @@ use Inbound\Domain\Touch\TouchRepository;
 use Inbound\Domain\Visit\Visit;
 use Inbound\Domain\Visit\VisitId;
 use Inbound\Domain\Visit\VisitRepository;
+use Inbound\Infrastructure\Events\NullEventBus;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentClickRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentLeadRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentTouchRepository;
@@ -37,6 +39,7 @@ final class CaptureContainerWiringTest extends TestCase
         $this->assertInstanceOf(EloquentVisitRepository::class, $this->app->make(VisitRepository::class));
         $this->assertInstanceOf(EloquentTouchRepository::class, $this->app->make(TouchRepository::class));
         $this->assertInstanceOf(EloquentLeadRepository::class, $this->app->make(LeadRepository::class));
+        $this->assertInstanceOf(NullEventBus::class, $this->app->make(EventBus::class));
         $this->assertInstanceOf(LaravelTransactionManager::class, $this->app->make(TransactionManager::class));
     }
 

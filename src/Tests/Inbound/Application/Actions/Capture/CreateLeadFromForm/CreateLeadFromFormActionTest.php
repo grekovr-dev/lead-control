@@ -9,7 +9,9 @@ use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisi
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormAction;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormCommand;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CurrentVisitNotFoundException;
+use Inbound\Application\Events\EventBus;
 use Inbound\Application\Transactions\TransactionManager;
+use Inbound\Domain\Lead\Events\LeadCreated;
 use Inbound\Domain\Lead\Lead;
 use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Lead\LeadRepository;
@@ -56,6 +58,7 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $leadRepository = $this->createMock(LeadRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
 
         $transactionManager
@@ -101,10 +104,20 @@ final class CreateLeadFromFormActionTest extends TestCase
                     && $lead->createdAt() == $occurredAt;
             }));
 
+        $eventBus
+            ->expects($this->once())
+            ->method('publish')
+            ->with($this->callback(function (object $event) use ($command, $occurredAt): bool {
+                return $event instanceof LeadCreated
+                    && $event->leadId->equals($command->leadId)
+                    && $event->occurredAt == $occurredAt;
+            }));
+
         $action = new CreateLeadFromFormAction(
             $leadRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $eventBus,
             $transactionManager,
         );
 
@@ -127,6 +140,7 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $leadRepository = $this->createMock(LeadRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
 
         $transactionManager
@@ -153,10 +167,15 @@ final class CreateLeadFromFormActionTest extends TestCase
             ->expects($this->never())
             ->method('save');
 
+        $eventBus
+            ->expects($this->never())
+            ->method('publish');
+
         $action = new CreateLeadFromFormAction(
             $leadRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $eventBus,
             $transactionManager,
         );
 
@@ -187,6 +206,7 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $leadRepository = $this->createMock(LeadRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
 
         $transactionManager
@@ -220,10 +240,16 @@ final class CreateLeadFromFormActionTest extends TestCase
             ->method('save')
             ->with($this->isInstanceOf(Lead::class));
 
+        $eventBus
+            ->expects($this->once())
+            ->method('publish')
+            ->with($this->isInstanceOf(LeadCreated::class));
+
         $action = new CreateLeadFromFormAction(
             $leadRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $eventBus,
             $transactionManager,
         );
 
