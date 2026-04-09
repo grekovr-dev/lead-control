@@ -9,5 +9,10 @@ interface TelegramClient
     /**
      * @throws TelegramClientException
      */
-    public function sendMessage(string $chatId, string $text): void;
+    public function sendMessage(
+        string $chatId,
+        string $text,
+        ?string $parseMode = null,
+        bool $disableWebPagePreview = false,
+    ): void;
 }

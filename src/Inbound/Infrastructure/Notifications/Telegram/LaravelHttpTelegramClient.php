@@ -16,15 +16,29 @@ final readonly class LaravelHttpTelegramClient implements TelegramClient
         private int $timeoutSeconds = 10,
     ) {}
 
-    public function sendMessage(string $chatId, string $text): void
-    {
+    public function sendMessage(
+        string $chatId,
+        string $text,
+        ?string $parseMode = null,
+        bool $disableWebPagePreview = false,
+    ): void {
+        $payload = [
+            'chat_id' => $chatId,
+            'text' => $text,
+        ];
+
+        if ($parseMode !== null && $parseMode !== '') {
+            $payload['parse_mode'] = $parseMode;
+        }
+
+        if ($disableWebPagePreview) {
+            $payload['disable_web_page_preview'] = true;
+        }
+
         $response = Http::baseUrl(rtrim($this->baseUrl, '/'))
             ->timeout($this->timeoutSeconds)
             ->asJson()
-            ->post(sprintf('/bot%s/sendMessage', $this->botToken), [
-                'chat_id' => $chatId,
-                'text' => $text,
-            ]);
+            ->post(sprintf('/bot%s/sendMessage', $this->botToken), $payload);
 
         if (! $response->successful()) {
             throw new TelegramClientException(sprintf(

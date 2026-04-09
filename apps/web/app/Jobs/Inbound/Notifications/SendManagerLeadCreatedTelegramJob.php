@@ -35,29 +35,40 @@ final class SendManagerLeadCreatedTelegramJob implements ShouldQueue
             new GetManagerLeadNotificationQuery(new LeadId($this->leadId)),
         );
 
-        $telegramClient->sendMessage($managerChatId, $this->messageText($view));
+        $telegramClient->sendMessage(
+            $managerChatId,
+            $this->messageText($view),
+            parseMode: 'HTML',
+            disableWebPagePreview: true,
+        );
     }
 
     private function messageText(ManagerLeadNotificationView $view): string
     {
         $lines = [
-            'Новий лід',
-            'ID: '.$view->leadId,
-            'Дата: '.$view->createdAt->format('d.m.Y H:i'),
-            'Джерело: '.$this->originLabel($view->origin),
+            sprintf(
+                '<a href="%s">Новий лід %s</a>',
+                $this->escapeHtml($this->leadUrl($view->leadId)),
+                $view->createdAt->format('d.m.Y H:i'),
+            ),
+            '',
         ];
 
+        $details = [];
+
         if ($view->name !== null && $view->name !== '') {
-            $lines[] = "Ім'я: ".$view->name;
+            $details[] = "Ім'я: ".$this->escapeHtml($view->name);
         }
 
         if ($view->phone !== null && $view->phone !== '') {
-            $lines[] = 'Телефон: '.$view->phone;
+            $details[] = 'Телефон: '.$this->escapeHtml($view->phone);
         }
 
-        if ($view->landingUrl !== null && $view->landingUrl !== '') {
-            $lines[] = 'Лендінг: '.$view->landingUrl;
+        if ($details !== []) {
+            $lines = [...$lines, ...$details, ''];
         }
+
+        $lines[] = 'Джерело: '.$this->originLabel($view->origin);
 
         return implode("\n", $lines);
     }
@@ -70,5 +81,21 @@ final class SendManagerLeadCreatedTelegramJob implements ShouldQueue
             'messenger_click' => 'Клік по месенджеру',
             default => $origin,
         };
+    }
+
+    private function leadUrl(string $leadId): string
+    {
+        $leadUrlBase = config('services.telegram.lead_url_base');
+
+        if (is_string($leadUrlBase) && $leadUrlBase !== '') {
+            return rtrim($leadUrlBase, '/').'/'.rawurlencode($leadId);
+        }
+
+        return route('admin.leads.show', ['leadId' => $leadId], true);
+    }
+
+    private function escapeHtml(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 }

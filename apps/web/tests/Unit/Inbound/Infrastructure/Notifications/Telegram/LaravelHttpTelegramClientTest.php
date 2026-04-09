@@ -33,7 +33,41 @@ final class LaravelHttpTelegramClientTest extends TestCase
         Http::assertSent(function ($request): bool {
             return $request->url() === 'https://api.telegram.org/bottest-token/sendMessage'
                 && $request['chat_id'] === '-1001234567890'
-                && $request['text'] === 'New lead created';
+                && $request['text'] === 'New lead created'
+                && ! isset($request['parse_mode'])
+                && ! isset($request['disable_web_page_preview']);
+        });
+    }
+
+    public function test_it_sends_optional_parse_mode_and_disables_link_previews(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response([
+                'ok' => true,
+                'result' => [
+                    'message_id' => 43,
+                ],
+            ]),
+        ]);
+
+        $client = new LaravelHttpTelegramClient(
+            botToken: 'test-token',
+            baseUrl: 'https://api.telegram.org',
+            timeoutSeconds: 10,
+        );
+
+        $client->sendMessage(
+            '-1001234567890',
+            '<a href="https://example.com/admin/leads/lead-123">Новий лід 09.04.2026 14:11</a>',
+            parseMode: 'HTML',
+            disableWebPagePreview: true,
+        );
+
+        Http::assertSent(function ($request): bool {
+            return $request->url() === 'https://api.telegram.org/bottest-token/sendMessage'
+                && $request['chat_id'] === '-1001234567890'
+                && $request['parse_mode'] === 'HTML'
+                && $request['disable_web_page_preview'] === true;
         });
     }
 
