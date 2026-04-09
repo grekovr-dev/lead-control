@@ -7,6 +7,7 @@ namespace Inbound\Application\Actions\Capture\PhoneClick;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitCommand;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\CurrentVisitNotFoundException as ContinueCurrentVisitNotFoundException;
+use Inbound\Application\Events\EventBus;
 use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Lead\Lead;
 use Inbound\Domain\Lead\LeadRepository;
@@ -23,13 +24,13 @@ final class CapturePhoneClickAction
         private TouchRepository $touchRepository,
         private VisitRepository $visitRepository,
         private ContinueCurrentVisitAction $continueCurrentVisitAction,
+        private EventBus $eventBus,
         private TransactionManager $transactionManager,
-    ) {
-    }
+    ) {}
 
     public function __invoke(CapturePhoneClickCommand $command): Lead|Touch
     {
-        return $this->transactionManager->run(function () use ($command): Lead|Touch {
+        $result = $this->transactionManager->run(function () use ($command): Lead|Touch {
             try {
                 $visit = ($this->continueCurrentVisitAction)(new ContinueCurrentVisitCommand(
                     $command->visitorId,
@@ -48,7 +49,7 @@ final class CapturePhoneClickAction
                     throw new \RuntimeException('Cannot capture phone click without a first visit for the visitor.');
                 }
 
-                $lead = new Lead(
+                $lead = Lead::create(
                     $command->leadId,
                     $command->visitorId,
                     $visit->id(),
@@ -79,5 +80,11 @@ final class CapturePhoneClickAction
 
             return $touch;
         });
+
+        if ($result instanceof Lead) {
+            $this->eventBus->publish(...$result->releaseEvents());
+        }
+
+        return $result;
     }
 }

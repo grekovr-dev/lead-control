@@ -6,15 +6,23 @@ namespace Tests\Unit\App\Providers\Inbound;
 
 use App\Http\Cookies\Inbound\Capture\AttributionCookieStore;
 use App\Http\Cookies\Inbound\Capture\VisitorIdCookieConfig;
+use App\Jobs\Inbound\Notifications\SendManagerLeadCreatedTelegramJob;
 use DateTimeImmutable;
+use Illuminate\Support\Facades\Queue;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormAction;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickAction;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchAction;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\ResolveCurrentVisitAction;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\VisitSessionRule;
+use Inbound\Application\Events\EventBus;
+use Inbound\Application\Notifications\Telegram\TelegramClient;
+use Inbound\Application\Queries\Notifications\GetManagerLeadNotification\ManagerLeadNotificationReadModel;
+use Inbound\Application\Reactions\Lead\ManagerLeadNotificationScheduler;
 use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Click\ClickRepository;
+use Inbound\Domain\Lead\Events\LeadCreated;
+use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Lead\LeadRepository;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
@@ -22,10 +30,14 @@ use Inbound\Domain\Touch\TouchRepository;
 use Inbound\Domain\Visit\Visit;
 use Inbound\Domain\Visit\VisitId;
 use Inbound\Domain\Visit\VisitRepository;
+use Inbound\Infrastructure\Events\LaravelEventBus;
+use Inbound\Infrastructure\Notifications\LaravelManagerLeadNotificationScheduler;
+use Inbound\Infrastructure\Notifications\Telegram\LaravelHttpTelegramClient;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentClickRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentLeadRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentTouchRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentVisitRepository;
+use Inbound\Infrastructure\Persistence\Eloquent\ReadModel\EloquentManagerLeadNotificationReadModel;
 use Inbound\Infrastructure\Persistence\LaravelTransactionManager;
 use Tests\TestCase;
 
@@ -37,6 +49,10 @@ final class CaptureContainerWiringTest extends TestCase
         $this->assertInstanceOf(EloquentVisitRepository::class, $this->app->make(VisitRepository::class));
         $this->assertInstanceOf(EloquentTouchRepository::class, $this->app->make(TouchRepository::class));
         $this->assertInstanceOf(EloquentLeadRepository::class, $this->app->make(LeadRepository::class));
+        $this->assertInstanceOf(LaravelEventBus::class, $this->app->make(EventBus::class));
+        $this->assertInstanceOf(LaravelManagerLeadNotificationScheduler::class, $this->app->make(ManagerLeadNotificationScheduler::class));
+        $this->assertInstanceOf(EloquentManagerLeadNotificationReadModel::class, $this->app->make(ManagerLeadNotificationReadModel::class));
+        $this->assertInstanceOf(LaravelHttpTelegramClient::class, $this->app->make(TelegramClient::class));
         $this->assertInstanceOf(LaravelTransactionManager::class, $this->app->make(TransactionManager::class));
     }
 
@@ -87,5 +103,23 @@ final class CaptureContainerWiringTest extends TestCase
         $cookie = $store->make(Attribution::empty());
 
         $this->assertFalse($cookie->isSecure());
+    }
+
+    public function test_it_routes_lead_created_events_from_the_event_bus_to_the_manager_notification_job(): void
+    {
+        Queue::fake();
+
+        $eventBus = $this->app->make(EventBus::class);
+
+        $eventBus->publish(
+            new LeadCreated(
+                new LeadId('lead-123'),
+                new DateTimeImmutable('2026-04-09 10:00:00'),
+            ),
+        );
+
+        Queue::assertPushed(SendManagerLeadCreatedTelegramJob::class, function (SendManagerLeadCreatedTelegramJob $job): bool {
+            return $job->leadId === 'lead-123';
+        });
     }
 }

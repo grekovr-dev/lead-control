@@ -4,7 +4,7 @@
     $phoneDisplay = '+38 (066) 781-07-07';
     $phoneHref = 'tel:+380667810707';
     $messengerLabel = 'Написати у Telegram';
-    $messengerHref = 'https://t.me/dobrosteli';
+    $messengerHref = 'https://t.me/dobristeli';
     $messengerIconSrc = asset('images/icons/telegram.svg');
     $captureConfig = [
         'clickUrl' => route('capture.click'),

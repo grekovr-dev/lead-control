@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Inbound\Domain\Lead;
 
 use DateTimeImmutable;
+use Inbound\Domain\Lead\Events\LeadCreated;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
 use Inbound\Domain\Visit\VisitId;
@@ -39,6 +40,43 @@ final class Lead
     private ?string $landingUrl;
 
     private DateTimeImmutable $createdAt;
+
+    /**
+     * @var list<object>
+     */
+    private array $recordedEvents = [];
+
+    public static function create(
+        LeadId $id,
+        VisitorId $visitorId,
+        VisitId $visitId,
+        ?string $name,
+        ?string $phone,
+        Attribution $visitAttribution,
+        LeadStatus $status,
+        string $origin,
+        DateTimeImmutable $createdAt,
+        Attribution $visitorAttribution,
+        ?string $landingUrl = null,
+    ): self {
+        $lead = new self(
+            $id,
+            $visitorId,
+            $visitId,
+            $name,
+            $phone,
+            $visitAttribution,
+            $status,
+            $origin,
+            $createdAt,
+            $visitorAttribution,
+            $landingUrl,
+        );
+
+        $lead->recordThat(new LeadCreated($lead->id(), $lead->createdAt()));
+
+        return $lead;
+    }
 
     public function __construct(
         LeadId $id,
@@ -138,6 +176,22 @@ final class Lead
     public function changeStatus(LeadStatus $status): void
     {
         $this->status = $status;
+    }
+
+    public function recordThat(object $event): void
+    {
+        $this->recordedEvents[] = $event;
+    }
+
+    /**
+     * @return list<object>
+     */
+    public function releaseEvents(): array
+    {
+        $events = $this->recordedEvents;
+        $this->recordedEvents = [];
+
+        return $events;
     }
 
     private static function normalizeNullableString(?string $value): ?string
