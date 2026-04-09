@@ -12,7 +12,9 @@ use InvalidArgumentException;
 
 final class DateRangeQueryResolver
 {
-    private const BUSINESS_TIMEZONE = 'Europe/Kyiv';
+    public function __construct(
+        private readonly string $businessTimezone = 'Europe/Kyiv',
+    ) {}
 
     public function resolve(
         Request $request,
@@ -38,7 +40,7 @@ final class DateRangeQueryResolver
 
     private function resolveRecentDaysRange(int $days): DateRange
     {
-        $today = CarbonImmutable::now(self::BUSINESS_TIMEZONE)->startOfDay();
+        $today = CarbonImmutable::now($this->businessTimezone())->startOfDay();
 
         return new DateRange(
             fromInclusive: $today->subDays($days - 1)->toDateTimeImmutable(),
@@ -48,7 +50,7 @@ final class DateRangeQueryResolver
 
     private function resolveCurrentMonthRange(): DateRange
     {
-        $startOfMonth = CarbonImmutable::now(self::BUSINESS_TIMEZONE)->startOfMonth()->startOfDay();
+        $startOfMonth = CarbonImmutable::now($this->businessTimezone())->startOfMonth()->startOfDay();
 
         return new DateRange(
             fromInclusive: $startOfMonth->toDateTimeImmutable(),
@@ -58,7 +60,7 @@ final class DateRangeQueryResolver
 
     private function resolvePreviousMonthRange(): DateRange
     {
-        $startOfCurrentMonth = CarbonImmutable::now(self::BUSINESS_TIMEZONE)->startOfMonth()->startOfDay();
+        $startOfCurrentMonth = CarbonImmutable::now($this->businessTimezone())->startOfMonth()->startOfDay();
         $startOfPreviousMonth = $startOfCurrentMonth->subMonth();
 
         return new DateRange(
@@ -106,13 +108,20 @@ final class DateRangeQueryResolver
             return null;
         }
 
-        $date = CarbonImmutable::createFromFormat('Y-m-d', $value, self::BUSINESS_TIMEZONE);
+        $date = CarbonImmutable::createFromFormat('Y-m-d', $value, $this->businessTimezone());
 
         if ($date !== false && $date->format('Y-m-d') === $value) {
             return $date;
         }
 
         return null;
+    }
+
+    private function businessTimezone(): string
+    {
+        return $this->businessTimezone !== ''
+            ? $this->businessTimezone
+            : date_default_timezone_get();
     }
 
     private function resolveString(Request $request, string $key): ?string

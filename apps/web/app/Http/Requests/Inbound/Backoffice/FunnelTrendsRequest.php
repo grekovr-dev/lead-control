@@ -189,7 +189,7 @@ final class FunnelTrendsRequest extends FormRequest
 
     private function parseDateString(string $value): ?CarbonImmutable
     {
-        $date = CarbonImmutable::createFromFormat('Y-m-d', $value, 'Europe/Kyiv');
+        $date = CarbonImmutable::createFromFormat('Y-m-d', $value, (string) config('app.timezone'));
 
         if ($date !== false && $date->format('Y-m-d') === $value) {
             return $date;
