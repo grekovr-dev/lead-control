@@ -2,6 +2,7 @@
 
 namespace App\Providers\Inbound;
 
+use App\Http\Resolvers\Inbound\Backoffice\DateRangeQueryResolver;
 use Illuminate\Support\ServiceProvider;
 use Inbound\Application\Queries\Backoffice\GetDashboardOverview\DashboardOverviewReadModel;
 use Inbound\Application\Queries\Backoffice\GetFunnelTrends\FunnelTrendsReadModel;
@@ -39,6 +40,12 @@ class BackofficeServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(DateRangeQueryResolver::class, function ($app): DateRangeQueryResolver {
+            return new DateRangeQueryResolver(
+                businessTimezone: (string) $app['config']->get('app.timezone', 'Europe/Kyiv'),
+            );
+        });
+
         $this->app->bind(VisitAttributionFunnelReportReadModel::class, EloquentVisitAttributionFunnelReportReadModel::class);
         $this->app->bind(DashboardOverviewReadModel::class, EloquentDashboardOverviewReadModel::class);
         $this->app->bind(FunnelTrendsReadModel::class, EloquentFunnelTrendsReadModel::class);

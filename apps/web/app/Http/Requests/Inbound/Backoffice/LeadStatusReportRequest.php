@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Inbound\Backoffice;
 
-use Carbon\CarbonImmutable;
 use App\Http\Resolvers\Inbound\Backoffice\DateRangeQueryResolver;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -157,7 +157,7 @@ final class LeadStatusReportRequest extends FormRequest
     {
         $value = $this->input($key);
 
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return null;
         }
 
@@ -184,7 +184,7 @@ final class LeadStatusReportRequest extends FormRequest
 
     private function parseDateString(string $value): ?CarbonImmutable
     {
-        $date = CarbonImmutable::createFromFormat('Y-m-d', $value, 'Europe/Kyiv');
+        $date = CarbonImmutable::createFromFormat('Y-m-d', $value, (string) config('app.timezone'));
 
         if ($date !== false && $date->format('Y-m-d') === $value) {
             return $date;
