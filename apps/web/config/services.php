@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'manager_chat_id' => env('TELEGRAM_MANAGER_CHAT_ID'),
+        'base_url' => env('TELEGRAM_BASE_URL', 'https://api.telegram.org'),
+        'timeout_seconds' => (int) env('TELEGRAM_TIMEOUT_SECONDS', 10),
+    ],
+
 ];
