@@ -6,7 +6,9 @@ namespace Tests\Unit\App\Providers\Inbound;
 
 use App\Http\Cookies\Inbound\Capture\AttributionCookieStore;
 use App\Http\Cookies\Inbound\Capture\VisitorIdCookieConfig;
+use App\Jobs\Inbound\Notifications\SendManagerLeadCreatedTelegramJob;
 use DateTimeImmutable;
+use Illuminate\Support\Facades\Queue;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormAction;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickAction;
@@ -37,7 +39,6 @@ use Inbound\Infrastructure\Persistence\Eloquent\EloquentTouchRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentVisitRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\ReadModel\EloquentManagerLeadNotificationReadModel;
 use Inbound\Infrastructure\Persistence\LaravelTransactionManager;
-use Mockery;
 use Tests\TestCase;
 
 final class CaptureContainerWiringTest extends TestCase
@@ -104,20 +105,21 @@ final class CaptureContainerWiringTest extends TestCase
         $this->assertFalse($cookie->isSecure());
     }
 
-    public function test_it_dispatches_lead_created_events_to_manager_notification_reaction(): void
+    public function test_it_routes_lead_created_events_from_the_event_bus_to_the_manager_notification_job(): void
     {
-        $scheduler = Mockery::mock(ManagerLeadNotificationScheduler::class);
-        $scheduler->shouldReceive('schedule')
-            ->once()
-            ->with(Mockery::on(static fn (LeadId $leadId): bool => $leadId->value() === 'lead-123'));
+        Queue::fake();
 
-        $this->app->instance(ManagerLeadNotificationScheduler::class, $scheduler);
+        $eventBus = $this->app->make(EventBus::class);
 
-        $this->app['events']->dispatch(
+        $eventBus->publish(
             new LeadCreated(
                 new LeadId('lead-123'),
                 new DateTimeImmutable('2026-04-09 10:00:00'),
             ),
         );
+
+        Queue::assertPushed(SendManagerLeadCreatedTelegramJob::class, function (SendManagerLeadCreatedTelegramJob $job): bool {
+            return $job->leadId === 'lead-123';
+        });
     }
 }
