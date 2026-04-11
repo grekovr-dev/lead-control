@@ -21,10 +21,26 @@ function makeComponent(overrides = {}) {
         leadPhoneRequiredMessage: 'Вкажіть номер телефону.',
         leadPhoneFormatMessage: 'Введіть 9 цифр після +380, наприклад 50 111 22 33.',
     };
+    const sessionStorageData = overrides.sessionStorageData ?? new Map();
+    const sessionStorage = overrides.sessionStorage ?? {
+        getItem(key) {
+            return sessionStorageData.has(key) ? sessionStorageData.get(key) : null;
+        },
+        setItem(key, value) {
+            sessionStorageData.set(key, String(value));
+        },
+        removeItem(key) {
+            sessionStorageData.delete(key);
+        },
+        clear() {
+            sessionStorageData.clear();
+        },
+    };
     const location = overrides.location ?? {
         pathname: '/?utm_source=google',
         search: '?utm_source=google&utm_medium=cpc',
         hash: '#lead-form',
+        reload() {},
     };
 
     globalThis.window = {
@@ -32,6 +48,7 @@ function makeComponent(overrides = {}) {
         history: {
             replaceState,
         },
+        sessionStorage,
         setTimeout: globalThis.setTimeout.bind(globalThis),
     };
 
@@ -172,6 +189,57 @@ test('landingCapture keeps the interface bootstrapping until the click request s
     await initPromise;
 
     assert.equal(component.isBootstrapping, false);
+});
+
+test('landingCapture soft reloads once when the landing click returns 419', async () => {
+    let reloadCalls = 0;
+
+    const component = makeComponent({
+        fetch: async () => ({
+            ok: false,
+            status: 419,
+            json: async () => ({}),
+        }),
+        location: {
+            pathname: '/',
+            search: '',
+            hash: '',
+            reload() {
+                reloadCalls += 1;
+            },
+        },
+    });
+
+    await component.init();
+
+    assert.equal(reloadCalls, 1);
+    assert.equal(component.hasRecentSoftReloadAttempt(), true);
+});
+
+test('landingCapture does not soft reload twice during the cooldown window', async () => {
+    let reloadCalls = 0;
+
+    const component = makeComponent({
+        fetch: async () => ({
+            ok: false,
+            status: 419,
+            json: async () => ({}),
+        }),
+        location: {
+            pathname: '/',
+            search: '',
+            hash: '',
+            reload() {
+                reloadCalls += 1;
+            },
+        },
+    });
+
+    component.markSoftReloadAttempt();
+    await component.init();
+
+    assert.equal(reloadCalls, 0);
+    assert.equal(component.hasRecentSoftReloadAttempt(), true);
 });
 
 test('landingCapture waits for bootstrapping before navigating', async () => {

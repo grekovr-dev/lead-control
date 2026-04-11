@@ -6,7 +6,7 @@
         <div class="grid gap-8 lg:grid-cols-[1.25fr_0.75fr]">
             <div class="flex flex-col gap-8">
                 <div class="flex flex-col gap-3 md:flex-row md:items-center justify-between">
-                    <div class="text-3xl uppercase font-semibold text-slate-700 lg:text-2xl xl:text-3xl">
+                    <div class="text-base font-semibold uppercase tracking-[0.14em] text-slate-600 md:text-lg">
                         Добрі стелі. Київ
                     </div>
 
@@ -36,7 +36,7 @@
                         Натяжні стелі будь-якої складності
                     </h1>
                     <p class="text-lg leading-relaxed text-slate-600">
-                        Виїзд на замір у зручний час, допомога з підбором матеріалів і зрозумілий прorахунок вартості до початку робіт.
+                        Виїзд на замір у зручний час, допомога з підбором матеріалів і зрозумілий прорахунок вартості до початку робіт.
                     </p>
                 </div>
 
@@ -80,9 +80,6 @@
                     <h3 class="text-2xl font-semibold leading-tight text-slate-700 md:text-3xl">
                         Виїзд на замір у день звернення
                     </h3>
-                    <p class="leading-relaxed text-slate-600">
-                        Маємо щеплення від ТЦК
-                    </p>
                 </div>
 
                 <div class="mt-6 grid gap-4 sm:grid-cols-2">
@@ -114,9 +111,9 @@
 
         <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_22px_45px_-28px_rgba(15,23,42,0.45)]">
             <img
-                src="{{ asset('images/hero.jpg') }}"
+                src="{{ asset('images/hero-cropped.jpg') }}"
                 alt="Натяжна стеля з сучасним освітленням"
-                class="h-84 w-full object-cover md:h-102 lg:h-138 xl:h-162"
+                class="h-64 w-full object-cover object-bottom md:h-72 lg:h-96 xl:h-104"
             >
         </div>
     </div>
