@@ -32,7 +32,7 @@
                 </div>
 
                 <div class="flex flex-col gap-4">
-                   <h1 class="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
+                   <h1 class="text-4xl font-semibold leading-tight text-slate-900">
                         Натяжні стелі будь-якої складності
                     </h1>
                     <p class="text-lg leading-relaxed text-slate-600">
