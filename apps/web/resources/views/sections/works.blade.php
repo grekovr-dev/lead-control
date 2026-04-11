@@ -1,4 +1,4 @@
-<section id="works" class="bg-white px-6 py-16 md:py-20">
+<section id="works" class="bg-gray-50 px-6 py-16 md:py-20">
     <div class="mx-auto max-w-6xl">
         <div class="mb-10 max-w-3xl">
             <p class="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-teal-700">Наші роботи</p>

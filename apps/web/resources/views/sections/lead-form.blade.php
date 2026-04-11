@@ -2,41 +2,8 @@
     $leadPhoneCountryCode = $captureConfig['leadPhoneCountryCode'] ?? '+380';
 @endphp
 
-<section id="lead-form" class="px-6 pb-20 pt-12 md:pb-24">
+<section id="lead-form" class="px-6 py-16 md:py-20">
     <div class="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <div class="min-w-0 rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.45)] md:p-8">
-            <p class="text-sm font-semibold uppercase tracking-[0.14em] text-teal-700">Заявка</p>
-            <h2 class="mt-3 text-3xl font-semibold leading-tight text-slate-900">
-                Розрахуємо вартість під ваш запит
-            </h2>
-            <p class="mt-4 leading-relaxed text-slate-600">
-                Заповніть коротку форму. На цьому етапі ми лише збираємо контакт для консультації без складних кроків.
-            </p>
-
-            <ul class="mt-6 space-y-3 text-sm text-slate-600">
-                <li class="flex items-start gap-2">
-                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                    Швидко уточнимо деталі вашого запиту
-                </li>
-                <li class="flex items-start gap-2">
-                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                    Підбір матеріалу під бюджет
-                </li>
-                <li class="flex items-start gap-2">
-                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                    Попередній кошторис до виїзду
-                </li>
-                <li class="flex items-start gap-2">
-                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                    Підкажемо варіант без зайвих витрат
-                </li>
-                <li class="flex items-start gap-2">
-                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                    Пояснимо, що впливає на кінцеву вартість
-                </li>
-            </ul>
-        </div>
-
         <div class="min-w-0 rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_20px_40px_-28px_rgba(15,23,42,0.45)] md:p-8">
             <div
                 x-cloak
@@ -116,7 +83,7 @@
                     :disabled="isBootstrapping || isSubmittingLeadForm"
                     class="w-full rounded-xl bg-teal-700 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-teal-800"
                 >
-                    <span x-cloak x-show="!isSubmittingLeadForm">Надіслати заявку</span>
+                    <span x-cloak x-show="!isSubmittingLeadForm">Замовити дзвінок</span>
                     <span x-cloak x-show="isSubmittingLeadForm">Надсилаємо заявку...</span>
                 </button>
 
@@ -135,6 +102,43 @@
                     <span>Або написати у Telegram</span>
                 </a>
             </form>
+        </div>
+
+        <div class="min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.45)] md:p-8">
+            <div class="flex flex-col gap-3">
+                <p class="text-sm font-semibold uppercase tracking-wide text-teal-700">
+                    Що буде далі
+                </p>
+                <h3 class="text-2xl font-semibold leading-tight text-slate-700 md:text-3xl">
+                    Зателефонуємо та підкажемо варіанти
+                </h3>
+                <p class="leading-relaxed text-slate-600">
+                    Під час дзвінка уточнимо ваш запит і зорієнтуємо щодо рішення, яке найкраще підійде саме вам.
+                </p>
+            </div>
+
+            <ul class="mt-6 grid gap-3 text-sm text-slate-600">
+                <li class="flex items-start gap-2">
+                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
+                    Уточнимо лише основні деталі вашого запиту
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
+                    Підберемо формат під ваш бюджет
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
+                    Озвучимо попередню вартість ще до заміру
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
+                    Розкажемо, що впливає на кінцеву вартість
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
+                    Після дзвінка вам буде зрозуміліше, що робити далі
+                </li>
+            </ul>
         </div>
     </div>
 </section>
