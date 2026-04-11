@@ -9,7 +9,9 @@
                 <img src="{{ $messengerIconSrc }}" alt="Telegram" class="h-4 w-4 shrink-0">
                 <span>Telegram</span>
             </a>
-            <a href="{{ $phoneHref }}" @click.prevent="trackPhoneLeadAndNavigate('{{ $phoneHref }}')" class="transition hover:text-slate-700">{{ $phoneDisplay }}</a>
+            <a href="{{ $phoneHref }}" @click.prevent="trackPhoneLeadAndNavigate('{{ $phoneHref }}')" class="transition hover:text-slate-700">
+                {{ $phoneDisplay }}
+            </a>
         </div>
     </div>
 </footer>

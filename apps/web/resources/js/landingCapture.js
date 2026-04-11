@@ -5,11 +5,63 @@ const landingBootstrapState = {
     touchPromises: new Map(),
 };
 
+const landingBootstrapReloadStorageKey = 'landing-capture-soft-reload-attempt-at';
+const landingBootstrapReloadCooldownMs = 15_000;
+
+function readLandingBootstrapReloadAttemptAt() {
+    try {
+        const rawValue = window.sessionStorage?.getItem(landingBootstrapReloadStorageKey);
+
+        if (rawValue === null || rawValue === undefined) {
+            return null;
+        }
+
+        const timestamp = Number(rawValue);
+
+        return Number.isFinite(timestamp) ? timestamp : null;
+    } catch {
+        return null;
+    }
+}
+
+function writeLandingBootstrapReloadAttemptAt(timestamp) {
+    try {
+        window.sessionStorage?.setItem(landingBootstrapReloadStorageKey, String(timestamp));
+    } catch {
+        //
+    }
+}
+
+function clearLandingBootstrapReloadAttemptAt() {
+    try {
+        window.sessionStorage?.removeItem(landingBootstrapReloadStorageKey);
+    } catch {
+        //
+    }
+}
+
+function isSuccessfulBootstrapResponse(response) {
+    if (typeof response?.ok === 'boolean') {
+        return response.ok;
+    }
+
+    if (typeof response?.status !== 'number') {
+        return true;
+    }
+
+    return response.status >= 200 && response.status < 300;
+}
+
+function responseStatus(response) {
+    return typeof response?.status === 'number' ? response.status : null;
+}
+
 export function resetLandingCaptureBootstrapState() {
     landingBootstrapState.promise = null;
     landingBootstrapState.clickTracked = false;
     landingBootstrapState.phoneLeadPromise = null;
     landingBootstrapState.touchPromises = new Map();
+    clearLandingBootstrapReloadAttemptAt();
 }
 
 export default function landingCapture() {
@@ -51,6 +103,30 @@ export default function landingCapture() {
             });
 
             return this.bootPromise;
+        },
+
+        hasRecentSoftReloadAttempt() {
+            const attemptedAt = readLandingBootstrapReloadAttemptAt();
+
+            if (attemptedAt === null) {
+                return false;
+            }
+
+            if (Date.now() - attemptedAt > landingBootstrapReloadCooldownMs) {
+                clearLandingBootstrapReloadAttemptAt();
+
+                return false;
+            }
+
+            return true;
+        },
+
+        markSoftReloadAttempt() {
+            writeLandingBootstrapReloadAttemptAt(Date.now());
+        },
+
+        clearSoftReloadAttempt() {
+            clearLandingBootstrapReloadAttemptAt();
         },
 
         ready() {
@@ -358,7 +434,7 @@ export default function landingCapture() {
             landingBootstrapState.clickTracked = true;
 
             try {
-                await fetch(this.config.clickUrl, {
+                const response = await fetch(this.config.clickUrl, {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {
@@ -369,6 +445,23 @@ export default function landingCapture() {
                     },
                     body: JSON.stringify({}),
                 });
+
+                if (isSuccessfulBootstrapResponse(response)) {
+                    this.clearSoftReloadAttempt();
+
+                    return;
+                }
+
+                landingBootstrapState.clickTracked = false;
+
+                if (responseStatus(response) === 419) {
+                    if (!this.hasRecentSoftReloadAttempt()) {
+                        this.markSoftReloadAttempt();
+                        window.location.reload();
+                    }
+
+                    return;
+                }
             } catch {
                 landingBootstrapState.clickTracked = false;
             }

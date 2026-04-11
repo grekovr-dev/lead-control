@@ -389,6 +389,10 @@ docker compose exec app php /var/www/apps/web/vendor/bin/pint --test /var/www/ap
 - respect layers
 - reuse patterns
 - create small focused classes
+- when working step-by-step via `реализуй пункт N`, always propose a commit
+  message after finishing the step
+- the proposed commit message must describe the completed change itself
+- do NOT include the step number in the commit message
 
 ---
 
