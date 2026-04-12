@@ -142,21 +142,6 @@ final readonly class Attribution
         ];
     }
 
-    public function withReferrer(?string $referrer): self
-    {
-        return new self(
-            $this->source,
-            $this->medium,
-            $this->campaign,
-            $this->content,
-            $this->term,
-            $this->gclid,
-            $this->fbclid,
-            $this->msclkid,
-            $referrer,
-        );
-    }
-
     public function equals(self $other): bool
     {
         return $this->source === $other->source
