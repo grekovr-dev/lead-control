@@ -4,18 +4,30 @@ declare(strict_types=1);
 
 namespace Inbound\Application\Actions\Capture\RegisterClick;
 
+use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
+use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitCommand;
+use Inbound\Application\Actions\Capture\ContinueCurrentVisit\CurrentVisitNotFoundException;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\ResolveCurrentVisitAction;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\ResolveCurrentVisitCommand;
+use Inbound\Application\Identifiers\UuidGenerator;
 use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Click\Click;
+use Inbound\Domain\Click\ClickId;
 use Inbound\Domain\Click\ClickRepository;
+use Inbound\Domain\Revisit\Revisit;
+use Inbound\Domain\Revisit\RevisitId;
+use Inbound\Domain\Revisit\RevisitRepository;
+use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Visit\Visit;
 
 final class RegisterClickAction
 {
     public function __construct(
         private ClickRepository $clickRepository,
+        private RevisitRepository $revisitRepository,
+        private ContinueCurrentVisitAction $continueCurrentVisitAction,
         private ResolveCurrentVisitAction $resolveCurrentVisitAction,
+        private UuidGenerator $uuidGenerator,
         private TransactionManager $transactionManager,
     ) {}
 
@@ -24,8 +36,30 @@ final class RegisterClickAction
         return $this->transactionManager->run(function () use ($command): Visit {
             $attribution = $command->attribution;
 
+            if ($attribution->equals(Attribution::direct())) {
+                try {
+                    $visit = ($this->continueCurrentVisitAction)(new ContinueCurrentVisitCommand(
+                        $command->visitorId,
+                        $command->occurredAt,
+                    ));
+
+                    $revisit = new Revisit(
+                        new RevisitId($this->uuidGenerator->generate()),
+                        $command->visitorId,
+                        $visit->id(),
+                        $command->landingUrl,
+                        $command->occurredAt,
+                    );
+
+                    $this->revisitRepository->save($revisit);
+
+                    return $visit;
+                } catch (CurrentVisitNotFoundException) {
+                    // Fall through to the normal click registration flow.
+                }
+            }
+
             $visit = ($this->resolveCurrentVisitAction)(new ResolveCurrentVisitCommand(
-                $command->visitId,
                 $command->visitorId,
                 $attribution,
                 $command->occurredAt,
@@ -33,7 +67,7 @@ final class RegisterClickAction
             ));
 
             $click = new Click(
-                $command->clickId,
+                new ClickId($this->uuidGenerator->generate()),
                 $command->visitorId,
                 $attribution,
                 $command->landingUrl,

@@ -9,16 +9,12 @@ use App\Http\Resolvers\Inbound\Capture\VisitorIdResolver;
 use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\CurrentVisitNotFoundException;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickAction;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickCommand;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchAction;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchCommand;
-use Inbound\Domain\Click\ClickId;
-use Inbound\Domain\Touch\TouchId;
 use Inbound\Domain\Touch\TouchType;
-use Inbound\Domain\Visit\VisitId;
 
 class RegisterController extends Controller
 {
@@ -38,8 +34,6 @@ class RegisterController extends Controller
         $attribution = $this->attributionCookieStore->resolve($request);
 
         $command = new RegisterClickCommand(
-            new ClickId((string) Str::uuid()),
-            new VisitId((string) Str::uuid()),
             $visitorId,
             $attribution,
             url('/'),
@@ -51,7 +45,6 @@ class RegisterController extends Controller
         $response = response()->json([
             'ok' => true,
             'data' => [
-                'clickId' => $command->clickId->value(),
                 'visitId' => $visit->id()->value(),
                 'visitorId' => $visitorId->value(),
             ],
@@ -71,7 +64,6 @@ class RegisterController extends Controller
         }
 
         $command = new RegisterTouchCommand(
-            new TouchId((string) Str::uuid()),
             $visitorId,
             TouchType::from((string) $request->validated('type')),
             new DateTimeImmutable,
