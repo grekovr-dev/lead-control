@@ -9,7 +9,10 @@ use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisi
 use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickAction;
 use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickCommand;
 use Inbound\Application\Actions\Capture\PhoneClick\CurrentVisitNotFoundException;
+use Inbound\Application\Events\EventBus;
+use Inbound\Application\Identifiers\UuidGenerator;
 use Inbound\Application\Transactions\TransactionManager;
+use Inbound\Domain\Lead\Events\LeadCreated;
 use Inbound\Domain\Lead\Lead;
 use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Lead\LeadRepository;
@@ -30,9 +33,8 @@ final class CapturePhoneClickActionTest extends TestCase
     public function test_it_creates_lead_when_phone_click_lead_is_missing_in_current_visit(): void
     {
         $occurredAt = new DateTimeImmutable('2026-03-25T13:10:00+02:00');
+        $expectedLeadId = new LeadId('lead-123');
         $command = new CapturePhoneClickCommand(
-            new LeadId('lead-123'),
-            new TouchId('touch-123'),
             new VisitorId('visitor-456'),
             $occurredAt,
         );
@@ -60,7 +62,14 @@ final class CapturePhoneClickActionTest extends TestCase
         $leadRepository = $this->createMock(LeadRepository::class);
         $touchRepository = $this->createMock(TouchRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $uuidGenerator = $this->createMock(UuidGenerator::class);
+        $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
+
+        $uuidGenerator
+            ->expects($this->once())
+            ->method('generate')
+            ->willReturn($expectedLeadId->value());
 
         $transactionManager
             ->expects($this->once())
@@ -97,8 +106,8 @@ final class CapturePhoneClickActionTest extends TestCase
         $leadRepository
             ->expects($this->once())
             ->method('save')
-            ->with($this->callback(function (Lead $lead) use ($command, $existingVisit, $firstVisit, $occurredAt): bool {
-                return $lead->id()->equals($command->leadId)
+            ->with($this->callback(function (Lead $lead) use ($expectedLeadId, $command, $existingVisit, $firstVisit, $occurredAt): bool {
+                return $lead->id()->equals($expectedLeadId)
                     && $lead->visitorId()->equals($command->visitorId)
                     && $lead->visitId()->equals($existingVisit->id())
                     && $lead->name() === null
@@ -115,27 +124,37 @@ final class CapturePhoneClickActionTest extends TestCase
             ->expects($this->never())
             ->method('save');
 
+        $eventBus
+            ->expects($this->once())
+            ->method('publish')
+            ->with($this->callback(function (object $event) use ($expectedLeadId, $occurredAt): bool {
+                return $event instanceof LeadCreated
+                    && $event->leadId->equals($expectedLeadId)
+                    && $event->occurredAt == $occurredAt;
+            }));
+
         $action = new CapturePhoneClickAction(
             $leadRepository,
             $touchRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $uuidGenerator,
+            $eventBus,
             $transactionManager,
         );
 
         $result = $action($command);
 
         $this->assertInstanceOf(Lead::class, $result);
-        $this->assertTrue($result->id()->equals($command->leadId));
+        $this->assertTrue($result->id()->equals($expectedLeadId));
         $this->assertTrue($result->visitId()->equals($existingVisit->id()));
     }
 
     public function test_it_registers_phone_click_touch_when_phone_click_lead_already_exists(): void
     {
         $occurredAt = new DateTimeImmutable('2026-03-25T13:10:00+02:00');
+        $expectedTouchId = new TouchId('touch-123');
         $command = new CapturePhoneClickCommand(
-            new LeadId('lead-new'),
-            new TouchId('touch-123'),
             new VisitorId('visitor-456'),
             $occurredAt,
         );
@@ -165,7 +184,14 @@ final class CapturePhoneClickActionTest extends TestCase
         $leadRepository = $this->createMock(LeadRepository::class);
         $touchRepository = $this->createMock(TouchRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $uuidGenerator = $this->createMock(UuidGenerator::class);
+        $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
+
+        $uuidGenerator
+            ->expects($this->once())
+            ->method('generate')
+            ->willReturn($expectedTouchId->value());
 
         $transactionManager
             ->expects($this->once())
@@ -205,26 +231,32 @@ final class CapturePhoneClickActionTest extends TestCase
         $touchRepository
             ->expects($this->once())
             ->method('save')
-            ->with($this->callback(function (Touch $touch) use ($command, $existingVisit, $occurredAt): bool {
-                return $touch->id()->equals($command->touchId)
+            ->with($this->callback(function (Touch $touch) use ($expectedTouchId, $existingVisit, $occurredAt): bool {
+                return $touch->id()->equals($expectedTouchId)
                     && $touch->visitId()->equals($existingVisit->id())
-                    && $touch->visitorId()->equals($command->visitorId)
+                    && $touch->visitorId()->equals(new VisitorId('visitor-456'))
                     && $touch->type() === TouchType::PhoneClick
                     && $touch->occurredAt() == $occurredAt;
             }));
+
+        $eventBus
+            ->expects($this->never())
+            ->method('publish');
 
         $action = new CapturePhoneClickAction(
             $leadRepository,
             $touchRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $uuidGenerator,
+            $eventBus,
             $transactionManager,
         );
 
         $result = $action($command);
 
         $this->assertInstanceOf(Touch::class, $result);
-        $this->assertTrue($result->id()->equals($command->touchId));
+        $this->assertTrue($result->id()->equals($expectedTouchId));
         $this->assertTrue($result->visitId()->equals($existingVisit->id()));
         $this->assertSame(TouchType::PhoneClick, $result->type());
     }
@@ -232,9 +264,8 @@ final class CapturePhoneClickActionTest extends TestCase
     public function test_it_creates_phone_click_lead_when_only_form_lead_exists_in_current_visit(): void
     {
         $occurredAt = new DateTimeImmutable('2026-03-25T13:10:00+02:00');
+        $expectedLeadId = new LeadId('lead-123');
         $command = new CapturePhoneClickCommand(
-            new LeadId('lead-123'),
-            new TouchId('touch-123'),
             new VisitorId('visitor-456'),
             $occurredAt,
         );
@@ -251,7 +282,14 @@ final class CapturePhoneClickActionTest extends TestCase
         $leadRepository = $this->createMock(LeadRepository::class);
         $touchRepository = $this->createMock(TouchRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $uuidGenerator = $this->createMock(UuidGenerator::class);
+        $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
+
+        $uuidGenerator
+            ->expects($this->once())
+            ->method('generate')
+            ->willReturn($expectedLeadId->value());
 
         $transactionManager
             ->expects($this->once())
@@ -288,8 +326,8 @@ final class CapturePhoneClickActionTest extends TestCase
         $leadRepository
             ->expects($this->once())
             ->method('save')
-            ->with($this->callback(function (Lead $lead) use ($command, $existingVisit, $occurredAt): bool {
-                return $lead->id()->equals($command->leadId)
+            ->with($this->callback(function (Lead $lead) use ($expectedLeadId, $command, $existingVisit, $occurredAt): bool {
+                return $lead->id()->equals($expectedLeadId)
                     && $lead->visitorId()->equals($command->visitorId)
                     && $lead->visitId()->equals($existingVisit->id())
                     && $lead->visitAttribution()->equals($existingVisit->firstAttribution())
@@ -302,11 +340,22 @@ final class CapturePhoneClickActionTest extends TestCase
             ->expects($this->never())
             ->method('save');
 
+        $eventBus
+            ->expects($this->once())
+            ->method('publish')
+            ->with($this->callback(function (object $event) use ($expectedLeadId, $occurredAt): bool {
+                return $event instanceof LeadCreated
+                    && $event->leadId->equals($expectedLeadId)
+                    && $event->occurredAt == $occurredAt;
+            }));
+
         $action = new CapturePhoneClickAction(
             $leadRepository,
             $touchRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $uuidGenerator,
+            $eventBus,
             $transactionManager,
         );
 
@@ -320,8 +369,6 @@ final class CapturePhoneClickActionTest extends TestCase
     public function test_it_throws_when_current_visit_is_missing(): void
     {
         $command = new CapturePhoneClickCommand(
-            new LeadId('lead-123'),
-            new TouchId('touch-123'),
             new VisitorId('visitor-456'),
             new DateTimeImmutable('2026-03-25T13:10:00+02:00'),
         );
@@ -329,7 +376,13 @@ final class CapturePhoneClickActionTest extends TestCase
         $leadRepository = $this->createMock(LeadRepository::class);
         $touchRepository = $this->createMock(TouchRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $uuidGenerator = $this->createMock(UuidGenerator::class);
+        $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
+
+        $uuidGenerator
+            ->expects($this->never())
+            ->method('generate');
 
         $transactionManager
             ->expects($this->once())
@@ -363,11 +416,17 @@ final class CapturePhoneClickActionTest extends TestCase
             ->expects($this->never())
             ->method('save');
 
+        $eventBus
+            ->expects($this->never())
+            ->method('publish');
+
         $action = new CapturePhoneClickAction(
             $leadRepository,
             $touchRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $uuidGenerator,
+            $eventBus,
             $transactionManager,
         );
 

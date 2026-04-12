@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Inbound\Application\Actions\Capture\ResolveCurrentVisit;
 
+use Inbound\Application\Identifiers\UuidGenerator;
 use Inbound\Domain\Visit\Visit;
+use Inbound\Domain\Visit\VisitId;
 use Inbound\Domain\Visit\VisitRepository;
 
 final class ResolveCurrentVisitAction
@@ -12,8 +14,8 @@ final class ResolveCurrentVisitAction
     public function __construct(
         private VisitRepository $visitRepository,
         private VisitSessionRule $visitSessionRule,
-    ) {
-    }
+        private UuidGenerator $uuidGenerator,
+    ) {}
 
     public function __invoke(ResolveCurrentVisitCommand $command): Visit
     {
@@ -27,7 +29,7 @@ final class ResolveCurrentVisitAction
         }
 
         $visit = new Visit(
-            $command->visitId,
+            new VisitId($this->uuidGenerator->generate()),
             $command->visitorId,
             $command->attribution,
             $command->attribution,

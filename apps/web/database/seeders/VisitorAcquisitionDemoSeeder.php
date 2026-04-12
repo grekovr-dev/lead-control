@@ -13,17 +13,14 @@ use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickAction;
 use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickCommand;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickAction;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickCommand;
-use Inbound\Domain\Click\ClickId;
 use Inbound\Domain\Lead\Lead;
-use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
 use Inbound\Domain\Touch\Touch;
-use Inbound\Domain\Touch\TouchId;
 use Inbound\Domain\Visit\Visit;
-use Inbound\Domain\Visit\VisitId;
 use Inbound\Infrastructure\Persistence\Eloquent\ClickModel;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadModel;
+use Inbound\Infrastructure\Persistence\Eloquent\RevisitModel;
 use Inbound\Infrastructure\Persistence\Eloquent\TouchModel;
 use Inbound\Infrastructure\Persistence\Eloquent\VisitModel;
 
@@ -33,28 +30,32 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
 
     private const MAIN_DEMO_PERIOD_PRESET = 'previous_month';
 
-    private const DEMO_ID_PREFIX = 'demo-';
-
     private const DEMO_VISITOR_PREFIX = 'demo-visitor-';
 
     public function run(): void
     {
-        $this->resetDemoData();
+        $telegramNotificationsEnabled = (bool) config('services.telegram.notifications_enabled', true);
 
-        $timeline = $this->timelineAnchors();
+        try {
+            config()->set('services.telegram.notifications_enabled', false);
 
-        $this->seedScenarioAHappyPathFirstTouchConversion($timeline);
-        $this->seedScenarioBReloadWithinActiveSession($timeline);
-        $this->seedScenarioCDirectRevisitAfterSessionExpiry($timeline);
-        $this->seedScenarioDStrongAcquisitionBucket($timeline);
-        $this->seedScenarioEWeakAcquisitionBucket($timeline);
-        $this->seedScenarioFDirectAndUnknownAttributionBuckets($timeline);
-        $this->seedScenarioGOutOfCohortLead($timeline);
+            $this->resetDemoData();
+
+            $timeline = $this->timelineAnchors();
+
+            $this->seedScenarioAHappyPathFirstTouchConversion($timeline);
+            $this->seedScenarioBDirectRevisitWithinActiveSession($timeline);
+            $this->seedScenarioCLongGapNewVisitAfterSessionExpiry($timeline);
+            $this->seedScenarioDStrongAcquisitionBucket($timeline);
+            $this->seedScenarioEWeakAcquisitionBucket($timeline);
+            $this->seedScenarioFDirectAndUnknownAttributionBuckets($timeline);
+            $this->seedScenarioGOutOfCohortLeadOnNewVisit($timeline);
+        } finally {
+            config()->set('services.telegram.notifications_enabled', $telegramNotificationsEnabled);
+        }
     }
 
     private function registerClick(
-        string $clickId,
-        string $visitId,
         string $visitorId,
         Attribution $attribution,
         string $landingUrl,
@@ -63,8 +64,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         $action = app(RegisterClickAction::class);
 
         return $action(new RegisterClickCommand(
-            clickId: new ClickId($clickId),
-            visitId: new VisitId($visitId),
             visitorId: new VisitorId($visitorId),
             attribution: $attribution,
             landingUrl: $landingUrl,
@@ -73,7 +72,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
     }
 
     private function createFormLead(
-        string $leadId,
         string $visitorId,
         ?string $name,
         string $phone,
@@ -82,7 +80,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         $action = app(CreateLeadFromFormAction::class);
 
         return $action(new CreateLeadFromFormCommand(
-            leadId: new LeadId($leadId),
             visitorId: new VisitorId($visitorId),
             name: $name,
             phone: $phone,
@@ -91,16 +88,12 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
     }
 
     private function capturePhoneLead(
-        string $leadId,
-        string $touchId,
         string $visitorId,
         DateTimeImmutable $occurredAt,
     ): Lead|Touch {
         $action = app(CapturePhoneClickAction::class);
 
         return $action(new CapturePhoneClickCommand(
-            leadId: new LeadId($leadId),
-            touchId: new TouchId($touchId),
             visitorId: new VisitorId($visitorId),
             occurredAt: $occurredAt,
         ));
@@ -187,8 +180,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         $visitorId = 'demo-visitor-a';
 
         $this->registerClick(
-            clickId: 'demo-click-a-1',
-            visitId: 'demo-visit-a-1',
             visitorId: $visitorId,
             attribution: $this->attribution(
                 source: 'google',
@@ -201,7 +192,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         );
 
         $this->createFormLead(
-            leadId: 'demo-lead-a-1',
             visitorId: $visitorId,
             name: 'Demo Happy Path',
             phone: '+380500000001',
@@ -217,7 +207,7 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
      *     mainDemoPeriodPreset: string
      * } $timeline
      */
-    private function seedScenarioBReloadWithinActiveSession(array $timeline): void
+    private function seedScenarioBDirectRevisitWithinActiveSession(array $timeline): void
     {
         unset($timeline['twoMonthsAgo'], $timeline['currentMonth'], $timeline['mainDemoPeriodPreset']);
 
@@ -227,8 +217,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         $visitorId = 'demo-visitor-b';
 
         $firstVisit = $this->registerClick(
-            clickId: 'demo-click-b-1',
-            visitId: 'demo-visit-b-1',
             visitorId: $visitorId,
             attribution: $this->attribution(
                 source: 'facebook',
@@ -241,8 +229,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         );
 
         $continuedVisit = $this->registerClick(
-            clickId: 'demo-click-b-2',
-            visitId: 'demo-visit-b-2',
             visitorId: $visitorId,
             attribution: Attribution::direct(),
             landingUrl: 'https://demo.lead-control.test/lookalike-offer',
@@ -250,15 +236,14 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         );
 
         $this->assertSameVisit(
-            expectedVisitId: 'demo-visit-b-1',
+            expectedVisitId: $firstVisit->id()->value(),
             actualVisit: $continuedVisit,
-            scenarioName: 'Scenario B reload within active session',
+            scenarioName: 'Scenario B direct revisit within active session',
         );
 
         $this->createFormLead(
-            leadId: 'demo-lead-b-1',
             visitorId: $visitorId,
-            name: 'Demo Reload Session',
+            name: 'Demo Direct Revisit',
             phone: '+380500000002',
             occurredAt: $leadCreatedAt,
         );
@@ -272,7 +257,7 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
      *     mainDemoPeriodPreset: string
      * } $timeline
      */
-    private function seedScenarioCDirectRevisitAfterSessionExpiry(array $timeline): void
+    private function seedScenarioCLongGapNewVisitAfterSessionExpiry(array $timeline): void
     {
         unset($timeline['twoMonthsAgo'], $timeline['currentMonth'], $timeline['mainDemoPeriodPreset']);
 
@@ -283,52 +268,52 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
             referrer: 'https://googleads.g.doubleclick.net/',
         );
         $firstClickAt = $this->daysAfter($timeline['previousMonth'], 7);
-        $directRevisitAt = $this->daysAfter($firstClickAt, 2);
-        $leadCreatedAt = $this->minutesAfter($directRevisitAt, 10);
+        $secondClickAt = $this->daysAfter($firstClickAt, 2);
+        $leadCreatedAt = $this->minutesAfter($secondClickAt, 10);
         $visitorId = 'demo-visitor-c';
 
         $firstVisit = $this->registerClick(
-            clickId: 'demo-click-c-1',
-            visitId: 'demo-visit-c-1',
             visitorId: $visitorId,
             attribution: $firstTouchAttribution,
             landingUrl: 'https://demo.lead-control.test/retarget-offer',
             occurredAt: $firstClickAt,
         );
 
-        $directVisit = $this->registerClick(
-            clickId: 'demo-click-c-2',
-            visitId: 'demo-visit-c-2',
+        $secondVisit = $this->registerClick(
             visitorId: $visitorId,
-            attribution: Attribution::direct(),
+            attribution: $this->attribution(
+                source: 'google',
+                medium: 'organic',
+                campaign: 'retarget-return',
+                referrer: 'https://www.google.com/',
+            ),
             landingUrl: 'https://demo.lead-control.test/retarget-offer',
-            occurredAt: $directRevisitAt,
+            occurredAt: $secondClickAt,
         );
 
         $this->assertSameVisit(
-            expectedVisitId: 'demo-visit-c-2',
-            actualVisit: $directVisit,
-            scenarioName: 'Scenario C direct revisit after session expiry',
+            expectedVisitId: $secondVisit->id()->value(),
+            actualVisit: $secondVisit,
+            scenarioName: 'Scenario C long gap new visit after session expiry',
         );
 
-        if ($firstVisit->id()->value() === $directVisit->id()->value()) {
+        if ($firstVisit->id()->value() === $secondVisit->id()->value()) {
             throw new \RuntimeException('Scenario C expected a new visit after session expiry, but the original visit was reused.');
         }
 
         $lead = $this->createFormLead(
-            leadId: 'demo-lead-c-1',
             visitorId: $visitorId,
-            name: 'Demo Direct Revisit',
+            name: 'Demo Long Gap Return',
             phone: '+380500000003',
             occurredAt: $leadCreatedAt,
         );
 
         $this->assertLeadAttributionSplit(
             lead: $lead,
-            expectedVisitId: 'demo-visit-c-2',
-            expectedVisitAttribution: Attribution::direct(),
+            expectedVisitId: $secondVisit->id()->value(),
+            expectedVisitAttribution: $secondVisit->firstAttribution(),
             expectedVisitorAttribution: $firstTouchAttribution,
-            scenarioName: 'Scenario C direct revisit after session expiry',
+            scenarioName: 'Scenario C long gap new visit after session expiry',
         );
     }
 
@@ -354,10 +339,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         $visitors = [
             [
                 'visitorId' => 'demo-visitor-d1',
-                'clickId' => 'demo-click-d-1',
-                'visitId' => 'demo-visit-d-1',
-                'leadId' => 'demo-lead-d-1',
-                'touchId' => 'demo-touch-d-1',
                 'origin' => 'form',
                 'name' => 'Demo Strong Bucket 1',
                 'phone' => '+380500000004',
@@ -366,10 +347,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
             ],
             [
                 'visitorId' => 'demo-visitor-d2',
-                'clickId' => 'demo-click-d-2',
-                'visitId' => 'demo-visit-d-2',
-                'leadId' => 'demo-lead-d-2',
-                'touchId' => 'demo-touch-d-2',
                 'origin' => 'form',
                 'name' => 'Demo Strong Bucket 2',
                 'phone' => '+380500000005',
@@ -378,10 +355,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
             ],
             [
                 'visitorId' => 'demo-visitor-d3',
-                'clickId' => 'demo-click-d-3',
-                'visitId' => 'demo-visit-d-3',
-                'leadId' => 'demo-lead-d-3',
-                'touchId' => 'demo-touch-d-3',
                 'origin' => 'phone_click',
                 'name' => 'Demo Strong Bucket 3',
                 'phone' => '+380500000006',
@@ -392,8 +365,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
 
         foreach ($visitors as $visitor) {
             $this->registerClick(
-                clickId: $visitor['clickId'],
-                visitId: $visitor['visitId'],
                 visitorId: $visitor['visitorId'],
                 attribution: $bucketAttribution,
                 landingUrl: 'https://demo.lead-control.test/creator-offer',
@@ -404,8 +375,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
 
             if ($visitor['origin'] === 'phone_click') {
                 $this->capturePhoneLead(
-                    leadId: $visitor['leadId'],
-                    touchId: $visitor['touchId'],
                     visitorId: $visitor['visitorId'],
                     occurredAt: $leadOccurredAt,
                 );
@@ -414,7 +383,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
             }
 
             $this->createFormLead(
-                leadId: $visitor['leadId'],
                 visitorId: $visitor['visitorId'],
                 name: $visitor['name'],
                 phone: $visitor['phone'],
@@ -445,28 +413,20 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         $visitors = [
             [
                 'visitorId' => 'demo-visitor-e1',
-                'clickId' => 'demo-click-e-1',
-                'visitId' => 'demo-visit-e-1',
                 'clickedAt' => $this->daysAfter($timeline['previousMonth'], 14),
             ],
             [
                 'visitorId' => 'demo-visitor-e2',
-                'clickId' => 'demo-click-e-2',
-                'visitId' => 'demo-visit-e-2',
                 'clickedAt' => $this->daysAfter($timeline['previousMonth'], 16),
             ],
             [
                 'visitorId' => 'demo-visitor-e3',
-                'clickId' => 'demo-click-e-3',
-                'visitId' => 'demo-visit-e-3',
                 'clickedAt' => $this->daysAfter($timeline['previousMonth'], 18),
             ],
         ];
 
         foreach ($visitors as $visitor) {
             $this->registerClick(
-                clickId: $visitor['clickId'],
-                visitId: $visitor['visitId'],
                 visitorId: $visitor['visitorId'],
                 attribution: $bucketAttribution,
                 landingUrl: 'https://demo.lead-control.test/organic-guide',
@@ -491,8 +451,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         $directLeadCreatedAt = $this->minutesAfter($directFirstClickAt, 20);
 
         $this->registerClick(
-            clickId: 'demo-click-f-1',
-            visitId: 'demo-visit-f-1',
             visitorId: 'demo-visitor-f1',
             attribution: Attribution::direct(),
             landingUrl: 'https://demo.lead-control.test/direct-offer',
@@ -500,8 +458,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         );
 
         $this->capturePhoneLead(
-            leadId: 'demo-lead-f-1',
-            touchId: 'demo-touch-f-1',
             visitorId: 'demo-visitor-f1',
             occurredAt: $directLeadCreatedAt,
         );
@@ -510,8 +466,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         $unknownLeadCreatedAt = $this->minutesAfter($unknownFirstClickAt, 16);
 
         $this->registerClick(
-            clickId: 'demo-click-f-2',
-            visitId: 'demo-visit-f-2',
             visitorId: 'demo-visitor-f2',
             attribution: $this->attribution(
                 source: 'unknown',
@@ -523,7 +477,6 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         );
 
         $this->createFormLead(
-            leadId: 'demo-lead-f-2',
             visitorId: 'demo-visitor-f2',
             name: 'Demo Unknown Source',
             phone: '+380500000008',
@@ -539,7 +492,7 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
      *     mainDemoPeriodPreset: string
      * } $timeline
      */
-    private function seedScenarioGOutOfCohortLead(array $timeline): void
+    private function seedScenarioGOutOfCohortLeadOnNewVisit(array $timeline): void
     {
         unset($timeline['currentMonth'], $timeline['mainDemoPeriodPreset']);
 
@@ -550,36 +503,40 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
             referrer: 'https://www.bing.com/',
         );
         $firstClickAt = $this->daysAfter($timeline['twoMonthsAgo'], 6);
-        $directRevisitAt = $this->daysAfter($timeline['previousMonth'], 24);
-        $leadCreatedAt = $this->minutesAfter($directRevisitAt, 14);
+        $secondClickAt = $this->daysAfter($timeline['previousMonth'], 24);
+        $leadCreatedAt = $this->minutesAfter($secondClickAt, 14);
         $visitorId = 'demo-visitor-g1';
 
-        $this->registerClick(
-            clickId: 'demo-click-g-1',
-            visitId: 'demo-visit-g-1',
+        $firstVisit = $this->registerClick(
             visitorId: $visitorId,
             attribution: $firstTouchAttribution,
             landingUrl: 'https://demo.lead-control.test/archived-offer',
             occurredAt: $firstClickAt,
         );
 
-        $directVisit = $this->registerClick(
-            clickId: 'demo-click-g-2',
-            visitId: 'demo-visit-g-2',
+        $secondVisit = $this->registerClick(
             visitorId: $visitorId,
-            attribution: Attribution::direct(),
+            attribution: $this->attribution(
+                source: 'google',
+                medium: 'organic',
+                campaign: 'late-return',
+                referrer: 'https://www.google.com/',
+            ),
             landingUrl: 'https://demo.lead-control.test/archived-offer',
-            occurredAt: $directRevisitAt,
+            occurredAt: $secondClickAt,
         );
 
         $this->assertSameVisit(
-            expectedVisitId: 'demo-visit-g-2',
-            actualVisit: $directVisit,
-            scenarioName: 'Scenario G out-of-cohort lead revisit',
+            expectedVisitId: $secondVisit->id()->value(),
+            actualVisit: $secondVisit,
+            scenarioName: 'Scenario G out-of-cohort lead on new visit',
         );
 
+        if ($firstVisit->id()->value() === $secondVisit->id()->value()) {
+            throw new \RuntimeException('Scenario G expected a new visit after the long gap, but the original visit was reused.');
+        }
+
         $lead = $this->createFormLead(
-            leadId: 'demo-lead-g-1',
             visitorId: $visitorId,
             name: 'Demo Out Of Cohort',
             phone: '+380500000009',
@@ -588,10 +545,10 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
 
         $this->assertLeadAttributionSplit(
             lead: $lead,
-            expectedVisitId: 'demo-visit-g-2',
-            expectedVisitAttribution: Attribution::direct(),
+            expectedVisitId: $secondVisit->id()->value(),
+            expectedVisitAttribution: $secondVisit->firstAttribution(),
             expectedVisitorAttribution: $firstTouchAttribution,
-            scenarioName: 'Scenario G out-of-cohort lead',
+            scenarioName: 'Scenario G out-of-cohort lead on new visit',
         );
     }
 
@@ -627,7 +584,7 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
 
         if (! $lead->visitAttribution()->equals($expectedVisitAttribution)) {
             throw new \RuntimeException(sprintf(
-                '%s expected lead visit attribution to follow the direct revisit.',
+                '%s expected lead visit attribution to follow the resolved visit.',
                 $scenarioName,
             ));
         }
@@ -643,23 +600,23 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
     private function resetDemoData(): void
     {
         TouchModel::query()
-            ->where('id', 'like', self::DEMO_ID_PREFIX.'%')
-            ->orWhere('visitor_id', 'like', self::DEMO_VISITOR_PREFIX.'%')
+            ->where('visitor_id', 'like', self::DEMO_VISITOR_PREFIX.'%')
             ->delete();
 
         ClickModel::query()
-            ->where('id', 'like', self::DEMO_ID_PREFIX.'%')
-            ->orWhere('visitor_id', 'like', self::DEMO_VISITOR_PREFIX.'%')
+            ->where('visitor_id', 'like', self::DEMO_VISITOR_PREFIX.'%')
             ->delete();
 
         LeadModel::query()
-            ->where('id', 'like', self::DEMO_ID_PREFIX.'%')
-            ->orWhere('visitor_id', 'like', self::DEMO_VISITOR_PREFIX.'%')
+            ->where('visitor_id', 'like', self::DEMO_VISITOR_PREFIX.'%')
+            ->delete();
+
+        RevisitModel::query()
+            ->where('visitor_id', 'like', self::DEMO_VISITOR_PREFIX.'%')
             ->delete();
 
         VisitModel::query()
-            ->where('id', 'like', self::DEMO_ID_PREFIX.'%')
-            ->orWhere('visitor_id', 'like', self::DEMO_VISITOR_PREFIX.'%')
+            ->where('visitor_id', 'like', self::DEMO_VISITOR_PREFIX.'%')
             ->delete();
     }
 }

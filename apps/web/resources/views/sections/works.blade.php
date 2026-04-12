@@ -1,8 +1,12 @@
-<section id="works" class="bg-white px-6 py-16 md:py-20">
+<section id="works" class="bg-gray-50 px-6 py-16 md:py-20">
     <div class="mx-auto max-w-6xl">
         <div class="mb-10 max-w-3xl">
-            <p class="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-teal-700">Наші роботи</p>
-            <h2 class="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">Приклади реалізованих проєктів</h2>
+            <p class="mb-3 text-sm font-semibold uppercase tracking-wide text-teal-700">
+                Наші роботи
+            </p>
+            <h2 class="text-2xl font-semibold leading-tight text-slate-900 md:text-3xl">
+                Приклади реалізованих проєктів
+            </h2>
             <p class="mt-4 text-lg leading-relaxed text-slate-600">
                 Кілька реальних прикладів натяжних стель, де можна оцінити якість, точність і загальний результат.
             </p>

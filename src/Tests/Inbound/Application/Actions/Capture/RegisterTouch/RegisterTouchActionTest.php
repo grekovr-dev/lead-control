@@ -9,6 +9,7 @@ use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisi
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\CurrentVisitNotFoundException;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchAction;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchCommand;
+use Inbound\Application\Identifiers\UuidGenerator;
 use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
@@ -26,8 +27,8 @@ final class RegisterTouchActionTest extends TestCase
     public function test_it_uses_existing_visit_when_it_exists(): void
     {
         $occurredAt = new DateTimeImmutable('2026-03-20T11:10:00+02:00');
+        $expectedTouchId = new TouchId('touch-123');
         $command = new RegisterTouchCommand(
-            new TouchId('touch-123'),
             new VisitorId('visitor-456'),
             TouchType::LeadFormClick,
             $occurredAt,
@@ -44,7 +45,13 @@ final class RegisterTouchActionTest extends TestCase
 
         $touchRepository = $this->createMock(TouchRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $uuidGenerator = $this->createMock(UuidGenerator::class);
         $transactionManager = $this->createMock(TransactionManager::class);
+
+        $uuidGenerator
+            ->expects($this->once())
+            ->method('generate')
+            ->willReturn($expectedTouchId->value());
 
         $transactionManager
             ->expects($this->once())
@@ -55,10 +62,10 @@ final class RegisterTouchActionTest extends TestCase
         $touchRepository
             ->expects($this->once())
             ->method('save')
-            ->with($this->callback(function (Touch $touch) use ($command, $existingVisit, $occurredAt): bool {
-                return $touch->id()->equals($command->touchId)
+            ->with($this->callback(function (Touch $touch) use ($expectedTouchId, $existingVisit, $occurredAt): bool {
+                return $touch->id()->equals($expectedTouchId)
                     && $touch->visitId()->equals($existingVisit->id())
-                    && $touch->visitorId()->equals($command->visitorId)
+                    && $touch->visitorId()->equals(new VisitorId('visitor-456'))
                     && $touch->type() === TouchType::LeadFormClick
                     && $touch->occurredAt() == $occurredAt;
             }));
@@ -81,19 +88,20 @@ final class RegisterTouchActionTest extends TestCase
         $action = new RegisterTouchAction(
             $touchRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $uuidGenerator,
             $transactionManager,
         );
 
         $result = $action($command);
 
         $this->assertInstanceOf(Touch::class, $result);
+        $this->assertTrue($result->id()->equals($expectedTouchId));
         $this->assertTrue($result->visitId()->equals($existingVisit->id()));
     }
 
     public function test_it_throws_when_current_visit_is_missing(): void
     {
         $command = new RegisterTouchCommand(
-            new TouchId('touch-123'),
             new VisitorId('visitor-456'),
             TouchType::MessengerClick,
             new DateTimeImmutable('2026-03-20T11:10:00+02:00'),
@@ -101,7 +109,12 @@ final class RegisterTouchActionTest extends TestCase
 
         $touchRepository = $this->createMock(TouchRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $uuidGenerator = $this->createMock(UuidGenerator::class);
         $transactionManager = $this->createMock(TransactionManager::class);
+
+        $uuidGenerator
+            ->expects($this->never())
+            ->method('generate');
 
         $transactionManager
             ->expects($this->once())
@@ -126,6 +139,7 @@ final class RegisterTouchActionTest extends TestCase
         $action = new RegisterTouchAction(
             $touchRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $uuidGenerator,
             $transactionManager,
         );
 

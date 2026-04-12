@@ -49,15 +49,13 @@ final class RegisterControllerTest extends TestCase
         $this->assertNotNull($response->getCookie($attributionCookieStore->cookieName()));
         $this->assertLessThan(time(), $response->getCookie($attributionCookieStore->cookieName())->getExpiresTime());
 
-        $clickId = (string) $response->json('data.clickId');
         $visitId = (string) $response->json('data.visitId');
 
-        $this->assertNotSame('', $clickId);
         $this->assertNotSame('', $visitId);
+        $this->assertArrayNotHasKey('clickId', (array) $response->json('data'));
         $this->assertDatabaseCount('clicks', 1);
         $this->assertDatabaseCount('visits', 1);
         $this->assertDatabaseHas('clicks', [
-            'id' => $clickId,
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
             'visit_id' => $visitId,
             'landing_url' => route('landing'),
@@ -122,13 +120,10 @@ final class RegisterControllerTest extends TestCase
         $this->assertNotNull($response->getCookie($attributionCookieStore->cookieName()));
         $this->assertLessThan(time(), $response->getCookie($attributionCookieStore->cookieName())->getExpiresTime());
 
-        $clickId = (string) $response->json('data.clickId');
-
-        $this->assertNotSame('', $clickId);
+        $this->assertArrayNotHasKey('clickId', (array) $response->json('data'));
         $this->assertDatabaseCount('clicks', 1);
         $this->assertDatabaseCount('visits', 1);
         $this->assertDatabaseHas('clicks', [
-            'id' => $clickId,
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
             'visit_id' => 'visit-existing',
             'landing_url' => route('landing'),
@@ -146,6 +141,66 @@ final class RegisterControllerTest extends TestCase
             'last_attribution_source' => 'google',
             'last_attribution_medium' => 'remarketing',
             'last_attribution_referrer' => 'https://facebook.com/ad-1',
+        ]);
+    }
+
+    /**
+     * @throws JsonException
+     */
+    public function test_click_endpoint_creates_revisit_when_direct_visit_continues_current_visit(): void
+    {
+        VisitModel::query()->create([
+            'id' => 'visit-existing',
+            'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'started_at' => now()->subMinutes(10),
+            'last_touched_at' => now()->subMinutes(5),
+            'first_attribution_source' => 'google',
+            'first_attribution_medium' => 'cpc',
+            'last_attribution_source' => 'google',
+            'last_attribution_medium' => 'cpc',
+        ]);
+
+        $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);
+        $attributionCookieStore = $this->app->make(AttributionCookieStore::class);
+
+        $response = $this
+            ->withCookie($visitorIdCookieStore->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
+            ->withCookie($attributionCookieStore->cookieName(), json_encode([
+                'source' => 'direct',
+                'medium' => 'none',
+                'campaign' => null,
+                'content' => null,
+                'term' => null,
+                'gclid' => null,
+                'fbclid' => null,
+                'msclkid' => null,
+                'referrer' => null,
+            ], JSON_THROW_ON_ERROR))
+            ->withCredentials()
+            ->postJson(route('capture.click'));
+
+        $response->assertOk();
+        $response->assertJsonPath('ok', true);
+        $response->assertJsonPath('data.visitorId', '550e8400-e29b-41d4-a716-446655440000');
+        $response->assertJsonPath('data.visitId', 'visit-existing');
+        $this->assertArrayNotHasKey('clickId', (array) $response->json('data'));
+
+        $this->assertDatabaseCount('clicks', 0);
+        $this->assertDatabaseCount('revisits', 1);
+        $this->assertDatabaseHas('revisits', [
+            'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'visit_id' => 'visit-existing',
+            'landing_url' => route('landing'),
+        ]);
+        $this->assertDatabaseCount('visits', 1);
+        $this->assertDatabaseHas('visits', [
+            'id' => 'visit-existing',
+            'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
+            'landing_url' => null,
+            'first_attribution_source' => 'google',
+            'first_attribution_medium' => 'cpc',
+            'last_attribution_source' => 'google',
+            'last_attribution_medium' => 'cpc',
         ]);
     }
 

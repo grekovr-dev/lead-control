@@ -7,8 +7,11 @@ namespace Inbound\Application\Actions\Capture\CreateLeadFromForm;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitCommand;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\CurrentVisitNotFoundException as ContinueCurrentVisitNotFoundException;
+use Inbound\Application\Events\EventBus;
+use Inbound\Application\Identifiers\UuidGenerator;
 use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Lead\Lead;
+use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Lead\LeadRepository;
 use Inbound\Domain\Lead\LeadStatus;
 use Inbound\Domain\Visit\VisitRepository;
@@ -19,13 +22,14 @@ final class CreateLeadFromFormAction
         private LeadRepository $leadRepository,
         private VisitRepository $visitRepository,
         private ContinueCurrentVisitAction $continueCurrentVisitAction,
+        private UuidGenerator $uuidGenerator,
+        private EventBus $eventBus,
         private TransactionManager $transactionManager,
-    ) {
-    }
+    ) {}
 
     public function __invoke(CreateLeadFromFormCommand $command): Lead
     {
-        return $this->transactionManager->run(function () use ($command): Lead {
+        $lead = $this->transactionManager->run(function () use ($command): Lead {
             try {
                 $visit = ($this->continueCurrentVisitAction)(new ContinueCurrentVisitCommand(
                     $command->visitorId,
@@ -41,8 +45,8 @@ final class CreateLeadFromFormAction
                 throw new \RuntimeException('Cannot create lead from form without a first visit for the visitor.');
             }
 
-            $lead = new Lead(
-                $command->leadId,
+            $lead = Lead::create(
+                new LeadId($this->uuidGenerator->generate()),
                 $command->visitorId,
                 $visit->id(),
                 $command->name,
@@ -59,5 +63,9 @@ final class CreateLeadFromFormAction
 
             return $lead;
         });
+
+        $this->eventBus->publish(...$lead->releaseEvents());
+
+        return $lead;
     }
 }

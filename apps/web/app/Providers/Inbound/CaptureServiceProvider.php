@@ -2,19 +2,35 @@
 
 namespace App\Providers\Inbound;
 
+use App\Http\Cookies\Inbound\Capture\AttributionCookieStore;
 use App\Http\Cookies\Inbound\Capture\VisitorIdCookieConfig;
 use DateInterval;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\ServiceProvider;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\VisitSessionRule;
+use Inbound\Application\Events\EventBus;
+use Inbound\Application\Identifiers\UuidGenerator;
+use Inbound\Application\Notifications\Telegram\TelegramClient;
+use Inbound\Application\Queries\Notifications\GetManagerLeadNotification\ManagerLeadNotificationReadModel;
+use Inbound\Application\Reactions\Lead\ManagerLeadNotificationScheduler;
+use Inbound\Application\Reactions\Lead\NotifyManagerAboutNewLead;
 use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Click\ClickRepository;
+use Inbound\Domain\Lead\Events\LeadCreated;
 use Inbound\Domain\Lead\LeadRepository;
+use Inbound\Domain\Revisit\RevisitRepository;
 use Inbound\Domain\Touch\TouchRepository;
 use Inbound\Domain\Visit\VisitRepository;
+use Inbound\Infrastructure\Events\LaravelEventBus;
+use Inbound\Infrastructure\Identifiers\LaravelUuidGenerator;
+use Inbound\Infrastructure\Notifications\LaravelManagerLeadNotificationScheduler;
+use Inbound\Infrastructure\Notifications\Telegram\LaravelHttpTelegramClient;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentClickRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentLeadRepository;
+use Inbound\Infrastructure\Persistence\Eloquent\EloquentRevisitRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentTouchRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentVisitRepository;
+use Inbound\Infrastructure\Persistence\Eloquent\ReadModel\EloquentManagerLeadNotificationReadModel;
 use Inbound\Infrastructure\Persistence\LaravelTransactionManager;
 
 class CaptureServiceProvider extends ServiceProvider
@@ -31,8 +47,8 @@ class CaptureServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->bind(\App\Http\Cookies\Inbound\Capture\AttributionCookieStore::class, function ($app) {
-            return new \App\Http\Cookies\Inbound\Capture\AttributionCookieStore(
+        $this->app->bind(AttributionCookieStore::class, function ($app) {
+            return new AttributionCookieStore(
                 secure: (bool) $app['config']->get('inbound.capture.cookie_secure', true),
             );
         });
@@ -45,16 +61,30 @@ class CaptureServiceProvider extends ServiceProvider
 
         $this->app->bind(ClickRepository::class, EloquentClickRepository::class);
         $this->app->bind(VisitRepository::class, EloquentVisitRepository::class);
+        $this->app->bind(RevisitRepository::class, EloquentRevisitRepository::class);
         $this->app->bind(TouchRepository::class, EloquentTouchRepository::class);
         $this->app->bind(LeadRepository::class, EloquentLeadRepository::class);
+        $this->app->bind(UuidGenerator::class, LaravelUuidGenerator::class);
+        $this->app->bind(EventBus::class, LaravelEventBus::class);
+        $this->app->bind(ManagerLeadNotificationScheduler::class, LaravelManagerLeadNotificationScheduler::class);
+        $this->app->bind(ManagerLeadNotificationReadModel::class, EloquentManagerLeadNotificationReadModel::class);
+        $this->app->bind(TelegramClient::class, function ($app): TelegramClient {
+            return new LaravelHttpTelegramClient(
+                botToken: (string) $app['config']->get('services.telegram.bot_token'),
+                baseUrl: (string) $app['config']->get('services.telegram.base_url', 'https://api.telegram.org'),
+                timeoutSeconds: (int) $app['config']->get('services.telegram.timeout_seconds', 10),
+            );
+        });
         $this->app->bind(TransactionManager::class, LaravelTransactionManager::class);
     }
 
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+    public function boot(Dispatcher $events): void
     {
-        //
+        $events->listen(LeadCreated::class, function (LeadCreated $event): void {
+            ($this->app->make(NotifyManagerAboutNewLead::class))($event);
+        });
     }
 }
