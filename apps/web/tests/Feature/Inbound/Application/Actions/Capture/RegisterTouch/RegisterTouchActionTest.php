@@ -11,7 +11,6 @@ use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchAction;
 use Inbound\Application\Actions\Capture\RegisterTouch\RegisterTouchCommand;
 use Inbound\Domain\Shared\VisitorId;
 use Inbound\Domain\Touch\Touch;
-use Inbound\Domain\Touch\TouchId;
 use Inbound\Domain\Touch\TouchType;
 use Inbound\Infrastructure\Persistence\Eloquent\VisitModel;
 use Tests\TestCase;
@@ -24,7 +23,6 @@ final class RegisterTouchActionTest extends TestCase
     {
         $occurredAt = new DateTimeImmutable('2026-03-23 11:10:00');
         $command = new RegisterTouchCommand(
-            new TouchId('touch-new'),
             new VisitorId('550e8400-e29b-41d4-a716-446655440000'),
             TouchType::LeadFormClick,
             $occurredAt,
@@ -56,7 +54,6 @@ final class RegisterTouchActionTest extends TestCase
 
         $occurredAt = new DateTimeImmutable('2026-03-23 11:10:00');
         $command = new RegisterTouchCommand(
-            new TouchId('touch-existing'),
             new VisitorId('550e8400-e29b-41d4-a716-446655440000'),
             TouchType::MessengerClick,
             $occurredAt,
@@ -64,16 +61,18 @@ final class RegisterTouchActionTest extends TestCase
 
         $action = $this->app->make(RegisterTouchAction::class);
         $touch = $action($command);
+        $touchId = $touch->id()->value();
 
         $this->assertInstanceOf(Touch::class, $touch);
-        $this->assertSame('touch-existing', $touch->id()->value());
+        $this->assertNotSame('', $touchId);
+        $this->assertSame($touchId, $touch->id()->value());
         $this->assertSame('visit-existing', $touch->visitId()->value());
         $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $touch->visitorId()->value());
         $this->assertSame(TouchType::MessengerClick, $touch->type());
 
         $this->assertDatabaseCount('touches', 1);
         $this->assertDatabaseHas('touches', [
-            'id' => 'touch-existing',
+            'id' => $touchId,
             'visit_id' => 'visit-existing',
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
             'type' => 'messenger_click',

@@ -36,6 +36,7 @@ return [
     ],
 
     'telegram' => [
+        'notifications_enabled' => env('TELEGRAM_NOTIFICATIONS_ENABLED', true),
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'manager_chat_id' => env('TELEGRAM_MANAGER_CHAT_ID'),
         'lead_url_base' => env('TELEGRAM_LEAD_URL_BASE'),

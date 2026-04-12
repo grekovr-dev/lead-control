@@ -10,7 +10,6 @@ use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormAct
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormCommand;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CurrentVisitNotFoundException;
 use Inbound\Domain\Lead\Lead;
-use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Shared\VisitorId;
 use Inbound\Infrastructure\Persistence\Eloquent\VisitModel;
 use Tests\TestCase;
@@ -47,7 +46,6 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $occurredAt = new DateTimeImmutable('2026-03-23 12:10:00');
         $command = new CreateLeadFromFormCommand(
-            new LeadId('lead-new'),
             new VisitorId('550e8400-e29b-41d4-a716-446655440000'),
             ' John Doe ',
             ' +380501112233 ',
@@ -56,9 +54,11 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $action = $this->app->make(CreateLeadFromFormAction::class);
         $lead = $action($command);
+        $leadId = $lead->id()->value();
 
         $this->assertInstanceOf(Lead::class, $lead);
-        $this->assertSame('lead-new', $lead->id()->value());
+        $this->assertNotSame('', $leadId);
+        $this->assertSame($leadId, $lead->id()->value());
         $this->assertSame('visit-existing', $lead->visitId()->value());
         $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $lead->visitorId()->value());
         $this->assertSame('John Doe', $lead->name());
@@ -73,7 +73,7 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $this->assertDatabaseCount('leads', 1);
         $this->assertDatabaseHas('leads', [
-            'id' => 'lead-new',
+            'id' => $leadId,
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
             'visit_id' => 'visit-existing',
             'name' => 'John Doe',
@@ -94,7 +94,6 @@ final class CreateLeadFromFormActionTest extends TestCase
     public function test_it_throws_when_active_visit_is_missing(): void
     {
         $command = new CreateLeadFromFormCommand(
-            new LeadId('lead-missing-visit'),
             new VisitorId('550e8400-e29b-41d4-a716-446655440000'),
             'John Doe',
             '+380501112233',
@@ -125,7 +124,6 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $occurredAt = new DateTimeImmutable('2026-03-23 12:40:01');
         $command = new CreateLeadFromFormCommand(
-            new LeadId('lead-expired'),
             new VisitorId('550e8400-e29b-41d4-a716-446655440000'),
             'John Doe',
             '+380501112233',
@@ -134,15 +132,17 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $action = $this->app->make(CreateLeadFromFormAction::class);
         $lead = $action($command);
+        $leadId = $lead->id()->value();
 
         $this->assertInstanceOf(Lead::class, $lead);
-        $this->assertSame('lead-expired', $lead->id()->value());
+        $this->assertNotSame('', $leadId);
+        $this->assertSame($leadId, $lead->id()->value());
         $this->assertSame('visit-expired', $lead->visitId()->value());
         $this->assertSame('form', $lead->origin());
 
         $this->assertDatabaseCount('leads', 1);
         $this->assertDatabaseHas('leads', [
-            'id' => 'lead-expired',
+            'id' => $leadId,
             'visit_id' => 'visit-expired',
             'origin' => 'form',
             'landing_url' => 'https://example.com/expired-landing',

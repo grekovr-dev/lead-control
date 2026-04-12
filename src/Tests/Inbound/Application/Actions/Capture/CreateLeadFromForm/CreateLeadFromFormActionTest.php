@@ -10,6 +10,7 @@ use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormAct
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormCommand;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CurrentVisitNotFoundException;
 use Inbound\Application\Events\EventBus;
+use Inbound\Application\Identifiers\UuidGenerator;
 use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Lead\Events\LeadCreated;
 use Inbound\Domain\Lead\Lead;
@@ -28,8 +29,8 @@ final class CreateLeadFromFormActionTest extends TestCase
     public function test_it_creates_lead_using_existing_visit(): void
     {
         $occurredAt = new DateTimeImmutable('2026-03-20T12:10:00+02:00');
+        $expectedLeadId = new LeadId('lead-123');
         $command = new CreateLeadFromFormCommand(
-            new LeadId('lead-123'),
             new VisitorId('visitor-456'),
             'John Doe',
             '+380501112233',
@@ -58,8 +59,14 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $leadRepository = $this->createMock(LeadRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $uuidGenerator = $this->createMock(UuidGenerator::class);
         $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
+
+        $uuidGenerator
+            ->expects($this->once())
+            ->method('generate')
+            ->willReturn($expectedLeadId->value());
 
         $transactionManager
             ->expects($this->once())
@@ -90,8 +97,8 @@ final class CreateLeadFromFormActionTest extends TestCase
         $leadRepository
             ->expects($this->once())
             ->method('save')
-            ->with($this->callback(function (Lead $lead) use ($command, $existingVisit, $firstVisit, $occurredAt): bool {
-                return $lead->id()->equals($command->leadId)
+            ->with($this->callback(function (Lead $lead) use ($expectedLeadId, $command, $existingVisit, $firstVisit, $occurredAt): bool {
+                return $lead->id()->equals($expectedLeadId)
                     && $lead->visitorId()->equals($command->visitorId)
                     && $lead->visitId()->equals($existingVisit->id())
                     && $lead->name() === 'John Doe'
@@ -107,9 +114,9 @@ final class CreateLeadFromFormActionTest extends TestCase
         $eventBus
             ->expects($this->once())
             ->method('publish')
-            ->with($this->callback(function (object $event) use ($command, $occurredAt): bool {
+            ->with($this->callback(function (object $event) use ($expectedLeadId, $occurredAt): bool {
                 return $event instanceof LeadCreated
-                    && $event->leadId->equals($command->leadId)
+                    && $event->leadId->equals($expectedLeadId)
                     && $event->occurredAt == $occurredAt;
             }));
 
@@ -117,6 +124,7 @@ final class CreateLeadFromFormActionTest extends TestCase
             $leadRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $uuidGenerator,
             $eventBus,
             $transactionManager,
         );
@@ -124,14 +132,13 @@ final class CreateLeadFromFormActionTest extends TestCase
         $result = $action($command);
 
         $this->assertInstanceOf(Lead::class, $result);
-        $this->assertTrue($result->id()->equals($command->leadId));
+        $this->assertTrue($result->id()->equals($expectedLeadId));
         $this->assertTrue($result->visitId()->equals($existingVisit->id()));
     }
 
     public function test_it_throws_when_current_visit_is_missing(): void
     {
         $command = new CreateLeadFromFormCommand(
-            new LeadId('lead-123'),
             new VisitorId('visitor-456'),
             'John Doe',
             '+380501112233',
@@ -140,8 +147,13 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $leadRepository = $this->createMock(LeadRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $uuidGenerator = $this->createMock(UuidGenerator::class);
         $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
+
+        $uuidGenerator
+            ->expects($this->never())
+            ->method('generate');
 
         $transactionManager
             ->expects($this->once())
@@ -175,6 +187,7 @@ final class CreateLeadFromFormActionTest extends TestCase
             $leadRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $uuidGenerator,
             $eventBus,
             $transactionManager,
         );
@@ -187,8 +200,8 @@ final class CreateLeadFromFormActionTest extends TestCase
 
     public function test_it_continues_last_visit_even_when_it_is_expired_by_session_rule(): void
     {
+        $expectedLeadId = new LeadId('lead-123');
         $command = new CreateLeadFromFormCommand(
-            new LeadId('lead-123'),
             new VisitorId('visitor-456'),
             'John Doe',
             '+380501112233',
@@ -206,8 +219,14 @@ final class CreateLeadFromFormActionTest extends TestCase
 
         $leadRepository = $this->createMock(LeadRepository::class);
         $visitRepository = $this->createMock(VisitRepository::class);
+        $uuidGenerator = $this->createMock(UuidGenerator::class);
         $eventBus = $this->createMock(EventBus::class);
         $transactionManager = $this->createMock(TransactionManager::class);
+
+        $uuidGenerator
+            ->expects($this->once())
+            ->method('generate')
+            ->willReturn($expectedLeadId->value());
 
         $transactionManager
             ->expects($this->once())
@@ -238,7 +257,9 @@ final class CreateLeadFromFormActionTest extends TestCase
         $leadRepository
             ->expects($this->once())
             ->method('save')
-            ->with($this->isInstanceOf(Lead::class));
+            ->with($this->callback(function (Lead $lead) use ($expectedLeadId): bool {
+                return $lead->id()->equals($expectedLeadId);
+            }));
 
         $eventBus
             ->expects($this->once())
@@ -249,6 +270,7 @@ final class CreateLeadFromFormActionTest extends TestCase
             $leadRepository,
             $visitRepository,
             new ContinueCurrentVisitAction($visitRepository),
+            $uuidGenerator,
             $eventBus,
             $transactionManager,
         );

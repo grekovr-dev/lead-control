@@ -8,10 +8,8 @@ use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickAction;
 use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickCommand;
-use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Shared\VisitorId;
 use Inbound\Domain\Touch\Touch;
-use Inbound\Domain\Touch\TouchId;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadModel;
 use Inbound\Infrastructure\Persistence\Eloquent\VisitModel;
 use Tests\TestCase;
@@ -52,24 +50,24 @@ final class CapturePhoneClickActionTest extends TestCase
 
         $occurredAt = new DateTimeImmutable('2026-03-23 11:10:00');
         $command = new CapturePhoneClickCommand(
-            new LeadId('lead-ignored'),
-            new TouchId('touch-new'),
             new VisitorId('550e8400-e29b-41d4-a716-446655440000'),
             $occurredAt,
         );
 
         $action = $this->app->make(CapturePhoneClickAction::class);
         $result = $action($command);
+        $touchId = $result->id()->value();
 
         $this->assertInstanceOf(Touch::class, $result);
-        $this->assertSame('touch-new', $result->id()->value());
+        $this->assertNotSame('', $touchId);
+        $this->assertSame($touchId, $result->id()->value());
         $this->assertSame('visit-existing', $result->visitId()->value());
         $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $result->visitorId()->value());
 
         $this->assertDatabaseCount('leads', 1);
         $this->assertDatabaseCount('touches', 1);
         $this->assertDatabaseHas('touches', [
-            'id' => 'touch-new',
+            'id' => $touchId,
             'visit_id' => 'visit-existing',
             'visitor_id' => '550e8400-e29b-41d4-a716-446655440000',
             'type' => 'phone_click',

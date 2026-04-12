@@ -6,8 +6,10 @@ namespace Inbound\Application\Actions\Capture\RegisterTouch;
 
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitCommand;
+use Inbound\Application\Identifiers\UuidGenerator;
 use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Touch\Touch;
+use Inbound\Domain\Touch\TouchId;
 use Inbound\Domain\Touch\TouchRepository;
 
 final class RegisterTouchAction
@@ -15,6 +17,7 @@ final class RegisterTouchAction
     public function __construct(
         private TouchRepository $touchRepository,
         private ContinueCurrentVisitAction $continueCurrentVisitAction,
+        private UuidGenerator $uuidGenerator,
         private TransactionManager $transactionManager,
     ) {
     }
@@ -28,7 +31,7 @@ final class RegisterTouchAction
             ));
 
             $touch = new Touch(
-                $command->touchId,
+                new TouchId($this->uuidGenerator->generate()),
                 $visit->id(),
                 $command->visitorId,
                 $command->type,

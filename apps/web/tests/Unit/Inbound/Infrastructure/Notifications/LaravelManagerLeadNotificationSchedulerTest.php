@@ -24,4 +24,16 @@ final class LaravelManagerLeadNotificationSchedulerTest extends TestCase
             return $job->leadId === 'lead-123';
         });
     }
+
+    public function test_it_skips_queueing_when_telegram_notifications_are_disabled(): void
+    {
+        Queue::fake();
+        config()->set('services.telegram.notifications_enabled', false);
+
+        $scheduler = new LaravelManagerLeadNotificationScheduler;
+
+        $scheduler->schedule(new LeadId('lead-123'));
+
+        Queue::assertNotPushed(SendManagerLeadCreatedTelegramJob::class);
+    }
 }

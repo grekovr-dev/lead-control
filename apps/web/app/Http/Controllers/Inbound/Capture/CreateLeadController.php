@@ -8,7 +8,6 @@ use App\Http\Resolvers\Inbound\Capture\VisitorIdResolver;
 use DateTimeImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormAction;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormCommand;
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CurrentVisitNotFoundException as FormCurrentVisitNotFoundException;
@@ -16,9 +15,7 @@ use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickAction;
 use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickCommand;
 use Inbound\Application\Actions\Capture\PhoneClick\CurrentVisitNotFoundException as PhoneClickCurrentVisitNotFoundException;
 use Inbound\Domain\Lead\Lead;
-use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Touch\Touch;
-use Inbound\Domain\Touch\TouchId;
 
 class CreateLeadController extends Controller
 {
@@ -35,7 +32,6 @@ class CreateLeadController extends Controller
         }
 
         $command = new CreateLeadFromFormCommand(
-            new LeadId((string) Str::uuid()),
             $visitorId,
             $this->resolveString($request, 'name'),
             (string) $request->validated('phone'),
@@ -60,8 +56,6 @@ class CreateLeadController extends Controller
         }
 
         $command = new CapturePhoneClickCommand(
-            new LeadId((string) Str::uuid()),
-            new TouchId((string) Str::uuid()),
             $visitorId,
             new DateTimeImmutable,
         );

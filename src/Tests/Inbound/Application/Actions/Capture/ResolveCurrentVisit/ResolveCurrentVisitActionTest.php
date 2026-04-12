@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\ResolveCurrentVisitAction;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\ResolveCurrentVisitCommand;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\VisitSessionRule;
+use Inbound\Application\Identifiers\UuidGenerator;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
 use Inbound\Domain\Visit\Visit;
@@ -22,7 +23,6 @@ final class ResolveCurrentVisitActionTest extends TestCase
     {
         $occurredAt = new DateTimeImmutable('2026-03-20T14:10:00+02:00');
         $command = new ResolveCurrentVisitCommand(
-            new VisitId('visit-new'),
             new VisitorId('visitor-456'),
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             $occurredAt,
@@ -38,12 +38,17 @@ final class ResolveCurrentVisitActionTest extends TestCase
         );
 
         $visitRepository = $this->createMock(VisitRepository::class);
+        $uuidGenerator = $this->createMock(UuidGenerator::class);
 
         $visitRepository
             ->expects($this->once())
             ->method('findLastByVisitorId')
             ->with($command->visitorId)
             ->willReturn($existingVisit);
+
+        $uuidGenerator
+            ->expects($this->never())
+            ->method('generate');
 
         $visitRepository
             ->expects($this->once())
@@ -57,6 +62,7 @@ final class ResolveCurrentVisitActionTest extends TestCase
         $action = new ResolveCurrentVisitAction(
             $visitRepository,
             new VisitSessionRule(new DateInterval('PT30M')),
+            $uuidGenerator,
         );
 
         $result = $action($command);
@@ -68,7 +74,6 @@ final class ResolveCurrentVisitActionTest extends TestCase
     {
         $occurredAt = new DateTimeImmutable('2026-03-20T14:10:00+02:00');
         $command = new ResolveCurrentVisitCommand(
-            new VisitId('visit-789'),
             new VisitorId('visitor-456'),
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             $occurredAt,
@@ -76,6 +81,7 @@ final class ResolveCurrentVisitActionTest extends TestCase
         );
 
         $visitRepository = $this->createMock(VisitRepository::class);
+        $uuidGenerator = $this->createMock(UuidGenerator::class);
 
         $visitRepository
             ->expects($this->once())
@@ -83,11 +89,16 @@ final class ResolveCurrentVisitActionTest extends TestCase
             ->with($command->visitorId)
             ->willReturn(null);
 
+        $uuidGenerator
+            ->expects($this->once())
+            ->method('generate')
+            ->willReturn('visit-789');
+
         $visitRepository
             ->expects($this->once())
             ->method('save')
             ->with($this->callback(function (Visit $visit) use ($command, $occurredAt): bool {
-                return $visit->id()->equals($command->visitId)
+                return $visit->id()->equals(new VisitId('visit-789'))
                     && $visit->visitorId()->equals($command->visitorId)
                     && $visit->firstAttribution()->equals($command->attribution)
                     && $visit->lastAttribution()->equals($command->attribution)
@@ -99,12 +110,13 @@ final class ResolveCurrentVisitActionTest extends TestCase
         $action = new ResolveCurrentVisitAction(
             $visitRepository,
             new VisitSessionRule(new DateInterval('PT30M')),
+            $uuidGenerator,
         );
 
         $result = $action($command);
 
         $this->assertInstanceOf(Visit::class, $result);
-        $this->assertTrue($result->id()->equals($command->visitId));
+        $this->assertTrue($result->id()->equals(new VisitId('visit-789')));
         $this->assertTrue($result->visitorId()->equals($command->visitorId));
     }
 
@@ -112,7 +124,6 @@ final class ResolveCurrentVisitActionTest extends TestCase
     {
         $occurredAt = new DateTimeImmutable('2026-03-20T14:40:01+02:00');
         $command = new ResolveCurrentVisitCommand(
-            new VisitId('visit-789'),
             new VisitorId('visitor-456'),
             new Attribution('google', 'cpc', null, null, null, null, null, null),
             $occurredAt,
@@ -129,6 +140,7 @@ final class ResolveCurrentVisitActionTest extends TestCase
         );
 
         $visitRepository = $this->createMock(VisitRepository::class);
+        $uuidGenerator = $this->createMock(UuidGenerator::class);
 
         $visitRepository
             ->expects($this->once())
@@ -136,12 +148,17 @@ final class ResolveCurrentVisitActionTest extends TestCase
             ->with($command->visitorId)
             ->willReturn($existingVisit);
 
+        $uuidGenerator
+            ->expects($this->once())
+            ->method('generate')
+            ->willReturn('visit-789');
+
         $visitRepository
             ->expects($this->once())
             ->method('save')
             ->with($this->callback(function (Visit $visit) use ($existingVisit, $command, $occurredAt): bool {
                 return $visit !== $existingVisit
-                    && $visit->id()->equals($command->visitId)
+                    && $visit->id()->equals(new VisitId('visit-789'))
                     && $visit->visitorId()->equals($command->visitorId)
                     && $visit->firstAttribution()->equals($command->attribution)
                     && $visit->lastAttribution()->equals($command->attribution)
@@ -153,11 +170,12 @@ final class ResolveCurrentVisitActionTest extends TestCase
         $action = new ResolveCurrentVisitAction(
             $visitRepository,
             new VisitSessionRule(new DateInterval('PT30M')),
+            $uuidGenerator,
         );
 
         $result = $action($command);
 
         $this->assertInstanceOf(Visit::class, $result);
-        $this->assertTrue($result->id()->equals($command->visitId));
+        $this->assertTrue($result->id()->equals(new VisitId('visit-789')));
     }
 }

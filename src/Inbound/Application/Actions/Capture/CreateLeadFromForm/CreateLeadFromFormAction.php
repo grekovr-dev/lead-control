@@ -8,8 +8,10 @@ use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisi
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitCommand;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\CurrentVisitNotFoundException as ContinueCurrentVisitNotFoundException;
 use Inbound\Application\Events\EventBus;
+use Inbound\Application\Identifiers\UuidGenerator;
 use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Lead\Lead;
+use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Lead\LeadRepository;
 use Inbound\Domain\Lead\LeadStatus;
 use Inbound\Domain\Visit\VisitRepository;
@@ -20,6 +22,7 @@ final class CreateLeadFromFormAction
         private LeadRepository $leadRepository,
         private VisitRepository $visitRepository,
         private ContinueCurrentVisitAction $continueCurrentVisitAction,
+        private UuidGenerator $uuidGenerator,
         private EventBus $eventBus,
         private TransactionManager $transactionManager,
     ) {}
@@ -43,7 +46,7 @@ final class CreateLeadFromFormAction
             }
 
             $lead = Lead::create(
-                $command->leadId,
+                new LeadId($this->uuidGenerator->generate()),
                 $command->visitorId,
                 $visit->id(),
                 $command->name,
