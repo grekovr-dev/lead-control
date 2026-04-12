@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Support\Notifications;
+namespace Inbound\Infrastructure\Notifications\Telegram;
 
 use Inbound\Application\Notifications\Telegram\TelegramClient;
 

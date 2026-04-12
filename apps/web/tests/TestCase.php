@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Support\BackofficePermissions;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Inbound\Application\Notifications\Telegram\TelegramClient;
-use Tests\Support\Notifications\NullTelegramClient;
+use Inbound\Infrastructure\Notifications\Telegram\NullTelegramClient;
 
 abstract class TestCase extends BaseTestCase
 {

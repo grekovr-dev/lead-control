@@ -12,6 +12,10 @@ final class LaravelManagerLeadNotificationScheduler implements ManagerLeadNotifi
 {
     public function schedule(LeadId $leadId): void
     {
+        if (! (bool) config('services.telegram.notifications_enabled', true)) {
+            return;
+        }
+
         SendManagerLeadCreatedTelegramJob::dispatch($leadId->value());
     }
 }
