@@ -14,7 +14,7 @@
                         <a
                             href="{{ $phoneHref }}"
                             @click.prevent="trackPhoneLeadAndNavigate('{{ $phoneHref }}')"
-                            class="inline-flex min-h-11 items-center rounded-full border border-teal-200 bg-white/90 px-4 py-2.5 text-sm font-semibold tracking-[0.12em] text-teal-700 transition hover:border-teal-300 hover:bg-white"
+                            class="inline-flex min-h-11 items-center rounded-full border border-teal-200 bg-white/90 px-4 py-2.5 text-sm font-semibold text-teal-700 transition hover:border-teal-300 hover:bg-white"
                         >
                             {{ $phoneDisplay }}
                         </a>
