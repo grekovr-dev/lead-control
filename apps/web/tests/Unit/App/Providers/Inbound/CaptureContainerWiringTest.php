@@ -24,6 +24,7 @@ use Inbound\Domain\Click\ClickRepository;
 use Inbound\Domain\Lead\Events\LeadCreated;
 use Inbound\Domain\Lead\LeadId;
 use Inbound\Domain\Lead\LeadRepository;
+use Inbound\Domain\Revisit\RevisitRepository;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
 use Inbound\Domain\Touch\TouchRepository;
@@ -35,6 +36,7 @@ use Inbound\Infrastructure\Notifications\LaravelManagerLeadNotificationScheduler
 use Inbound\Infrastructure\Notifications\Telegram\LaravelHttpTelegramClient;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentClickRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentLeadRepository;
+use Inbound\Infrastructure\Persistence\Eloquent\EloquentRevisitRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentTouchRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentVisitRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\ReadModel\EloquentManagerLeadNotificationReadModel;
@@ -47,6 +49,7 @@ final class CaptureContainerWiringTest extends TestCase
     {
         $this->assertInstanceOf(EloquentClickRepository::class, $this->app->make(ClickRepository::class));
         $this->assertInstanceOf(EloquentVisitRepository::class, $this->app->make(VisitRepository::class));
+        $this->assertInstanceOf(EloquentRevisitRepository::class, $this->app->make(RevisitRepository::class));
         $this->assertInstanceOf(EloquentTouchRepository::class, $this->app->make(TouchRepository::class));
         $this->assertInstanceOf(EloquentLeadRepository::class, $this->app->make(LeadRepository::class));
         $this->assertInstanceOf(LaravelEventBus::class, $this->app->make(EventBus::class));

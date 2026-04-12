@@ -17,6 +17,7 @@ use Inbound\Application\Transactions\TransactionManager;
 use Inbound\Domain\Click\ClickRepository;
 use Inbound\Domain\Lead\Events\LeadCreated;
 use Inbound\Domain\Lead\LeadRepository;
+use Inbound\Domain\Revisit\RevisitRepository;
 use Inbound\Domain\Touch\TouchRepository;
 use Inbound\Domain\Visit\VisitRepository;
 use Inbound\Infrastructure\Events\LaravelEventBus;
@@ -24,6 +25,7 @@ use Inbound\Infrastructure\Notifications\LaravelManagerLeadNotificationScheduler
 use Inbound\Infrastructure\Notifications\Telegram\LaravelHttpTelegramClient;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentClickRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentLeadRepository;
+use Inbound\Infrastructure\Persistence\Eloquent\EloquentRevisitRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentTouchRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\EloquentVisitRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\ReadModel\EloquentManagerLeadNotificationReadModel;
@@ -57,6 +59,7 @@ class CaptureServiceProvider extends ServiceProvider
 
         $this->app->bind(ClickRepository::class, EloquentClickRepository::class);
         $this->app->bind(VisitRepository::class, EloquentVisitRepository::class);
+        $this->app->bind(RevisitRepository::class, EloquentRevisitRepository::class);
         $this->app->bind(TouchRepository::class, EloquentTouchRepository::class);
         $this->app->bind(LeadRepository::class, EloquentLeadRepository::class);
         $this->app->bind(EventBus::class, LaravelEventBus::class);
