@@ -6,7 +6,8 @@
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
 
-  "php.validate.executablePath": "${workspaceFolder}/.vscode/php-docker.sh",
+  "php.validate.executablePath": "/home/hrekov-r/Projects/lead-control/.vscode/php-docker.sh",
+  "php.debug.executablePath": "/home/hrekov-r/Projects/lead-control/.vscode/php-docker.sh",
   "intelephense.environment.phpVersion": "8.3.0",
   "intelephense.files.maxSize": 5000000,
   "intelephense.files.exclude": [
