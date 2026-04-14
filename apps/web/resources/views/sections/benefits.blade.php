@@ -8,7 +8,7 @@
                 Чому нас рекомендують друзям і повертаються знову
             </h2>
             <p class="mt-4 text-lg leading-relaxed text-slate-600">
-                Натяжні стелі будь-якої складності та конфігурації, професійний монтаж та прогнозований результат без стресу для вас.
+                Монтуємо натяжні стелі в Києві та області, допомагаємо підібрати рішення під бюджет і фіксуємо прогнозований результат без зайвого стресу.
             </p>
         </div>
 
@@ -17,7 +17,7 @@
                 <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-teal-100 text-sm font-semibold text-teal-700">01</span>
                 <h3 class="mt-4 text-xl font-semibold text-slate-900">Безкоштовний замір</h3>
                 <p class="mt-3 leading-relaxed text-slate-600">
-                    Приїжджаємо, знімаємо розміри та одразу допомагаємо обрати практичне рішення під ваш бюджет.
+                    Приїжджаємо на замір у Києві та області й одразу допомагаємо підібрати практичне рішення під ваш бюджет.
                 </p>
             </article>
 
@@ -33,7 +33,7 @@
                 <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-teal-100 text-sm font-semibold text-teal-700">03</span>
                 <h3 class="mt-4 text-xl font-semibold text-slate-900">Надійна співпраця</h3>
                 <p class="mt-3 leading-relaxed text-slate-600">
-                    Офіційний договір, прозорий кошторис та гарантія на роботи і матеріали.
+                    Офіційний договір, прозорий кошторис і гарантія на роботи та матеріали.
                 </p>
             </article>
         </div>
