@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Добрі стелі">
+  <rect x="28" y="28" width="456" height="456" rx="112" fill="#0f766e"/>
+  <rect x="110" y="160" width="292" height="22" rx="11" fill="#ffffff"/>
+  <rect x="142" y="236" width="228" height="16" rx="8" fill="#5eead4"/>
+  <rect x="222" y="182" width="12" height="54" rx="6" fill="#ffffff"/>
+  <rect x="278" y="182" width="12" height="54" rx="6" fill="#ffffff"/>
+  <circle cx="379" cy="219" r="15" fill="#ffffff"/>
+  <circle cx="379" cy="219" r="7" fill="#5eead4"/>
+</svg>
