@@ -153,4 +153,19 @@ final class LandingControllerTest extends TestCase
         $this->assertStringContainsString('"url":"'.route('landing').'"', $content);
         $this->assertStringContainsString('"name":"Добрі стелі"', $content);
     }
+
+    public function test_it_exposes_favicon_links_for_browsers_and_mobile_devices(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('favicon.svg', $content);
+        $this->assertStringContainsString('favicon-32x32.png', $content);
+        $this->assertStringContainsString('favicon-16x16.png', $content);
+        $this->assertStringContainsString('apple-touch-icon.png', $content);
+        $this->assertStringContainsString('favicon.ico', $content);
+    }
 }
