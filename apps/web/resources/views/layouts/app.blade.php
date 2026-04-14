@@ -20,6 +20,32 @@
     <meta name="twitter:description" content="Безкоштовний замір, прозорий прорахунок і монтаж натяжних стель у Києві та області. Працюємо швидко, акуратно та під ключ.">
     <meta name="twitter:image" content="{{ asset('images/hero-cropped.jpg') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php
+        $landingServiceSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Service',
+            'name' => 'Натяжні стелі в Києві та області',
+            'description' => 'Монтаж натяжних стель у Києві та області з безкоштовним заміром і попереднім прорахунком вартості.',
+            'url' => route('landing'),
+            'areaServed' => [
+                [
+                    '@type' => 'City',
+                    'name' => 'Київ',
+                ],
+                [
+                    '@type' => 'AdministrativeArea',
+                    'name' => 'Київська область',
+                ],
+            ],
+            'provider' => [
+                '@type' => 'Organization',
+                'name' => 'Добрі стелі',
+            ],
+        ];
+    @endphp
+    <script type="application/ld+json">
+        @json($landingServiceSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
