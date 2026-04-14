@@ -17,7 +17,7 @@
                 <div class="relative h-52 overflow-hidden bg-slate-100">
                     <img
                         src="{{ asset('images/bathroom-ceiling.jpg') }}"
-                        alt="Натяжна стеля у ванній кімнаті"
+                        alt="Натяжна стеля у ванній кімнаті з сучасним освітленням"
                         class="h-full w-full object-cover object-top"
                     >
                     <span class="absolute bottom-4 right-4 inline-flex rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
@@ -40,7 +40,7 @@
                 <div class="relative h-52 overflow-hidden bg-slate-100">
                     <img
                         src="{{ asset('images/kitchen-ceiling.jpg') }}"
-                        alt="Натяжна стеля на кухні-студії"
+                        alt="Натяжна стеля на кухні-студії з тіньовим профілем і світловими лініями"
                         class="h-full w-full object-cover object-center"
                     >
                     <span class="absolute bottom-4 right-4 inline-flex rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
@@ -63,7 +63,7 @@
                 <div class="relative h-52 overflow-hidden bg-slate-100">
                     <img
                         src="{{ asset('images/bedroom-ceiling.jpg') }}"
-                        alt="Натяжна стеля у спальні"
+                        alt="Натяжна стеля у спальні з магнітно-трековою системою та прихованим карнизом"
                         class="h-full w-full object-cover object-top"
                     >
                     <span class="absolute bottom-4 right-4 inline-flex rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
