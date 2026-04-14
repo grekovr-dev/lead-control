@@ -1,12 +1,31 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
+    @php
+        $googleTagManagerId = config('services.google_tag_manager.id');
+    @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Натяжні стелі в Києві та області під ключ | Добрі стелі</title>
     <meta name="description" content="Безкоштовний замір, прозорий прорахунок і монтаж натяжних стель у Києві та області. Працюємо швидко, акуратно та під ключ.">
     <meta name="robots" content="index,follow,max-image-preview:large">
     <link rel="canonical" href="{{ route('landing') }}">
+    @if (is_string($googleTagManagerId) && $googleTagManagerId !== '' && $googleTagManagerId !== 'CHANGE_ME')
+    <!-- Google Tag Manager -->
+    <script>
+        (function(w, d, s, l, i) {
+            w[l] = w[l] || [];
+            w[l].push({'gtm.start': new Date().getTime(), event: 'gtm.js'});
+            var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s),
+                dl = l !== 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', '{{ $googleTagManagerId }}');
+    </script>
+    <!-- End Google Tag Manager -->
+    @endif
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
@@ -54,6 +73,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
+    @if (is_string($googleTagManagerId) && $googleTagManagerId !== '' && $googleTagManagerId !== 'CHANGE_ME')
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $googleTagManagerId }}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    @endif
     @yield('content')
 </body>
 </html>

@@ -168,4 +168,20 @@ final class LandingControllerTest extends TestCase
         $this->assertStringContainsString('apple-touch-icon.png', $content);
         $this->assertStringContainsString('favicon.ico', $content);
     }
+
+    public function test_it_embeds_google_tag_manager_in_the_shared_layout(): void
+    {
+        config()->set('services.google_tag_manager.id', 'GTM-N354DDJ9');
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('googletagmanager.com/gtm.js?id=', $content);
+        $this->assertStringContainsString('googletagmanager.com/ns.html?id=', $content);
+        $this->assertStringContainsString('GTM-N354DDJ9', $content);
+        $this->assertStringContainsString('dataLayer', $content);
+    }
 }

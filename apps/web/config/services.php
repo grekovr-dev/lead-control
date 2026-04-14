@@ -44,4 +44,8 @@ return [
         'timeout_seconds' => (int) env('TELEGRAM_TIMEOUT_SECONDS', 10),
     ],
 
+    'google_tag_manager' => [
+        'id' => env('GOOGLE_TAG_MANAGER_ID'),
+    ],
+
 ];
