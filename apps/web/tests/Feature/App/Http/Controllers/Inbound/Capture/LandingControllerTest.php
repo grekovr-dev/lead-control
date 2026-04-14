@@ -137,4 +137,20 @@ final class LandingControllerTest extends TestCase
             $this->assertStringContainsString(str_replace('/', '\\/', $route), $content);
         }
     }
+
+    public function test_it_exposes_service_structured_data_for_search_engines(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('type="application/ld+json"', $content);
+        $this->assertStringContainsString('"@context":"https://schema.org"', $content);
+        $this->assertStringContainsString('"@type":"Service"', $content);
+        $this->assertStringContainsString('"name":"Натяжні стелі в Києві та області"', $content);
+        $this->assertStringContainsString('"url":"'.route('landing').'"', $content);
+        $this->assertStringContainsString('"name":"Добрі стелі"', $content);
+    }
 }
