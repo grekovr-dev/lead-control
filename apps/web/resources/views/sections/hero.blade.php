@@ -33,10 +33,10 @@
 
                 <div class="flex flex-col gap-4">
                    <h1 class="text-4xl font-semibold leading-tight text-slate-900">
-                        Натяжні стелі будь-якої складності
+                        Натяжні стелі в Києві та області
                     </h1>
                     <p class="text-lg leading-relaxed text-slate-600">
-                        Виїзд на замір у зручний час, допомога з підбором матеріалів і зрозумілий прорахунок вартості до початку робіт.
+                        Виїзд на замір у зручний час по Києву та області, допомога з підбором матеріалів і зрозумілий прорахунок вартості до початку робіт.
                     </p>
                 </div>
 
@@ -47,7 +47,7 @@
                     </li>
                     <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                        Працюємо швидко і якісно
+                        Працюємо по Києву та області
                     </li>
                     <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
