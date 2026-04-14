@@ -7,7 +7,7 @@
             <div class="flex flex-col gap-8">
                 <div class="flex flex-col gap-3 md:flex-row md:items-center justify-between">
                     <div class="text-base font-semibold uppercase tracking-[0.14em] text-slate-600 md:text-lg">
-                        Добрі стелі. Київ
+                        Добрі стелі
                     </div>
 
                     <div class="flex items-center gap-3 lg:justify-end">
@@ -47,7 +47,7 @@
                     </li>
                     <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                        Працюємо по Києву та області
+                        Швидкий виїзд на замір
                     </li>
                     <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
@@ -61,10 +61,10 @@
 
                 <div class="flex flex-col gap-3 sm:flex-row">
                     <a href="#lead-form" @click.prevent="trackTouchAndNavigate('#lead-form', 'lead_form_click')" class="inline-flex items-center justify-center rounded-xl bg-teal-700 px-6 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-teal-800">
-                        Залишити заявку
+                        Отримати прорахунок
                     </a>
                     <a href="#works" @click.prevent="trackTouchAndNavigate('#works', 'works_click')" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100">
-                        Подивитися приклади
+                        Приклади робіт
                     </a>
                     <a href="{{ $phoneHref }}" @click.prevent="trackPhoneLeadAndNavigate('{{ $phoneHref }}')" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100">
                         {{ $phoneDisplay }}
@@ -112,7 +112,7 @@
         <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_22px_45px_-28px_rgba(15,23,42,0.45)]">
             <img
                 src="{{ asset('images/hero-cropped.jpg') }}"
-                alt="Натяжна стеля з сучасним освітленням"
+                alt="Натяжна стеля з підсвіткою в сучасному інтер'єрі, Київ"
                 class="h-64 w-full object-cover object-bottom md:h-72 lg:h-96 xl:h-104"
             >
         </div>
