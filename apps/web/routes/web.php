@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\BackofficeSessionController;
 use App\Http\Controllers\Inbound\Capture\CreateLeadController;
 use App\Http\Controllers\Inbound\Capture\LandingController;
 use App\Http\Controllers\Inbound\Capture\RegisterController;
+use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +12,7 @@ Route::get('/login', [BackofficeSessionController::class, 'create'])->name('logi
 Route::post('/login', [BackofficeSessionController::class, 'store'])->name('login.store');
 Route::post('/logout', [BackofficeSessionController::class, 'destroy'])->middleware('auth')->name('logout');
 
+Route::get('/robots.txt', RobotsController::class)->name('robots');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::get('/', LandingController::class)->name('landing');
