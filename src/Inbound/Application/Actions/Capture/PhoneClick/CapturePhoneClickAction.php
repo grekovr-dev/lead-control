@@ -32,9 +32,10 @@ final class CapturePhoneClickAction
         private TransactionManager $transactionManager,
     ) {}
 
-    public function __invoke(CapturePhoneClickCommand $command): Lead|Touch
+    public function __invoke(CapturePhoneClickCommand $command): CapturePhoneClickResult
     {
-        $result = $this->transactionManager->run(function () use ($command): Lead|Touch {
+        $leadToPublish = null;
+        $result = $this->transactionManager->run(function () use ($command, &$leadToPublish): CapturePhoneClickResult {
             try {
                 $visit = ($this->continueCurrentVisitAction)(new ContinueCurrentVisitCommand(
                     $command->visitorId,
@@ -68,8 +69,14 @@ final class CapturePhoneClickAction
                 );
 
                 $this->leadRepository->save($lead);
+                $leadToPublish = $lead;
 
-                return $lead;
+                return new CapturePhoneClickResult(
+                    $command->visitorId->value(),
+                    $visit->id()->value(),
+                    CapturePhoneClickResult::TYPE_LEAD,
+                    $lead->id()->value(),
+                );
             }
 
             $touch = new Touch(
@@ -82,11 +89,16 @@ final class CapturePhoneClickAction
 
             $this->touchRepository->save($touch);
 
-            return $touch;
+            return new CapturePhoneClickResult(
+                $command->visitorId->value(),
+                $visit->id()->value(),
+                CapturePhoneClickResult::TYPE_TOUCH,
+                $touch->id()->value(),
+            );
         });
 
-        if ($result instanceof Lead) {
-            $this->eventBus->publish(...$result->releaseEvents());
+        if ($leadToPublish instanceof Lead) {
+            $this->eventBus->publish(...$leadToPublish->releaseEvents());
         }
 
         return $result;

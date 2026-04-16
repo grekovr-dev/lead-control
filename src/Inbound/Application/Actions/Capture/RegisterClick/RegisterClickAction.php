@@ -18,7 +18,6 @@ use Inbound\Domain\Revisit\Revisit;
 use Inbound\Domain\Revisit\RevisitId;
 use Inbound\Domain\Revisit\RevisitRepository;
 use Inbound\Domain\Shared\Attribution;
-use Inbound\Domain\Visit\Visit;
 
 final class RegisterClickAction
 {
@@ -31,9 +30,9 @@ final class RegisterClickAction
         private TransactionManager $transactionManager,
     ) {}
 
-    public function __invoke(RegisterClickCommand $command): Visit
+    public function __invoke(RegisterClickCommand $command): RegisterClickResult
     {
-        return $this->transactionManager->run(function () use ($command): Visit {
+        return $this->transactionManager->run(function () use ($command): RegisterClickResult {
             $attribution = $command->attribution;
 
             if ($attribution->equals(Attribution::direct())) {
@@ -53,7 +52,12 @@ final class RegisterClickAction
 
                     $this->revisitRepository->save($revisit);
 
-                    return $visit;
+                    return new RegisterClickResult(
+                        $command->visitorId->value(),
+                        $visit->id()->value(),
+                        RegisterClickResult::TYPE_REVISIT,
+                        $revisit->id()->value(),
+                    );
                 } catch (CurrentVisitNotFoundException) {
                     // Fall through to the normal click registration flow.
                 }
@@ -77,7 +81,12 @@ final class RegisterClickAction
 
             $this->clickRepository->save($click);
 
-            return $visit;
+            return new RegisterClickResult(
+                $command->visitorId->value(),
+                $visit->id()->value(),
+                RegisterClickResult::TYPE_CLICK,
+                $click->id()->value(),
+            );
         });
     }
 }

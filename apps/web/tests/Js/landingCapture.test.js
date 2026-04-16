@@ -200,6 +200,8 @@ test('landingCapture pushes landing click analytics data after bootstrap success
             json: async () => ({
                 ok: true,
                 data: {
+                    resultType: 'click',
+                    resultId: 'click-1',
                     visitorId: 'visitor-1',
                     visitId: 'visit-1',
                 },
@@ -219,8 +221,47 @@ test('landingCapture pushes landing click analytics data after bootstrap success
             event: 'landing_click_registered',
             visitor_uuid: 'visitor-1',
             visit_uuid: 'visit-1',
-            click_uuid: null,
+            click_uuid: 'click-1',
             revisit_uuid: null,
+            touch_uuid: null,
+            touch_type: null,
+            lead_uuid: null,
+            lead_origin: null,
+        },
+    ]);
+});
+
+test('landingCapture pushes landing revisit analytics data after bootstrap success', async () => {
+    const component = makeComponent({
+        fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+                ok: true,
+                data: {
+                    resultType: 'revisit',
+                    resultId: 'revisit-1',
+                    visitorId: 'visitor-1',
+                    visitId: 'visit-1',
+                },
+            }),
+        }),
+        location: {
+            pathname: '/',
+            search: '',
+            hash: '',
+        },
+    });
+
+    await component.init();
+
+    assert.deepEqual(globalThis.window.dataLayer, [
+        {
+            event: 'landing_revisit_registered',
+            visitor_uuid: 'visitor-1',
+            visit_uuid: 'visit-1',
+            click_uuid: null,
+            revisit_uuid: 'revisit-1',
             touch_uuid: null,
             touch_type: null,
             lead_uuid: null,
@@ -455,6 +496,8 @@ test('landingCapture pushes touch analytics data after a successful touch', asyn
                     json: async () => ({
                         ok: true,
                         data: {
+                            resultType: 'click',
+                            resultId: 'click-1',
                             visitorId: 'visitor-1',
                             visitId: 'visit-1',
                         },
@@ -468,7 +511,8 @@ test('landingCapture pushes touch analytics data after a successful touch', asyn
                 json: async () => ({
                     ok: true,
                     data: {
-                        touchId: 'touch-1',
+                        resultType: 'touch',
+                        resultId: 'touch-1',
                         visitorId: 'visitor-1',
                         visitId: 'visit-1',
                         type: 'works_click',
@@ -491,7 +535,7 @@ test('landingCapture pushes touch analytics data after a successful touch', asyn
             event: 'landing_click_registered',
             visitor_uuid: 'visitor-1',
             visit_uuid: 'visit-1',
-            click_uuid: null,
+            click_uuid: 'click-1',
             revisit_uuid: null,
             touch_uuid: null,
             touch_type: null,
@@ -568,6 +612,8 @@ test('landingCapture pushes lead analytics data after form success', async () =>
                     json: async () => ({
                         ok: true,
                         data: {
+                            resultType: 'click',
+                            resultId: 'click-1',
                             visitorId: 'visitor-1',
                             visitId: 'visit-1',
                         },
@@ -580,7 +626,8 @@ test('landingCapture pushes lead analytics data after form success', async () =>
                 json: async () => ({
                     ok: true,
                     data: {
-                        leadId: 'lead-1',
+                        resultType: 'lead',
+                        resultId: 'lead-1',
                         visitorId: 'visitor-1',
                         visitId: 'visit-1',
                         origin: 'form',
@@ -641,7 +688,7 @@ test('landingCapture pushes lead analytics data after form success', async () =>
             event: 'landing_click_registered',
             visitor_uuid: 'visitor-1',
             visit_uuid: 'visit-1',
-            click_uuid: null,
+            click_uuid: 'click-1',
             revisit_uuid: null,
             touch_uuid: null,
             touch_type: null,
@@ -689,6 +736,8 @@ test('landingCapture pushes lead analytics data for phone click leads', async ()
                     json: async () => ({
                         ok: true,
                         data: {
+                            resultType: 'click',
+                            resultId: 'click-1',
                             visitorId: 'visitor-1',
                             visitId: 'visit-1',
                         },
@@ -702,7 +751,8 @@ test('landingCapture pushes lead analytics data for phone click leads', async ()
                 json: async () => ({
                     ok: true,
                     data: {
-                        leadId: 'lead-1',
+                        resultType: 'lead',
+                        resultId: 'lead-1',
                         visitorId: 'visitor-1',
                         visitId: 'visit-1',
                         origin: 'phone_click',
@@ -725,7 +775,7 @@ test('landingCapture pushes lead analytics data for phone click leads', async ()
             event: 'landing_click_registered',
             visitor_uuid: 'visitor-1',
             visit_uuid: 'visit-1',
-            click_uuid: null,
+            click_uuid: 'click-1',
             revisit_uuid: null,
             touch_uuid: null,
             touch_type: null,
@@ -888,9 +938,7 @@ test('landingCapture submits the lead form successfully', async () => {
                 status: 201,
                 json: async () => ({
                     ok: true,
-                    data: {
-                        leadId: 'lead-1',
-                    },
+                    data: {resultType: 'lead', resultId: 'lead-1'},
                 }),
             };
         },
@@ -1096,7 +1144,7 @@ test('landingCapture trims a pasted full phone number with +380 to the local nin
 
             return {
                 status: 201,
-                json: async () => ({ok: true, data: {leadId: 'lead-1'}}),
+                json: async () => ({ok: true, data: {resultType: 'lead', resultId: 'lead-1'}}),
             };
         },
         location: {

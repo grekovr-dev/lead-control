@@ -13,9 +13,10 @@ use Inbound\Application\Actions\Capture\CreateLeadFromForm\CreateLeadFromFormCom
 use Inbound\Application\Actions\Capture\CreateLeadFromForm\CurrentVisitNotFoundException as FormCurrentVisitNotFoundException;
 use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickAction;
 use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickCommand;
+use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickResult;
 use Inbound\Application\Actions\Capture\PhoneClick\CurrentVisitNotFoundException as PhoneClickCurrentVisitNotFoundException;
 use Inbound\Domain\Lead\Lead;
-use Inbound\Domain\Touch\Touch;
+use Inbound\Domain\Touch\TouchType;
 
 class CreateLeadController extends Controller
 {
@@ -66,11 +67,11 @@ class CreateLeadController extends Controller
             return $this->currentVisitNotFoundResponse('Cannot create lead from phone click without a current visit.');
         }
 
-        if ($result instanceof Lead) {
-            return $this->createdResponse($result);
+        if ($result->resultType === CapturePhoneClickResult::TYPE_LEAD) {
+            return $this->phoneClickLeadResponse($result);
         }
 
-        return $this->touchResponse($result);
+        return $this->phoneClickTouchResponse($result);
     }
 
     private function createdResponse(Lead $lead): JsonResponse
@@ -86,15 +87,30 @@ class CreateLeadController extends Controller
         ], 201);
     }
 
-    private function touchResponse(Touch $touch): JsonResponse
+    private function phoneClickLeadResponse(CapturePhoneClickResult $result): JsonResponse
     {
         return response()->json([
             'ok' => true,
             'data' => [
-                'touchId' => $touch->id()->value(),
-                'visitId' => $touch->visitId()->value(),
-                'visitorId' => $touch->visitorId()->value(),
-                'type' => $touch->type()->value,
+                'visitId' => $result->visitId,
+                'visitorId' => $result->visitorId,
+                'origin' => 'phone_click',
+                'resultType' => $result->resultType,
+                'resultId' => $result->resultId,
+            ],
+        ], 201);
+    }
+
+    private function phoneClickTouchResponse(CapturePhoneClickResult $result): JsonResponse
+    {
+        return response()->json([
+            'ok' => true,
+            'data' => [
+                'visitId' => $result->visitId,
+                'visitorId' => $result->visitorId,
+                'type' => TouchType::PhoneClick->value,
+                'resultType' => $result->resultType,
+                'resultId' => $result->resultId,
             ],
         ]);
     }
