@@ -49,6 +49,7 @@ function makeComponent(overrides = {}) {
             replaceState,
         },
         sessionStorage,
+        dataLayer: overrides.dataLayer ?? [],
         setTimeout: globalThis.setTimeout.bind(globalThis),
     };
 
@@ -189,6 +190,43 @@ test('landingCapture keeps the interface bootstrapping until the click request s
     await initPromise;
 
     assert.equal(component.isBootstrapping, false);
+});
+
+test('landingCapture pushes landing click analytics data after bootstrap success', async () => {
+    const component = makeComponent({
+        fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+                ok: true,
+                data: {
+                    visitorId: 'visitor-1',
+                    visitId: 'visit-1',
+                },
+            }),
+        }),
+        location: {
+            pathname: '/',
+            search: '',
+            hash: '',
+        },
+    });
+
+    await component.init();
+
+    assert.deepEqual(globalThis.window.dataLayer, [
+        {
+            event: 'landing_click_registered',
+            visitor_uuid: 'visitor-1',
+            visit_uuid: 'visit-1',
+            click_uuid: null,
+            revisit_uuid: null,
+            touch_uuid: null,
+            touch_type: null,
+            lead_uuid: null,
+            lead_origin: null,
+        },
+    ]);
 });
 
 test('landingCapture soft reloads once when the landing click returns 419', async () => {
@@ -390,6 +428,90 @@ test('landingCapture tracks lead form click before navigating to the form hash',
     assert.equal(globalThis.window.location.hash, '#lead-form');
 });
 
+test('landingCapture pushes touch analytics data after a successful touch', async () => {
+    const fetchCalls = [];
+
+    const component = makeComponent({
+        config: {
+            clickUrl: 'https://localhost:8443/capture/click',
+            touchUrl: 'https://localhost:8443/capture/touch',
+            leadFormUrl: 'https://localhost:8443/capture/leads/form',
+            leadPhoneClickUrl: 'https://localhost:8443/capture/leads/phone-click',
+            leadPhoneCountryCode: '+380',
+            formSuccessMessage: 'Дякуємо! Заявку отримано, ми зв\'яжемося з вами найближчим часом.',
+            formValidationMessage: 'Перевірте правильність заповнення форми та надішліть заявку ще раз.',
+            formConflictMessage: 'Не вдалося зберегти заявку без активного візиту. Оновіть сторінку та спробуйте ще раз.',
+            formFailureMessage: 'Не вдалося надіслати заявку. Спробуйте ще раз або зателефонуйте нам.',
+            leadPhoneRequiredMessage: 'Вкажіть номер телефону.',
+            leadPhoneFormatMessage: 'Введіть 9 цифр після +380, наприклад 50 111 22 33.',
+        },
+        fetch: async (...args) => {
+            fetchCalls.push(args);
+
+            if (fetchCalls.length === 1) {
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({
+                        ok: true,
+                        data: {
+                            visitorId: 'visitor-1',
+                            visitId: 'visit-1',
+                        },
+                    }),
+                };
+            }
+
+            return {
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    ok: true,
+                    data: {
+                        touchId: 'touch-1',
+                        visitorId: 'visitor-1',
+                        visitId: 'visit-1',
+                        type: 'works_click',
+                    },
+                }),
+            };
+        },
+        location: {
+            pathname: '/',
+            search: '',
+            hash: '',
+        },
+    });
+
+    await component.init();
+    await component.trackTouch('works_click');
+
+    assert.deepEqual(globalThis.window.dataLayer, [
+        {
+            event: 'landing_click_registered',
+            visitor_uuid: 'visitor-1',
+            visit_uuid: 'visit-1',
+            click_uuid: null,
+            revisit_uuid: null,
+            touch_uuid: null,
+            touch_type: null,
+            lead_uuid: null,
+            lead_origin: null,
+        },
+        {
+            event: 'landing_touch_registered',
+            visitor_uuid: 'visitor-1',
+            visit_uuid: 'visit-1',
+            click_uuid: null,
+            revisit_uuid: null,
+            touch_uuid: 'touch-1',
+            touch_type: 'works_click',
+            lead_uuid: null,
+            lead_origin: null,
+        },
+    ]);
+});
+
 test('landingCapture sends phone-click tracking before navigating to tel', async () => {
     const fetchCalls = [];
 
@@ -430,6 +552,198 @@ test('landingCapture sends phone-click tracking before navigating to tel', async
     assert.equal(fetchCalls[0][0], 'https://localhost:8443/capture/leads/phone-click');
     assert.equal(fetchCalls[0][1].keepalive, true);
     assert.equal(globalThis.window.location.href, 'tel:+380667810707');
+});
+
+test('landingCapture pushes lead analytics data after form success', async () => {
+    const fetchCalls = [];
+
+    const component = makeComponent({
+        fetch: async (...args) => {
+            fetchCalls.push(args);
+
+            if (fetchCalls.length === 1) {
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({
+                        ok: true,
+                        data: {
+                            visitorId: 'visitor-1',
+                            visitId: 'visit-1',
+                        },
+                    }),
+                };
+            }
+
+            return {
+                status: 201,
+                json: async () => ({
+                    ok: true,
+                    data: {
+                        leadId: 'lead-1',
+                        visitorId: 'visitor-1',
+                        visitId: 'visit-1',
+                        origin: 'form',
+                    },
+                }),
+            };
+        },
+        location: {
+            pathname: '/',
+            search: '',
+            hash: '',
+        },
+    });
+
+    await component.init();
+
+    const form = {
+        resetCalls: 0,
+        elements: {
+            namedItem(name) {
+                if (name === 'phone') {
+                    return this.phone;
+                }
+
+                return null;
+            },
+            phone: {
+                value: '',
+            },
+        },
+        reset() {
+            this.resetCalls += 1;
+        },
+    };
+
+    const event = {
+        preventDefault() {},
+        currentTarget: form,
+    };
+
+    globalThis.FormData = class {
+        constructor() {
+            this.values = new Map([
+                ['name', 'John Doe'],
+                ['phone', '50 111 22 33'],
+            ]);
+        }
+
+        get(key) {
+            return this.values.get(key) ?? null;
+        }
+    };
+
+    await component.submitLeadForm(event);
+
+    assert.deepEqual(globalThis.window.dataLayer, [
+        {
+            event: 'landing_click_registered',
+            visitor_uuid: 'visitor-1',
+            visit_uuid: 'visit-1',
+            click_uuid: null,
+            revisit_uuid: null,
+            touch_uuid: null,
+            touch_type: null,
+            lead_uuid: null,
+            lead_origin: null,
+        },
+        {
+            event: 'lead_created',
+            visitor_uuid: 'visitor-1',
+            visit_uuid: 'visit-1',
+            click_uuid: null,
+            revisit_uuid: null,
+            touch_uuid: null,
+            touch_type: null,
+            lead_uuid: 'lead-1',
+            lead_origin: 'form',
+        },
+    ]);
+});
+
+test('landingCapture pushes lead analytics data for phone click leads', async () => {
+    const fetchCalls = [];
+
+    const component = makeComponent({
+        config: {
+            clickUrl: 'https://localhost:8443/capture/click',
+            touchUrl: 'https://localhost:8443/capture/touch',
+            leadFormUrl: 'https://localhost:8443/capture/leads/form',
+            leadPhoneClickUrl: 'https://localhost:8443/capture/leads/phone-click',
+            leadPhoneCountryCode: '+380',
+            formSuccessMessage: 'Дякуємо! Заявку отримано, ми зв\'яжемося з вами найближчим часом.',
+            formValidationMessage: 'Перевірте правильність заповнення форми та надішліть заявку ще раз.',
+            formConflictMessage: 'Не вдалося зберегти заявку без активного візиту. Оновіть сторінку та спробуйте ще раз.',
+            formFailureMessage: 'Не вдалося надіслати заявку. Спробуйте ще раз або зателефонуйте нам.',
+            leadPhoneRequiredMessage: 'Вкажіть номер телефону.',
+            leadPhoneFormatMessage: 'Введіть 9 цифр після +380, наприклад 50 111 22 33.',
+        },
+        fetch: async (...args) => {
+            fetchCalls.push(args);
+
+            if (fetchCalls.length === 1) {
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({
+                        ok: true,
+                        data: {
+                            visitorId: 'visitor-1',
+                            visitId: 'visit-1',
+                        },
+                    }),
+                };
+            }
+
+            return {
+                ok: true,
+                status: 201,
+                json: async () => ({
+                    ok: true,
+                    data: {
+                        leadId: 'lead-1',
+                        visitorId: 'visitor-1',
+                        visitId: 'visit-1',
+                        origin: 'phone_click',
+                    },
+                }),
+            };
+        },
+        location: {
+            pathname: '/',
+            search: '',
+            hash: '',
+        },
+    });
+
+    await component.init();
+    await component.trackPhoneLead();
+
+    assert.deepEqual(globalThis.window.dataLayer, [
+        {
+            event: 'landing_click_registered',
+            visitor_uuid: 'visitor-1',
+            visit_uuid: 'visit-1',
+            click_uuid: null,
+            revisit_uuid: null,
+            touch_uuid: null,
+            touch_type: null,
+            lead_uuid: null,
+            lead_origin: null,
+        },
+        {
+            event: 'lead_created',
+            visitor_uuid: 'visitor-1',
+            visit_uuid: 'visit-1',
+            click_uuid: null,
+            revisit_uuid: null,
+            touch_uuid: null,
+            touch_type: null,
+            lead_uuid: 'lead-1',
+            lead_origin: 'phone_click',
+        },
+    ]);
 });
 
 test('landingCapture sends phone-click tracking on each new click after the previous request settles', async () => {
