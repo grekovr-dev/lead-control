@@ -230,7 +230,7 @@ function buildLandingAnalyticsEventPayload(eventName) {
             : null;
     }
 
-    if (eventName === 'lead_created') {
+    if (eventName === 'lead_created' || eventName === 'lead_form_submit' || eventName === 'lead_phone_click') {
         payload.lead_uuid = isNonEmptyString(landingBootstrapState.leadAnalyticsContext.leadId)
             ? landingBootstrapState.leadAnalyticsContext.leadId
             : null;
@@ -287,6 +287,22 @@ function landingAnalyticsResultType(record = {}, fallbackResultType = null) {
     return fallbackResultType;
 }
 
+function landingAnalyticsLeadEventName(record = {}, fallbackEventName = 'lead_created') {
+    if (typeof record !== 'object' || record === null) {
+        return fallbackEventName;
+    }
+
+    if (record.origin === 'form') {
+        return 'lead_form_submit';
+    }
+
+    if (record.origin === 'phone_click') {
+        return 'lead_phone_click';
+    }
+
+    return fallbackEventName;
+}
+
 function pushLandingAnalyticsEventForResultType(record = {}, resultType = null) {
     if (!hasLandingAnalyticsRecordIdentifiers(record)) {
         return false;
@@ -311,7 +327,7 @@ function pushLandingAnalyticsEventForResultType(record = {}, resultType = null) 
     if (resultType === 'lead') {
         rememberLandingAnalyticsContext(record);
         rememberLandingLeadAnalyticsContext(record);
-        pushLandingAnalyticsEvent('lead_created');
+        pushLandingAnalyticsEvent(landingAnalyticsLeadEventName(record));
 
         return true;
     }
