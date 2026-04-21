@@ -696,7 +696,7 @@ test('landingCapture pushes lead analytics data after form success', async () =>
             lead_origin: null,
         },
         {
-            event: 'lead_form_submit',
+            event: 'lead_form_submitted',
             visitor_uuid: 'visitor-1',
             visit_uuid: 'visit-1',
             click_uuid: null,

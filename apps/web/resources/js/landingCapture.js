@@ -230,7 +230,7 @@ function buildLandingAnalyticsEventPayload(eventName) {
             : null;
     }
 
-    if (eventName === 'lead_created' || eventName === 'lead_form_submit' || eventName === 'lead_phone_click') {
+    if (eventName === 'lead_created' || eventName === 'lead_form_submitted' || eventName === 'lead_phone_click') {
         payload.lead_uuid = isNonEmptyString(landingBootstrapState.leadAnalyticsContext.leadId)
             ? landingBootstrapState.leadAnalyticsContext.leadId
             : null;
@@ -293,7 +293,7 @@ function landingAnalyticsLeadEventName(record = {}, fallbackEventName = 'lead_cr
     }
 
     if (record.origin === 'form') {
-        return 'lead_form_submit';
+        return 'lead_form_submitted';
     }
 
     if (record.origin === 'phone_click') {
