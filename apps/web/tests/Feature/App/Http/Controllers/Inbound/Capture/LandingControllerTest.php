@@ -214,6 +214,21 @@ final class LandingControllerTest extends TestCase
         $this->assertStringContainsString('alt="Натяжна стеля з підсвіткою в сучасному інтер&#039;єрі, Бориспіль"', $content);
     }
 
+    public function test_it_keeps_root_landing_metadata_and_hero_content_unchanged(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('<title>Натяжні стелі в Києві та області під ключ | Добрі стелі</title>', $content);
+        $this->assertStringContainsString('<link rel="canonical" href="'.route('landing').'">', $content);
+        $this->assertStringContainsString('<meta property="og:url" content="'.route('landing').'">', $content);
+        $this->assertStringContainsString('Натяжні стелі в Києві та області', $content);
+        $this->assertStringContainsString('alt="Натяжна стеля з підсвіткою в сучасному інтер&#039;єрі, Київ"', $content);
+    }
+
     public function test_it_exposes_favicon_links_for_browsers_and_mobile_devices(): void
     {
         $response = $this->get('/');
