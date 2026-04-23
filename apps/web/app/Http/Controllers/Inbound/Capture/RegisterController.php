@@ -40,13 +40,15 @@ class RegisterController extends Controller
             new DateTimeImmutable,
         );
 
-        $visit = $action($command);
+        $result = $action($command);
 
         $response = response()->json([
             'ok' => true,
             'data' => [
-                'visitId' => $visit->id()->value(),
-                'visitorId' => $visitorId->value(),
+                'visitId' => $result->visitId,
+                'visitorId' => $result->visitorId,
+                'resultType' => $result->resultType,
+                'resultId' => $result->resultId,
             ],
         ]);
 

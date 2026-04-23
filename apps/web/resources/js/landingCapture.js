@@ -3,6 +3,22 @@ const landingBootstrapState = {
     clickTracked: false,
     phoneLeadPromise: null,
     touchPromises: new Map(),
+    entryAnalyticsContext: {
+        clickId: null,
+        revisitId: null,
+    },
+    touchAnalyticsContext: {
+        touchId: null,
+        type: null,
+    },
+    leadAnalyticsContext: {
+        leadId: null,
+        origin: null,
+    },
+    analyticsContext: {
+        visitorId: null,
+        visitId: null,
+    },
 };
 
 const landingBootstrapReloadStorageKey = 'landing-capture-soft-reload-attempt-at';
@@ -56,11 +72,298 @@ function responseStatus(response) {
     return typeof response?.status === 'number' ? response.status : null;
 }
 
+function isNonEmptyString(value) {
+    return typeof value === 'string' && value !== '';
+}
+
+function ensureLandingDataLayer() {
+    if (typeof window !== 'object' || window === null) {
+        return null;
+    }
+
+    if (!Array.isArray(window.dataLayer)) {
+        window.dataLayer = [];
+    }
+
+    return window.dataLayer;
+}
+
+function currentLandingAnalyticsContext() {
+    const payload = {};
+
+    if (isNonEmptyString(landingBootstrapState.analyticsContext.visitorId)) {
+        payload.visitor_uuid = landingBootstrapState.analyticsContext.visitorId;
+    }
+
+    if (isNonEmptyString(landingBootstrapState.analyticsContext.visitId)) {
+        payload.visit_uuid = landingBootstrapState.analyticsContext.visitId;
+    }
+
+    return payload;
+}
+
+function rememberLandingAnalyticsContext(record = {}) {
+    if (typeof record !== 'object' || record === null) {
+        return;
+    }
+
+    if (isNonEmptyString(record.visitorId)) {
+        landingBootstrapState.analyticsContext.visitorId = record.visitorId;
+    }
+
+    if (isNonEmptyString(record.visitId)) {
+        landingBootstrapState.analyticsContext.visitId = record.visitId;
+    }
+}
+
+function rememberLandingEntryAnalyticsContext(record = {}, resultType = null) {
+    if (typeof record !== 'object' || record === null) {
+        return;
+    }
+
+    const entryId = isNonEmptyString(record.resultId)
+        ? record.resultId
+        : resultType === 'click' && isNonEmptyString(record.clickId)
+            ? record.clickId
+            : resultType === 'revisit' && isNonEmptyString(record.revisitId)
+                ? record.revisitId
+                : null;
+
+    if (resultType === 'revisit') {
+        landingBootstrapState.entryAnalyticsContext.clickId = null;
+
+        if (entryId !== null) {
+            landingBootstrapState.entryAnalyticsContext.revisitId = entryId;
+        }
+
+        return;
+    }
+
+    if (resultType === 'click') {
+        landingBootstrapState.entryAnalyticsContext.revisitId = null;
+
+        if (entryId !== null) {
+            landingBootstrapState.entryAnalyticsContext.clickId = entryId;
+        }
+    }
+}
+
+function rememberLandingTouchAnalyticsContext(record = {}) {
+    if (typeof record !== 'object' || record === null) {
+        return;
+    }
+
+    const touchId = isNonEmptyString(record.resultId)
+        ? record.resultId
+        : isNonEmptyString(record.touchId)
+            ? record.touchId
+            : null;
+
+    if (touchId !== null) {
+        landingBootstrapState.touchAnalyticsContext.touchId = touchId;
+    }
+
+    if (isNonEmptyString(record.type)) {
+        landingBootstrapState.touchAnalyticsContext.type = record.type;
+    }
+}
+
+function rememberLandingLeadAnalyticsContext(record = {}) {
+    if (typeof record !== 'object' || record === null) {
+        return;
+    }
+
+    const leadId = isNonEmptyString(record.resultId)
+        ? record.resultId
+        : isNonEmptyString(record.leadId)
+            ? record.leadId
+            : null;
+
+    if (leadId !== null) {
+        landingBootstrapState.leadAnalyticsContext.leadId = leadId;
+    }
+
+    if (isNonEmptyString(record.origin)) {
+        landingBootstrapState.leadAnalyticsContext.origin = record.origin;
+    }
+}
+
+function hasLandingAnalyticsRecordIdentifiers(record = {}) {
+    return isNonEmptyString(record.visitorId)
+        || isNonEmptyString(record.visitId)
+        || isNonEmptyString(record.touchId)
+        || isNonEmptyString(record.leadId)
+        || isNonEmptyString(record.resultId);
+}
+
+function buildLandingAnalyticsEventPayload(eventName) {
+    const context = currentLandingAnalyticsContext();
+    const payload = {
+        visitor_uuid: context.visitor_uuid ?? null,
+        visit_uuid: context.visit_uuid ?? null,
+        click_uuid: null,
+        revisit_uuid: null,
+        touch_uuid: null,
+        touch_type: null,
+        lead_uuid: null,
+        lead_origin: null,
+    };
+
+    if (eventName === 'landing_click_registered') {
+        payload.click_uuid = isNonEmptyString(landingBootstrapState.entryAnalyticsContext.clickId)
+            ? landingBootstrapState.entryAnalyticsContext.clickId
+            : null;
+    }
+
+    if (eventName === 'landing_revisit_registered') {
+        payload.revisit_uuid = isNonEmptyString(landingBootstrapState.entryAnalyticsContext.revisitId)
+            ? landingBootstrapState.entryAnalyticsContext.revisitId
+            : null;
+    }
+
+    if (eventName === 'landing_touch_registered') {
+        payload.touch_uuid = isNonEmptyString(landingBootstrapState.touchAnalyticsContext.touchId)
+            ? landingBootstrapState.touchAnalyticsContext.touchId
+            : null;
+        payload.touch_type = isNonEmptyString(landingBootstrapState.touchAnalyticsContext.type)
+            ? landingBootstrapState.touchAnalyticsContext.type
+            : null;
+    }
+
+    if (eventName === 'lead_created' || eventName === 'lead_form_submitted' || eventName === 'lead_phone_click') {
+        payload.lead_uuid = isNonEmptyString(landingBootstrapState.leadAnalyticsContext.leadId)
+            ? landingBootstrapState.leadAnalyticsContext.leadId
+            : null;
+        payload.lead_origin = isNonEmptyString(landingBootstrapState.leadAnalyticsContext.origin)
+            ? landingBootstrapState.leadAnalyticsContext.origin
+            : null;
+    }
+
+    return payload;
+}
+
+function pushLandingAnalyticsEvent(eventName) {
+    if (!isNonEmptyString(eventName)) {
+        return;
+    }
+
+    const dataLayer = ensureLandingDataLayer();
+
+    if (dataLayer === null) {
+        return;
+    }
+
+    dataLayer.push({
+        event: eventName,
+        ...buildLandingAnalyticsEventPayload(eventName),
+    });
+}
+
+async function readResponseJson(response) {
+    if (typeof response?.json !== 'function') {
+        return {};
+    }
+
+    return await response.json().catch(() => ({}));
+}
+
+function responseRecord(responseJson = {}) {
+    if (typeof responseJson !== 'object' || responseJson === null) {
+        return {};
+    }
+
+    if (typeof responseJson.data !== 'object' || responseJson.data === null) {
+        return {};
+    }
+
+    return responseJson.data;
+}
+
+function landingAnalyticsResultType(record = {}, fallbackResultType = null) {
+    if (isNonEmptyString(record.resultType)) {
+        return record.resultType;
+    }
+
+    return fallbackResultType;
+}
+
+function landingAnalyticsLeadEventName(record = {}, fallbackEventName = 'lead_created') {
+    if (typeof record !== 'object' || record === null) {
+        return fallbackEventName;
+    }
+
+    if (record.origin === 'form') {
+        return 'lead_form_submitted';
+    }
+
+    if (record.origin === 'phone_click') {
+        return 'lead_phone_click';
+    }
+
+    return fallbackEventName;
+}
+
+function pushLandingAnalyticsEventForResultType(record = {}, resultType = null) {
+    if (!hasLandingAnalyticsRecordIdentifiers(record)) {
+        return false;
+    }
+
+    if (resultType === 'click') {
+        rememberLandingAnalyticsContext(record);
+        rememberLandingEntryAnalyticsContext(record, resultType);
+        pushLandingAnalyticsEvent('landing_click_registered');
+
+        return true;
+    }
+
+    if (resultType === 'revisit') {
+        rememberLandingAnalyticsContext(record);
+        rememberLandingEntryAnalyticsContext(record, resultType);
+        pushLandingAnalyticsEvent('landing_revisit_registered');
+
+        return true;
+    }
+
+    if (resultType === 'lead') {
+        rememberLandingAnalyticsContext(record);
+        rememberLandingLeadAnalyticsContext(record);
+        pushLandingAnalyticsEvent(landingAnalyticsLeadEventName(record));
+
+        return true;
+    }
+
+    if (resultType === 'touch') {
+        rememberLandingAnalyticsContext(record);
+        rememberLandingTouchAnalyticsContext(record);
+        pushLandingAnalyticsEvent('landing_touch_registered');
+
+        return true;
+    }
+
+    return false;
+}
+
 export function resetLandingCaptureBootstrapState() {
     landingBootstrapState.promise = null;
     landingBootstrapState.clickTracked = false;
     landingBootstrapState.phoneLeadPromise = null;
     landingBootstrapState.touchPromises = new Map();
+    landingBootstrapState.entryAnalyticsContext = {
+        clickId: null,
+        revisitId: null,
+    };
+    landingBootstrapState.touchAnalyticsContext = {
+        touchId: null,
+        type: null,
+    };
+    landingBootstrapState.leadAnalyticsContext = {
+        leadId: null,
+        origin: null,
+    };
+    landingBootstrapState.analyticsContext = {
+        visitorId: null,
+        visitId: null,
+    };
     clearLandingBootstrapReloadAttemptAt();
 }
 
@@ -194,9 +497,13 @@ export default function landingCapture() {
                     body: JSON.stringify(payload),
                 });
 
-                const data = await response.json().catch(() => ({}));
+                const responseJson = await readResponseJson(response);
+                const record = responseRecord(responseJson);
+                const resultType = landingAnalyticsResultType(record, 'lead');
 
-                if (response.status === 201 && data?.ok) {
+                if (response.status === 201 && responseJson?.ok) {
+                    pushLandingAnalyticsEventForResultType(record, resultType);
+
                     this.leadFormState = 'success';
                     this.leadFormMessage = this.config.formSuccessMessage ?? '';
                     form.reset();
@@ -206,11 +513,11 @@ export default function landingCapture() {
                 if (response.status === 422) {
                     this.leadFormState = 'validation-error';
                     this.leadFormMessage = this.config.formValidationMessage ?? '';
-                    this.leadFormFieldErrors = this.translateLeadFormErrors(data?.errors ?? {});
+                    this.leadFormFieldErrors = this.translateLeadFormErrors(responseJson?.errors ?? {});
                     return;
                 }
 
-                if (response.status === 409 && data?.code === 'current_visit_not_found') {
+                if (response.status === 409 && responseJson?.code === 'current_visit_not_found') {
                     this.leadFormState = 'server-error';
                     this.leadFormMessage = this.config.formConflictMessage ?? 'Не вдалося зберегти заявку без поточного візиту.';
                     return;
@@ -371,10 +678,7 @@ export default function landingCapture() {
 
             const tracking = this.trackPhoneLead();
 
-            await Promise.race([
-                tracking,
-                this.delay(400),
-            ]);
+            await tracking.catch(() => {});
 
             window.location.href = href;
         },
@@ -388,10 +692,7 @@ export default function landingCapture() {
 
             const tracking = this.trackTouch(type);
 
-            await Promise.race([
-                tracking,
-                this.delay(400),
-            ]);
+            await tracking.catch(() => {});
 
             if (href.startsWith('#')) {
                 this.navigateToHash(href);
@@ -447,6 +748,14 @@ export default function landingCapture() {
                 });
 
                 if (isSuccessfulBootstrapResponse(response)) {
+                    const responseJson = await readResponseJson(response);
+                    const record = responseRecord(responseJson);
+                    const resultType = landingAnalyticsResultType(record);
+
+                    if (responseJson?.ok === true) {
+                        pushLandingAnalyticsEventForResultType(record, resultType);
+                    }
+
                     this.clearSoftReloadAttempt();
 
                     return;
@@ -478,7 +787,7 @@ export default function landingCapture() {
 
             landingBootstrapState.phoneLeadPromise = (async () => {
                 try {
-                    await fetch(this.config.leadPhoneClickUrl, {
+                    const response = await fetch(this.config.leadPhoneClickUrl, {
                         method: 'POST',
                         credentials: 'same-origin',
                         keepalive: true,
@@ -490,6 +799,15 @@ export default function landingCapture() {
                         },
                         body: JSON.stringify({}),
                     });
+
+                    const responseJson = await readResponseJson(response);
+                    const record = responseRecord(responseJson);
+                    const resultType = landingAnalyticsResultType(record);
+
+                    if (responseJson?.ok === true && pushLandingAnalyticsEventForResultType(record, resultType)) {
+                        return;
+                    }
+
                 } finally {
                     landingBootstrapState.phoneLeadPromise = null;
                 }
@@ -513,7 +831,7 @@ export default function landingCapture() {
 
             const promise = (async () => {
                 try {
-                    await fetch(this.config.touchUrl, {
+                    const response = await fetch(this.config.touchUrl, {
                         method: 'POST',
                         credentials: 'same-origin',
                         keepalive: true,
@@ -525,6 +843,14 @@ export default function landingCapture() {
                         },
                         body: JSON.stringify({type}),
                     });
+
+                    const responseJson = await readResponseJson(response);
+                    const record = responseRecord(responseJson);
+                    const resultType = landingAnalyticsResultType(record, 'touch');
+
+                    if (responseJson?.ok !== false && response.ok) {
+                        pushLandingAnalyticsEventForResultType(record, resultType);
+                    }
                 } finally {
                     landingBootstrapState.touchPromises.delete(type);
                 }

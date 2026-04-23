@@ -6,12 +6,11 @@ namespace Tests\Feature\Inbound\Application\Actions\Capture\RegisterClick;
 
 use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickAction;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickCommand;
+use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickResult;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
-use Inbound\Domain\Visit\Visit;
 use Inbound\Infrastructure\Persistence\Eloquent\VisitModel;
 use Tests\TestCase;
 
@@ -30,15 +29,15 @@ final class RegisterClickActionTest extends TestCase
         );
 
         $action = $this->app->make(RegisterClickAction::class);
-        $visit = $action($command);
+        $result = $action($command);
 
-        $this->assertInstanceOf(Visit::class, $visit);
-        $this->assertTrue(Str::isUuid($visit->id()->value()));
-        $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $visit->visitorId()->value());
-        $this->assertSame('https://example.com/stretch-ceiling', $visit->landingUrl());
-        $this->assertSame('https://example.com/catalog?utm_source=google', $visit->firstAttribution()->referrer());
+        $this->assertInstanceOf(RegisterClickResult::class, $result);
+        $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $result->visitorId);
+        $this->assertSame(RegisterClickResult::TYPE_CLICK, $result->resultType);
+        $this->assertNotSame('', $result->visitId);
+        $this->assertNotSame('', $result->resultId);
 
-        $visitId = $visit->id()->value();
+        $visitId = $result->visitId;
 
         $this->assertDatabaseCount('clicks', 1);
         $this->assertDatabaseHas('clicks', [
@@ -86,11 +85,13 @@ final class RegisterClickActionTest extends TestCase
         );
 
         $action = $this->app->make(RegisterClickAction::class);
-        $visit = $action($command);
+        $result = $action($command);
 
-        $this->assertInstanceOf(Visit::class, $visit);
-        $this->assertSame('visit-existing', $visit->id()->value());
-        $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $visit->visitorId()->value());
+        $this->assertInstanceOf(RegisterClickResult::class, $result);
+        $this->assertSame('visit-existing', $result->visitId);
+        $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $result->visitorId);
+        $this->assertSame(RegisterClickResult::TYPE_CLICK, $result->resultType);
+        $this->assertNotSame('', $result->resultId);
 
         $this->assertDatabaseCount('clicks', 1);
         $this->assertDatabaseHas('clicks', [
@@ -140,11 +141,13 @@ final class RegisterClickActionTest extends TestCase
         );
 
         $action = $this->app->make(RegisterClickAction::class);
-        $visit = $action($command);
+        $result = $action($command);
 
-        $this->assertInstanceOf(Visit::class, $visit);
-        $this->assertSame('visit-existing', $visit->id()->value());
-        $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $visit->visitorId()->value());
+        $this->assertInstanceOf(RegisterClickResult::class, $result);
+        $this->assertSame('visit-existing', $result->visitId);
+        $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $result->visitorId);
+        $this->assertSame(RegisterClickResult::TYPE_REVISIT, $result->resultType);
+        $this->assertNotSame('', $result->resultId);
 
         $this->assertDatabaseCount('clicks', 0);
         $this->assertDatabaseCount('revisits', 1);

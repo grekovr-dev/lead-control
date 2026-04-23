@@ -25,6 +25,45 @@ final class LandingControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertViewIs('pages.landing');
+        $response->assertViewHas('landingGeo');
+        $response->assertCookieNotExpired($visitorIdCookieStore->cookieName());
+        $response->assertCookieNotExpired($attributionCookieStore->cookieName());
+        $response->assertCookieMissing('inbound_referrer');
+
+        $visitorCookie = $response->getCookie($visitorIdCookieStore->cookieName());
+        $attributionCookie = $response->getCookie($attributionCookieStore->cookieName());
+
+        $this->assertNotNull($visitorCookie);
+        $this->assertNotNull($attributionCookie);
+        $this->assertMatchesRegularExpression(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+            (string) $visitorCookie->getValue(),
+        );
+        $this->assertSame([
+            'source' => 'google',
+            'medium' => 'cpc',
+            'campaign' => 'spring-sale',
+            'content' => null,
+            'term' => null,
+            'gclid' => 'gclid-1',
+            'fbclid' => null,
+            'msclkid' => null,
+            'referrer' => 'https://google.com/search?q=stretch+ceiling',
+        ], json_decode((string) $attributionCookie->getValue(), true, 512, JSON_THROW_ON_ERROR));
+    }
+
+    public function test_it_bootstraps_visitor_and_attribution_cookies_on_geo_landing_open(): void
+    {
+        $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);
+        $attributionCookieStore = $this->app->make(AttributionCookieStore::class);
+
+        $response = $this
+            ->withHeader('referer', 'https://google.com/search?q=stretch+ceiling')
+            ->get('/boryspil?utm_source=google&utm_medium=cpc&utm_campaign=spring-sale&gclid=gclid-1');
+
+        $response->assertOk();
+        $response->assertViewIs('pages.landing');
+        $response->assertViewHas('landingGeo');
         $response->assertCookieNotExpired($visitorIdCookieStore->cookieName());
         $response->assertCookieNotExpired($attributionCookieStore->cookieName());
         $response->assertCookieMissing('inbound_referrer');
@@ -154,6 +193,42 @@ final class LandingControllerTest extends TestCase
         $this->assertStringContainsString('"name":"Добрі стелі"', $content);
     }
 
+    public function test_it_exposes_geo_specific_metadata_on_the_boryspil_landing_page(): void
+    {
+        $response = $this->get('/boryspil');
+
+        $response->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('<title>Натяжні стелі в Борисполі під ключ | Добрі стелі</title>', $content);
+        $this->assertStringContainsString('<meta name="description" content="Безкоштовний замір, прозорий прорахунок і монтаж натяжних стель у Борисполі та районі. Працюємо швидко та якісно.">', $content);
+        $this->assertStringContainsString('<link rel="canonical" href="'.route('landing.geo', ['landingGeoSlug' => 'boryspil']).'">', $content);
+        $this->assertStringContainsString('<meta property="og:title" content="Натяжні стелі в Борисполі під ключ | Добрі стелі">', $content);
+        $this->assertStringContainsString('<meta property="og:url" content="'.route('landing.geo', ['landingGeoSlug' => 'boryspil']).'">', $content);
+        $this->assertStringContainsString('"name":"Натяжні стелі в Борисполі"', $content);
+        $this->assertStringContainsString('"name":"Бориспіль"', $content);
+        $this->assertStringContainsString('<h1 class="text-4xl font-semibold leading-tight text-slate-900">', $content);
+        $this->assertStringContainsString('Натяжні стелі в Борисполі', $content);
+        $response->assertSeeText('Швидкий виїзд на замір у Борисполі');
+        $this->assertStringContainsString('alt="Натяжна стеля з підсвіткою в сучасному інтер&#039;єрі, Бориспіль"', $content);
+    }
+
+    public function test_it_keeps_root_landing_metadata_and_hero_content_unchanged(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('<title>Натяжні стелі в Києві та області під ключ | Добрі стелі</title>', $content);
+        $this->assertStringContainsString('<link rel="canonical" href="'.route('landing').'">', $content);
+        $this->assertStringContainsString('<meta property="og:url" content="'.route('landing').'">', $content);
+        $this->assertStringContainsString('Натяжні стелі в Києві та області', $content);
+        $this->assertStringContainsString('alt="Натяжна стеля з підсвіткою в сучасному інтер&#039;єрі, Київ"', $content);
+    }
+
     public function test_it_exposes_favicon_links_for_browsers_and_mobile_devices(): void
     {
         $response = $this->get('/');
@@ -167,5 +242,21 @@ final class LandingControllerTest extends TestCase
         $this->assertStringContainsString('favicon-16x16.png', $content);
         $this->assertStringContainsString('apple-touch-icon.png', $content);
         $this->assertStringContainsString('favicon.ico', $content);
+    }
+
+    public function test_it_embeds_google_tag_manager_in_the_shared_layout(): void
+    {
+        config()->set('services.google_tag_manager.id', 'GTM-N354DDJ9');
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('googletagmanager.com/gtm.js?id=', $content);
+        $this->assertStringContainsString('googletagmanager.com/ns.html?id=', $content);
+        $this->assertStringContainsString('GTM-N354DDJ9', $content);
+        $this->assertStringContainsString('dataLayer', $content);
     }
 }

@@ -13,7 +13,10 @@ final class SitemapController extends Controller
     {
         return response()
             ->view('sitemap', [
-                'landingUrl' => route('landing'),
+                'landingUrls' => [
+                    route('landing'),
+                    route('landing.geo', ['landingGeoSlug' => 'boryspil']),
+                ],
             ])
             ->header('Content-Type', 'application/xml; charset=UTF-8');
     }

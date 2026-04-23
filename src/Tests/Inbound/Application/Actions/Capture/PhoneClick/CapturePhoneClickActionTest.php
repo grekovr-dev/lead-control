@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
 use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickAction;
 use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickCommand;
+use Inbound\Application\Actions\Capture\PhoneClick\CapturePhoneClickResult;
 use Inbound\Application\Actions\Capture\PhoneClick\CurrentVisitNotFoundException;
 use Inbound\Application\Events\EventBus;
 use Inbound\Application\Identifiers\UuidGenerator;
@@ -145,9 +146,11 @@ final class CapturePhoneClickActionTest extends TestCase
 
         $result = $action($command);
 
-        $this->assertInstanceOf(Lead::class, $result);
-        $this->assertTrue($result->id()->equals($expectedLeadId));
-        $this->assertTrue($result->visitId()->equals($existingVisit->id()));
+        $this->assertInstanceOf(CapturePhoneClickResult::class, $result);
+        $this->assertSame($command->visitorId->value(), $result->visitorId);
+        $this->assertSame($existingVisit->id()->value(), $result->visitId);
+        $this->assertSame(CapturePhoneClickResult::TYPE_LEAD, $result->resultType);
+        $this->assertSame($expectedLeadId->value(), $result->resultId);
     }
 
     public function test_it_registers_phone_click_touch_when_phone_click_lead_already_exists(): void
@@ -255,10 +258,11 @@ final class CapturePhoneClickActionTest extends TestCase
 
         $result = $action($command);
 
-        $this->assertInstanceOf(Touch::class, $result);
-        $this->assertTrue($result->id()->equals($expectedTouchId));
-        $this->assertTrue($result->visitId()->equals($existingVisit->id()));
-        $this->assertSame(TouchType::PhoneClick, $result->type());
+        $this->assertInstanceOf(CapturePhoneClickResult::class, $result);
+        $this->assertSame($command->visitorId->value(), $result->visitorId);
+        $this->assertSame($existingVisit->id()->value(), $result->visitId);
+        $this->assertSame(CapturePhoneClickResult::TYPE_TOUCH, $result->resultType);
+        $this->assertSame($expectedTouchId->value(), $result->resultId);
     }
 
     public function test_it_creates_phone_click_lead_when_only_form_lead_exists_in_current_visit(): void
@@ -361,9 +365,11 @@ final class CapturePhoneClickActionTest extends TestCase
 
         $result = $action($command);
 
-        $this->assertInstanceOf(Lead::class, $result);
-        $this->assertSame('phone_click', $result->origin());
-        $this->assertTrue($result->visitId()->equals($existingVisit->id()));
+        $this->assertInstanceOf(CapturePhoneClickResult::class, $result);
+        $this->assertSame($command->visitorId->value(), $result->visitorId);
+        $this->assertSame($existingVisit->id()->value(), $result->visitId);
+        $this->assertSame(CapturePhoneClickResult::TYPE_LEAD, $result->resultType);
+        $this->assertSame($expectedLeadId->value(), $result->resultId);
     }
 
     public function test_it_throws_when_current_visit_is_missing(): void

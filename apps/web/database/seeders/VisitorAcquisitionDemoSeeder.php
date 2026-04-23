@@ -16,8 +16,9 @@ use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickCommand;
 use Inbound\Domain\Lead\Lead;
 use Inbound\Domain\Shared\Attribution;
 use Inbound\Domain\Shared\VisitorId;
-use Inbound\Domain\Touch\Touch;
 use Inbound\Domain\Visit\Visit;
+use Inbound\Domain\Visit\VisitId;
+use Inbound\Domain\Visit\VisitRepository;
 use Inbound\Infrastructure\Persistence\Eloquent\ClickModel;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadModel;
 use Inbound\Infrastructure\Persistence\Eloquent\RevisitModel;
@@ -62,13 +63,20 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
         DateTimeImmutable $occurredAt,
     ): Visit {
         $action = app(RegisterClickAction::class);
-
-        return $action(new RegisterClickCommand(
+        $result = $action(new RegisterClickCommand(
             visitorId: new VisitorId($visitorId),
             attribution: $attribution,
             landingUrl: $landingUrl,
             occurredAt: $occurredAt,
         ));
+
+        $visit = app(VisitRepository::class)->findById(new VisitId($result->visitId));
+
+        if (! $visit instanceof Visit) {
+            throw new \RuntimeException(sprintf('Demo seeder could not resolve visit %s after click registration.', $result->visitId));
+        }
+
+        return $visit;
     }
 
     private function createFormLead(
@@ -90,10 +98,10 @@ final class VisitorAcquisitionDemoSeeder extends Seeder
     private function capturePhoneLead(
         string $visitorId,
         DateTimeImmutable $occurredAt,
-    ): Lead|Touch {
+    ): void {
         $action = app(CapturePhoneClickAction::class);
 
-        return $action(new CapturePhoneClickCommand(
+        $action(new CapturePhoneClickCommand(
             visitorId: new VisitorId($visitorId),
             occurredAt: $occurredAt,
         ));

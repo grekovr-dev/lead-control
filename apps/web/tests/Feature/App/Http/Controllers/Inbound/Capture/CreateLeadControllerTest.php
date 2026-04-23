@@ -209,10 +209,11 @@ final class CreateLeadControllerTest extends TestCase
         $response->assertJsonPath('data.visitId', 'visit-existing');
         $response->assertJsonPath('data.visitorId', '550e8400-e29b-41d4-a716-446655440000');
         $response->assertJsonPath('data.origin', 'phone_click');
+        $response->assertJsonPath('data.resultType', 'lead');
+        $this->assertNotSame('', (string) $response->json('data.resultId'));
+        $this->assertArrayNotHasKey('leadId', (array) $response->json('data'));
 
-        $leadId = (string) $response->json('data.leadId');
-
-        $this->assertNotSame('', $leadId);
+        $leadId = (string) $response->json('data.resultId');
         $this->assertDatabaseCount('leads', 1);
         $this->assertDatabaseCount('touches', 0);
         $this->assertDatabaseHas('leads', [
@@ -288,10 +289,11 @@ final class CreateLeadControllerTest extends TestCase
         $response->assertJsonPath('data.visitId', 'visit-existing');
         $response->assertJsonPath('data.visitorId', '550e8400-e29b-41d4-a716-446655440000');
         $response->assertJsonPath('data.type', 'phone_click');
+        $response->assertJsonPath('data.resultType', 'touch');
+        $this->assertNotSame('', (string) $response->json('data.resultId'));
+        $this->assertArrayNotHasKey('touchId', (array) $response->json('data'));
 
-        $touchId = (string) $response->json('data.touchId');
-
-        $this->assertNotSame('', $touchId);
+        $touchId = (string) $response->json('data.resultId');
         $this->assertDatabaseCount('leads', 1);
         $this->assertDatabaseCount('touches', 1);
         $this->assertDatabaseHas('touches', [
@@ -358,10 +360,11 @@ final class CreateLeadControllerTest extends TestCase
         $response->assertJsonPath('data.visitId', 'visit-existing');
         $response->assertJsonPath('data.visitorId', '550e8400-e29b-41d4-a716-446655440000');
         $response->assertJsonPath('data.origin', 'phone_click');
+        $response->assertJsonPath('data.resultType', 'lead');
+        $this->assertNotSame('', (string) $response->json('data.resultId'));
+        $this->assertArrayNotHasKey('leadId', (array) $response->json('data'));
 
-        $leadId = (string) $response->json('data.leadId');
-
-        $this->assertNotSame('', $leadId);
+        $leadId = (string) $response->json('data.resultId');
         $this->assertDatabaseCount('leads', 2);
         $this->assertDatabaseCount('touches', 0);
         $this->assertDatabaseHas('leads', [

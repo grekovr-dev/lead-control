@@ -77,6 +77,11 @@ Core business value:
 - Russian may be used for explanations outside code
 - Do NOT mix Ukrainian into code
 
+### Anonymous Functions
+
+- Prefer classic `function (...) { return ...; }` closures in PHP code
+- Do NOT use arrow functions `fn (...) => ...` unless the surrounding codebase already uses them consistently in that file
+
 ---
 
 ### Important Rule

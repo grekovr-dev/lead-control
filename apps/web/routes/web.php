@@ -16,6 +16,9 @@ Route::get('/robots.txt', RobotsController::class)->name('robots');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::get('/', LandingController::class)->name('landing');
+Route::get('/{landingGeoSlug}', LandingController::class)
+    ->whereIn('landingGeoSlug', ['boryspil'])
+    ->name('landing.geo');
 
 Route::prefix('capture')
     ->name('capture.')
