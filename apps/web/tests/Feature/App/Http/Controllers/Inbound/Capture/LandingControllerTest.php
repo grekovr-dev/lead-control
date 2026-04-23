@@ -193,6 +193,23 @@ final class LandingControllerTest extends TestCase
         $this->assertStringContainsString('"name":"Добрі стелі"', $content);
     }
 
+    public function test_it_exposes_geo_specific_metadata_on_the_boryspil_landing_page(): void
+    {
+        $response = $this->get('/boryspil');
+
+        $response->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('<title>Натяжні стелі в Борисполі під ключ | Добрі стелі</title>', $content);
+        $this->assertStringContainsString('<meta name="description" content="Безкоштовний замір, прозорий прорахунок і монтаж натяжних стель у Борисполі та районі. Працюємо швидко та якісно.">', $content);
+        $this->assertStringContainsString('<link rel="canonical" href="'.route('landing.geo', ['landingGeoSlug' => 'boryspil']).'">', $content);
+        $this->assertStringContainsString('<meta property="og:title" content="Натяжні стелі в Борисполі під ключ | Добрі стелі">', $content);
+        $this->assertStringContainsString('<meta property="og:url" content="'.route('landing.geo', ['landingGeoSlug' => 'boryspil']).'">', $content);
+        $this->assertStringContainsString('"name":"Натяжні стелі в Борисполі"', $content);
+        $this->assertStringContainsString('"name":"Бориспіль"', $content);
+    }
+
     public function test_it_exposes_favicon_links_for_browsers_and_mobile_devices(): void
     {
         $response = $this->get('/');

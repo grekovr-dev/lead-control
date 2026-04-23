@@ -17,6 +17,7 @@ final readonly class GeoLandingContext
         public string $cityName,
         public string $title,
         public string $description,
+        public string $canonicalUrl,
         public string $h1,
         public string $leadSentence,
         public string $ogImageAlt,

@@ -3,13 +3,25 @@
 <head>
     @php
         $googleTagManagerId = config('services.google_tag_manager.id');
+        $landingGeo = $landingGeo ?? null;
+
+        $landingTitle = $landingGeo?->title ?? 'Натяжні стелі в Києві та області під ключ | Добрі стелі';
+        $landingDescription = $landingGeo?->description ?? 'Безкоштовний замір, прозорий прорахунок і монтаж натяжних стель у Києві та області. Працюємо швидко та якісно.';
+        $landingCanonicalUrl = $landingGeo?->canonicalUrl ?? route('landing');
+        $landingOgImageAlt = $landingGeo?->ogImageAlt ?? 'Натяжні стелі в Києві та області';
+        $landingSchemaName = $landingGeo?->schemaName ?? 'Натяжні стелі в Києві та області';
+        $landingSchemaDescription = $landingGeo?->schemaDescription ?? 'Монтаж натяжних стель у Києві та області з безкоштовним заміром і попереднім прорахунком вартості.';
+        $landingAreaServed = $landingGeo?->areaServed ?? [
+            'Київ',
+            'Київська область',
+        ];
     @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Натяжні стелі в Києві та області під ключ | Добрі стелі</title>
-    <meta name="description" content="Безкоштовний замір, прозорий прорахунок і монтаж натяжних стель у Києві та області. Працюємо швидко та якісно.">
+    <title>{{ $landingTitle }}</title>
+    <meta name="description" content="{{ $landingDescription }}">
     <meta name="robots" content="index,follow,max-image-preview:large">
-    <link rel="canonical" href="{{ route('landing') }}">
+    <link rel="canonical" href="{{ $landingCanonicalUrl }}">
     @if (is_string($googleTagManagerId) && $googleTagManagerId !== '' && $googleTagManagerId !== 'CHANGE_ME')
     <!-- Google Tag Manager -->
     <script>
@@ -34,33 +46,30 @@
     <meta property="og:locale" content="uk_UA">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Добрі стелі">
-    <meta property="og:title" content="Натяжні стелі в Києві та області під ключ | Добрі стелі">
-    <meta property="og:description" content="Безкоштовний замір, прозорий прорахунок і монтаж натяжних стель у Києві та області. Працюємо швидко та якісно.">
-    <meta property="og:url" content="{{ route('landing') }}">
+    <meta property="og:title" content="{{ $landingTitle }}">
+    <meta property="og:description" content="{{ $landingDescription }}">
+    <meta property="og:url" content="{{ $landingCanonicalUrl }}">
     <meta property="og:image" content="{{ asset('images/hero-cropped.jpg') }}">
-    <meta property="og:image:alt" content="Натяжні стелі в Києві та області">
+    <meta property="og:image:alt" content="{{ $landingOgImageAlt }}">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Натяжні стелі в Києві та області під ключ | Добрі стелі">
-    <meta name="twitter:description" content="Безкоштовний замір, прозорий прорахунок і монтаж натяжних стель у Києві та області. Працюємо швидко та якісно.">
+    <meta name="twitter:title" content="{{ $landingTitle }}">
+    <meta name="twitter:description" content="{{ $landingDescription }}">
     <meta name="twitter:image" content="{{ asset('images/hero-cropped.jpg') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
         $landingServiceSchema = [
             '@context' => 'https://schema.org',
             '@type' => 'Service',
-            'name' => 'Натяжні стелі в Києві та області',
-            'description' => 'Монтаж натяжних стель у Києві та області з безкоштовним заміром і попереднім прорахунком вартості.',
-            'url' => route('landing'),
-            'areaServed' => [
-                [
-                    '@type' => 'City',
-                    'name' => 'Київ',
+            'name' => $landingSchemaName,
+            'description' => $landingSchemaDescription,
+            'url' => $landingCanonicalUrl,
+            'areaServed' => array_map(
+                fn (string $area): array => [
+                    '@type' => str_contains($area, 'область') ? 'AdministrativeArea' : 'City',
+                    'name' => $area,
                 ],
-                [
-                    '@type' => 'AdministrativeArea',
-                    'name' => 'Київська область',
-                ],
-            ],
+                $landingAreaServed,
+            ),
             'provider' => [
                 '@type' => 'Organization',
                 'name' => 'Добрі стелі',

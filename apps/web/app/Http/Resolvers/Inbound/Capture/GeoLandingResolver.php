@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Resolvers\Inbound\Capture;
 
+use Illuminate\Support\Facades\Route;
+
 final class GeoLandingResolver
 {
     public function resolve(?string $slug): GeoLandingContext
@@ -24,6 +26,7 @@ final class GeoLandingResolver
                 cityName: 'Київ та область',
                 title: 'Натяжні стелі в Києві та області під ключ | Добрі стелі',
                 description: 'Безкоштовний замір, прозорий прорахунок і монтаж натяжних стель у Києві та області. Працюємо швидко та якісно.',
+                canonicalUrl: Route::has('landing') ? route('landing') : url('/'),
                 h1: 'Натяжні стелі в Києві та області',
                 leadSentence: 'Швидкий виїзд на замір у Києві та області у зручний для вас час.',
                 ogImageAlt: 'Натяжні стелі в Києві та області',
@@ -39,6 +42,9 @@ final class GeoLandingResolver
                 cityName: 'Бориспіль',
                 title: 'Натяжні стелі в Борисполі під ключ | Добрі стелі',
                 description: 'Безкоштовний замір, прозорий прорахунок і монтаж натяжних стель у Борисполі та районі. Працюємо швидко та якісно.',
+                canonicalUrl: Route::has('landing.geo')
+                    ? route('landing.geo', ['landingGeoSlug' => 'boryspil'])
+                    : url('/boryspil'),
                 h1: 'Натяжні стелі в Борисполі',
                 leadSentence: 'Швидкий виїзд на замір у Борисполі та районі у зручний для вас час.',
                 ogImageAlt: 'Натяжні стелі в Борисполі',
