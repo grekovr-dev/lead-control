@@ -25,6 +25,7 @@ final class LandingControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertViewIs('pages.landing');
+        $response->assertViewHas('landingGeo');
         $response->assertCookieNotExpired($visitorIdCookieStore->cookieName());
         $response->assertCookieNotExpired($attributionCookieStore->cookieName());
         $response->assertCookieMissing('inbound_referrer');
@@ -62,6 +63,7 @@ final class LandingControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertViewIs('pages.landing');
+        $response->assertViewHas('landingGeo');
         $response->assertCookieNotExpired($visitorIdCookieStore->cookieName());
         $response->assertCookieNotExpired($attributionCookieStore->cookieName());
         $response->assertCookieMissing('inbound_referrer');
