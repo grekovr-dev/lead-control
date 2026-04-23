@@ -51,6 +51,43 @@ final class LandingControllerTest extends TestCase
         ], json_decode((string) $attributionCookie->getValue(), true, 512, JSON_THROW_ON_ERROR));
     }
 
+    public function test_it_bootstraps_visitor_and_attribution_cookies_on_geo_landing_open(): void
+    {
+        $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);
+        $attributionCookieStore = $this->app->make(AttributionCookieStore::class);
+
+        $response = $this
+            ->withHeader('referer', 'https://google.com/search?q=stretch+ceiling')
+            ->get('/boryspil?utm_source=google&utm_medium=cpc&utm_campaign=spring-sale&gclid=gclid-1');
+
+        $response->assertOk();
+        $response->assertViewIs('pages.landing');
+        $response->assertCookieNotExpired($visitorIdCookieStore->cookieName());
+        $response->assertCookieNotExpired($attributionCookieStore->cookieName());
+        $response->assertCookieMissing('inbound_referrer');
+
+        $visitorCookie = $response->getCookie($visitorIdCookieStore->cookieName());
+        $attributionCookie = $response->getCookie($attributionCookieStore->cookieName());
+
+        $this->assertNotNull($visitorCookie);
+        $this->assertNotNull($attributionCookie);
+        $this->assertMatchesRegularExpression(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+            (string) $visitorCookie->getValue(),
+        );
+        $this->assertSame([
+            'source' => 'google',
+            'medium' => 'cpc',
+            'campaign' => 'spring-sale',
+            'content' => null,
+            'term' => null,
+            'gclid' => 'gclid-1',
+            'fbclid' => null,
+            'msclkid' => null,
+            'referrer' => 'https://google.com/search?q=stretch+ceiling',
+        ], json_decode((string) $attributionCookie->getValue(), true, 512, JSON_THROW_ON_ERROR));
+    }
+
     public function test_it_reuses_existing_visitor_cookie_and_stores_direct_attribution_snapshot(): void
     {
         $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);

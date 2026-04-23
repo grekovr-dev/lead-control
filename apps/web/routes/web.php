@@ -16,6 +16,7 @@ Route::get('/robots.txt', RobotsController::class)->name('robots');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::get('/', LandingController::class)->name('landing');
+Route::get('/boryspil', LandingController::class)->name('landing.boryspil');
 
 Route::prefix('capture')
     ->name('capture.')
