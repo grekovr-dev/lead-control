@@ -1,4 +1,11 @@
 <section class="relative overflow-hidden px-6 py-8 md:py-12">
+    @php
+        $landingGeo = $landingGeo ?? null;
+        $landingHeroTitle = $landingGeo?->h1 ?? 'Натяжні стелі в Києві та області';
+        $landingHeroLead = $landingGeo?->leadSentence ?? 'Виїзд на замір у зручний час по Києву та області, допомога з підбором матеріалів і зрозумілий прорахунок вартості до початку робіт.';
+        $landingHeroArea = $landingGeo?->areaServed[0] ?? 'Київ';
+        $landingHeroImageAlt = "Натяжна стеля з підсвіткою в сучасному інтер'єрі, {$landingHeroArea}";
+    @endphp
     <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-linear-to-b from-teal-50 via-cyan-50/60 to-transparent"></div>
     <div class="pointer-events-none absolute -right-14 -top-20 -z-10 h-64 w-64 rounded-full bg-teal-200/40 blur-3xl"></div>
 
@@ -33,10 +40,10 @@
 
                 <div class="flex flex-col gap-4">
                    <h1 class="text-4xl font-semibold leading-tight text-slate-900">
-                        Натяжні стелі в Києві та області
+                        {{ $landingHeroTitle }}
                     </h1>
                     <p class="text-lg leading-relaxed text-slate-600">
-                        Виїзд на замір у зручний час по Києву та області, допомога з підбором матеріалів і зрозумілий прорахунок вартості до початку робіт.
+                        {{ $landingHeroLead }}
                     </p>
                 </div>
 
@@ -112,7 +119,7 @@
         <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_22px_45px_-28px_rgba(15,23,42,0.45)]">
             <img
                 src="{{ asset('images/hero-cropped.jpg') }}"
-                alt="Натяжна стеля з підсвіткою в сучасному інтер'єрі, Київ"
+                alt="{{ $landingHeroImageAlt }}"
                 class="h-64 w-full object-cover object-bottom md:h-72 lg:h-96 xl:h-104"
             >
         </div>

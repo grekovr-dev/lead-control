@@ -46,7 +46,7 @@ final class GeoLandingResolver
                     ? route('landing.geo', ['landingGeoSlug' => 'boryspil'])
                     : url('/boryspil'),
                 h1: 'Натяжні стелі в Борисполі',
-                leadSentence: 'Швидкий виїзд на замір у Борисполі та районі у зручний для вас час.',
+                leadSentence: 'Швидкий виїзд на замір у Борисполі у зручний для вас час.',
                 ogImageAlt: 'Натяжні стелі в Борисполі',
                 schemaName: 'Натяжні стелі в Борисполі',
                 schemaDescription: 'Монтаж натяжних стель у Борисполі з безкоштовним заміром і попереднім прорахунком вартості.',

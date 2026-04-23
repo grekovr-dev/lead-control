@@ -208,6 +208,10 @@ final class LandingControllerTest extends TestCase
         $this->assertStringContainsString('<meta property="og:url" content="'.route('landing.geo', ['landingGeoSlug' => 'boryspil']).'">', $content);
         $this->assertStringContainsString('"name":"Натяжні стелі в Борисполі"', $content);
         $this->assertStringContainsString('"name":"Бориспіль"', $content);
+        $this->assertStringContainsString('<h1 class="text-4xl font-semibold leading-tight text-slate-900">', $content);
+        $this->assertStringContainsString('Натяжні стелі в Борисполі', $content);
+        $response->assertSeeText('Швидкий виїзд на замір у Борисполі');
+        $this->assertStringContainsString('alt="Натяжна стеля з підсвіткою в сучасному інтер&#039;єрі, Бориспіль"', $content);
     }
 
     public function test_it_exposes_favicon_links_for_browsers_and_mobile_devices(): void

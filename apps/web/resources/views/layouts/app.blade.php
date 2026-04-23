@@ -64,10 +64,12 @@
             'description' => $landingSchemaDescription,
             'url' => $landingCanonicalUrl,
             'areaServed' => array_map(
-                fn (string $area): array => [
-                    '@type' => str_contains($area, 'область') ? 'AdministrativeArea' : 'City',
-                    'name' => $area,
-                ],
+                function (string $area): array {
+                    return [
+                        '@type' => str_contains($area, 'область') ? 'AdministrativeArea' : 'City',
+                        'name' => $area,
+                    ];
+                },
                 $landingAreaServed,
             ),
             'provider' => [
