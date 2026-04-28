@@ -89,7 +89,7 @@ function deferred() {
     return {promise, resolve, reject};
 }
 
-test('landingCapture strips attribution query before tracking click', async () => {
+test('landingCapture keeps attribution query during bootstrap', async () => {
     const replaceStateCalls = [];
     const fetchCalls = [];
 
@@ -110,8 +110,7 @@ test('landingCapture strips attribution query before tracking click', async () =
 
     await component.init();
 
-    assert.equal(replaceStateCalls.length, 1);
-    assert.deepEqual(replaceStateCalls[0], [{}, '', '/#lead-form']);
+    assert.equal(replaceStateCalls.length, 0);
     assert.equal(fetchCalls.length, 1);
     assert.equal(fetchCalls[0][0], 'https://localhost:8443/capture/click');
 });

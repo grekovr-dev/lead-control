@@ -392,7 +392,7 @@ export default function landingCapture() {
             }
 
             landingBootstrapState.promise = (async () => {
-                this.stripAttributionQuery();
+                // this.stripAttributionQuery();
 
                 try {
                     await this.trackLandingClick();
