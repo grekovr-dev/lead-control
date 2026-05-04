@@ -11,6 +11,7 @@ use Inbound\Application\Queries\Backoffice\GetLeadTimeline\LeadTimelineView;
 use Inbound\Infrastructure\Persistence\Eloquent\ClickModel;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadModel;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadStatusTransitionModel;
+use Inbound\Infrastructure\Persistence\Eloquent\RevisitModel;
 use Inbound\Infrastructure\Persistence\Eloquent\TouchModel;
 use Inbound\Infrastructure\Persistence\Eloquent\VisitModel;
 use Tests\TestCase;
@@ -55,6 +56,14 @@ final class LeadShowControllerTest extends TestCase
             'landing_url' => 'https://example.com/landing',
             'attribution_referrer' => 'https://google.com/',
             'occurred_at' => '2026-03-28 11:40:00',
+        ]);
+
+        RevisitModel::query()->create([
+            'id' => 'revisit-123',
+            'visitor_id' => 'visitor-123',
+            'visit_id' => 'visit-123',
+            'landing_url' => 'https://example.com/revisit',
+            'occurred_at' => '2026-03-28 11:45:00',
         ]);
 
         TouchModel::query()->create([
@@ -117,7 +126,7 @@ final class LeadShowControllerTest extends TestCase
         $response->assertViewHas('timeline', function ($timeline): bool {
             return $timeline instanceof LeadTimelineView
                 && $timeline->leadId === 'lead-123'
-                && count($timeline->events) === 5;
+                && count($timeline->events) === 6;
         });
         $response->assertSeeText([
             'Лід lead-123',
@@ -148,10 +157,12 @@ final class LeadShowControllerTest extends TestCase
             'Таймлайн',
             'Лід створено',
             'Клік по лендингу',
+            'Повторний візит',
             'Клік по месенджеру',
             'Статус змінено',
             'Додано нотатку',
             'Need to call back tomorrow.',
+            'https://example.com/revisit',
             'Автор: Test User 42',
         ]);
         $response->assertSee('data-lead-details-back-button', false);

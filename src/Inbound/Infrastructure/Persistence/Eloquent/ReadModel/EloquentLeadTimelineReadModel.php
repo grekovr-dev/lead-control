@@ -18,6 +18,7 @@ use Inbound\Infrastructure\Persistence\Eloquent\ClickModel;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadModel;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadNoteModel;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadStatusTransitionModel;
+use Inbound\Infrastructure\Persistence\Eloquent\RevisitModel;
 use Inbound\Infrastructure\Persistence\Eloquent\TouchModel;
 use UnexpectedValueException;
 
@@ -37,6 +38,7 @@ final class EloquentLeadTimelineReadModel implements LeadTimelineReadModel
         $events = [
             $this->buildLeadCreatedEvent($leadModel),
             ...$this->buildTouchEvents($leadModel),
+            ...$this->buildRevisitEvents($leadModel),
             ...$this->buildClickEvents($leadModel),
             ...$this->buildStatusTransitionEvents($leadModel),
             ...$this->buildLeadNoteEvents($leadModel),
@@ -96,6 +98,40 @@ final class EloquentLeadTimelineReadModel implements LeadTimelineReadModel
                 description: null,
                 touchType: $touchType->value,
                 touchTypeLabel: $this->touchTypeLabel($touchType),
+            );
+        }
+
+        return $events;
+    }
+
+    /**
+     * @return list<LeadTimelineEventView>
+     */
+    private function buildRevisitEvents(LeadModel $leadModel): array
+    {
+        $visitorId = $this->nullableString($leadModel->getAttribute('visitor_id'));
+
+        if ($visitorId === null) {
+            return [];
+        }
+
+        /** @var list<RevisitModel> $models */
+        $models = RevisitModel::query()
+            ->where('visitor_id', $visitorId)
+            ->orderBy('occurred_at')
+            ->orderBy('id')
+            ->get()
+            ->all();
+
+        $events = [];
+
+        foreach ($models as $model) {
+            $events[] = new LeadTimelineEventView(
+                type: 'revisit',
+                occurredAt: $this->toDateTimeImmutable($model->getAttribute('occurred_at')),
+                title: 'Повторний візит',
+                description: $this->nullableString($model->getAttribute('landing_url')),
+                landingUrl: $this->nullableString($model->getAttribute('landing_url')),
             );
         }
 
@@ -259,6 +295,7 @@ final class EloquentLeadTimelineReadModel implements LeadTimelineReadModel
     {
         return match ($type) {
             'click' => 10,
+            'revisit' => 15,
             'touch' => 20,
             'lead_created' => 30,
             'status_transition' => 40,
