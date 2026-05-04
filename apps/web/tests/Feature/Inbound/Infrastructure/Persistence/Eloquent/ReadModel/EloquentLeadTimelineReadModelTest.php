@@ -13,6 +13,7 @@ use Inbound\Infrastructure\Persistence\Eloquent\ClickModel;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadModel;
 use Inbound\Infrastructure\Persistence\Eloquent\LeadStatusTransitionModel;
 use Inbound\Infrastructure\Persistence\Eloquent\ReadModel\EloquentLeadTimelineReadModel;
+use Inbound\Infrastructure\Persistence\Eloquent\RevisitModel;
 use Inbound\Infrastructure\Persistence\Eloquent\TouchModel;
 use Inbound\Infrastructure\Persistence\Eloquent\VisitModel;
 use Tests\TestCase;
@@ -56,6 +57,14 @@ final class EloquentLeadTimelineReadModelTest extends TestCase
             'visitor_id' => 'visitor-123',
             'type' => 'messenger_click',
             'occurred_at' => '2026-03-28 11:50:00',
+        ]);
+
+        RevisitModel::query()->create([
+            'id' => 'revisit-123',
+            'visitor_id' => 'visitor-123',
+            'visit_id' => 'visit-123',
+            'landing_url' => 'https://example.com/revisit',
+            'occurred_at' => '2026-03-28 11:45:00',
         ]);
 
         TouchModel::query()->create([
@@ -103,8 +112,8 @@ final class EloquentLeadTimelineReadModelTest extends TestCase
         $timeline = $readModel(new GetLeadTimelineQuery(new LeadId('lead-123')));
 
         $this->assertSame('lead-123', $timeline->leadId);
-        $this->assertCount(5, $timeline->events);
-        $this->assertSame(['lead_note', 'status_transition', 'lead_created', 'touch', 'click'], array_map(
+        $this->assertCount(6, $timeline->events);
+        $this->assertSame(['lead_note', 'status_transition', 'lead_created', 'touch', 'revisit', 'click'], array_map(
             static fn ($event): string => $event->type,
             $timeline->events,
         ));
@@ -114,7 +123,9 @@ final class EloquentLeadTimelineReadModelTest extends TestCase
         $this->assertSame('manual_backoffice', $timeline->events[1]->ruleKey);
         $this->assertSame('form', $timeline->events[2]->origin);
         $this->assertSame('messenger_click', $timeline->events[3]->touchType);
-        $this->assertSame('https://example.com/landing', $timeline->events[4]->landingUrl);
+        $this->assertSame('Повторний візит', $timeline->events[4]->title);
+        $this->assertSame('https://example.com/revisit', $timeline->events[4]->landingUrl);
+        $this->assertSame('https://example.com/landing', $timeline->events[5]->landingUrl);
     }
 
     public function test_it_throws_when_lead_is_missing(): void
