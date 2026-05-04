@@ -99,7 +99,11 @@
                     @else
                         <div class="mt-4 space-y-4">
                             @foreach ($timeline->events as $event)
-                                <div class="rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-4">
+                                <div @class([
+                                    'rounded-xl border px-4 py-4',
+                                    'border-slate-200 bg-slate-50/60' => $event->type !== 'revisit',
+                                    'border-teal-200 bg-teal-50/60' => $event->type === 'revisit',
+                                ])>
                                     <div class="flex items-start justify-between gap-3">
                                         <div>
                                             <div class="font-medium text-slate-900">{{ $event->title }}</div>
@@ -115,6 +119,10 @@
 
                                     @if ($event->ruleKey !== null || $event->touchTypeLabel !== null || $event->landingUrl !== null || $event->referrer !== null || $event->authorId !== null)
                                         <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
+                                            @if ($event->type === 'revisit')
+                                                <span class="rounded-full bg-white px-2.5 py-1 text-teal-700">Повторний візит</span>
+                                            @endif
+
                                             @if ($event->touchTypeLabel !== null)
                                                 <span class="rounded-full bg-white px-2.5 py-1">{{ $event->touchTypeLabel }}</span>
                                             @endif
