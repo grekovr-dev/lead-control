@@ -40,6 +40,7 @@
             @include('sections.benefits')
             @include('sections.works')
             @include('sections.cta')
+            @include('sections.faq')
             @include('sections.lead-form')
             @include('sections.footer')
         </div>

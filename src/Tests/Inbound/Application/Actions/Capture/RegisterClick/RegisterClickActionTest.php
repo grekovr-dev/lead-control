@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Inbound\Application\Actions\Capture\ContinueCurrentVisit\ContinueCurrentVisitAction;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickAction;
 use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickCommand;
+use Inbound\Application\Actions\Capture\RegisterClick\RegisterClickResult;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\ResolveCurrentVisitAction;
 use Inbound\Application\Actions\Capture\ResolveCurrentVisit\VisitSessionRule;
 use Inbound\Application\Identifiers\UuidGenerator;
@@ -123,7 +124,11 @@ final class RegisterClickActionTest extends TestCase
 
         $result = $action($command);
 
-        $this->assertSame($existingVisit, $result);
+        $this->assertInstanceOf(RegisterClickResult::class, $result);
+        $this->assertSame($command->visitorId->value(), $result->visitorId);
+        $this->assertSame($existingVisit->id()->value(), $result->visitId);
+        $this->assertSame(RegisterClickResult::TYPE_CLICK, $result->resultType);
+        $this->assertSame('click-123', $result->resultId);
     }
 
     public function test_it_continues_current_visit_without_creating_click_for_direct_revisit(): void
@@ -207,7 +212,11 @@ final class RegisterClickActionTest extends TestCase
 
         $result = $action($command);
 
-        $this->assertSame($existingVisit, $result);
+        $this->assertInstanceOf(RegisterClickResult::class, $result);
+        $this->assertSame($command->visitorId->value(), $result->visitorId);
+        $this->assertSame($existingVisit->id()->value(), $result->visitId);
+        $this->assertSame(RegisterClickResult::TYPE_REVISIT, $result->resultType);
+        $this->assertSame('revisit-123', $result->resultId);
     }
 
     public function test_it_creates_new_visit_when_direct_visit_has_no_current_visit(): void
@@ -287,8 +296,10 @@ final class RegisterClickActionTest extends TestCase
 
         $result = $action($command);
 
-        $this->assertInstanceOf(Visit::class, $result);
-        $this->assertTrue($result->id()->equals(new VisitId('visit-789')));
-        $this->assertTrue($result->visitorId()->equals($command->visitorId));
+        $this->assertInstanceOf(RegisterClickResult::class, $result);
+        $this->assertSame($command->visitorId->value(), $result->visitorId);
+        $this->assertSame('visit-789', $result->visitId);
+        $this->assertSame(RegisterClickResult::TYPE_CLICK, $result->resultType);
+        $this->assertSame('click-123', $result->resultId);
     }
 }

@@ -1,4 +1,11 @@
 <section class="relative overflow-hidden px-6 py-8 md:py-12">
+    @php
+        $landingGeo = $landingGeo ?? null;
+        $landingHeroTitle = $landingGeo?->h1 ?? 'Натяжні стелі в Києві та області';
+        $landingHeroLead = $landingGeo?->leadSentence ?? 'Виїзд на замір у зручний час по Києву та області, допомога з підбором матеріалів і зрозумілий прорахунок вартості до початку робіт.';
+        $landingHeroArea = $landingGeo?->areaServed[0] ?? 'Київ';
+        $landingHeroImageAlt = "Натяжна стеля з підсвіткою в сучасному інтер'єрі, {$landingHeroArea}";
+    @endphp
     <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-linear-to-b from-teal-50 via-cyan-50/60 to-transparent"></div>
     <div class="pointer-events-none absolute -right-14 -top-20 -z-10 h-64 w-64 rounded-full bg-teal-200/40 blur-3xl"></div>
 
@@ -7,7 +14,7 @@
             <div class="flex flex-col gap-8">
                 <div class="flex flex-col gap-3 md:flex-row md:items-center justify-between">
                     <div class="text-base font-semibold uppercase tracking-[0.14em] text-slate-600 md:text-lg">
-                        Добрі стелі. Київ
+                        Добрі стелі
                     </div>
 
                     <div class="flex items-center gap-3 lg:justify-end">
@@ -33,10 +40,10 @@
 
                 <div class="flex flex-col gap-4">
                    <h1 class="text-4xl font-semibold leading-tight text-slate-900">
-                        Натяжні стелі будь-якої складності
+                        {{ $landingHeroTitle }}
                     </h1>
                     <p class="text-lg leading-relaxed text-slate-600">
-                        Виїзд на замір у зручний час, допомога з підбором матеріалів і зрозумілий прорахунок вартості до початку робіт.
+                        {{ $landingHeroLead }}
                     </p>
                 </div>
 
@@ -47,7 +54,7 @@
                     </li>
                     <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                        Працюємо швидко і якісно
+                        Швидкий виїзд на замір
                     </li>
                     <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
@@ -61,10 +68,10 @@
 
                 <div class="flex flex-col gap-3 sm:flex-row">
                     <a href="#lead-form" @click.prevent="trackTouchAndNavigate('#lead-form', 'lead_form_click')" class="inline-flex items-center justify-center rounded-xl bg-teal-700 px-6 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-teal-800">
-                        Залишити заявку
+                        Отримати прорахунок
                     </a>
                     <a href="#works" @click.prevent="trackTouchAndNavigate('#works', 'works_click')" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100">
-                        Подивитися приклади
+                        Приклади робіт
                     </a>
                     <a href="{{ $phoneHref }}" @click.prevent="trackPhoneLeadAndNavigate('{{ $phoneHref }}')" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100">
                         {{ $phoneDisplay }}
@@ -112,7 +119,7 @@
         <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_22px_45px_-28px_rgba(15,23,42,0.45)]">
             <img
                 src="{{ asset('images/hero-cropped.jpg') }}"
-                alt="Натяжна стеля з сучасним освітленням"
+                alt="{{ $landingHeroImageAlt }}"
                 class="h-64 w-full object-cover object-bottom md:h-72 lg:h-96 xl:h-104"
             >
         </div>

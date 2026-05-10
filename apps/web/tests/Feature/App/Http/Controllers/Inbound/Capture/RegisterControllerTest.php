@@ -46,6 +46,8 @@ final class RegisterControllerTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('ok', true);
         $response->assertJsonPath('data.visitorId', '550e8400-e29b-41d4-a716-446655440000');
+        $response->assertJsonPath('data.resultType', 'click');
+        $this->assertNotSame('', (string) $response->json('data.resultId'));
         $this->assertNotNull($response->getCookie($attributionCookieStore->cookieName()));
         $this->assertLessThan(time(), $response->getCookie($attributionCookieStore->cookieName())->getExpiresTime());
 
@@ -117,6 +119,8 @@ final class RegisterControllerTest extends TestCase
         $response->assertJsonPath('ok', true);
         $response->assertJsonPath('data.visitorId', '550e8400-e29b-41d4-a716-446655440000');
         $response->assertJsonPath('data.visitId', 'visit-existing');
+        $response->assertJsonPath('data.resultType', 'click');
+        $this->assertNotSame('', (string) $response->json('data.resultId'));
         $this->assertNotNull($response->getCookie($attributionCookieStore->cookieName()));
         $this->assertLessThan(time(), $response->getCookie($attributionCookieStore->cookieName())->getExpiresTime());
 
@@ -183,6 +187,8 @@ final class RegisterControllerTest extends TestCase
         $response->assertJsonPath('ok', true);
         $response->assertJsonPath('data.visitorId', '550e8400-e29b-41d4-a716-446655440000');
         $response->assertJsonPath('data.visitId', 'visit-existing');
+        $response->assertJsonPath('data.resultType', 'revisit');
+        $this->assertNotSame('', (string) $response->json('data.resultId'));
         $this->assertArrayNotHasKey('clickId', (array) $response->json('data'));
 
         $this->assertDatabaseCount('clicks', 0);
