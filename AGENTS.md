@@ -50,13 +50,18 @@ Core business value:
 
 ### Product Language
 
-- All **user-facing content MUST be in Ukrainian**
+- All **user-facing content MUST be localized**
+- Supported product locales are:
+  - `uk` (default / primary locale)
+  - `ru` (supported secondary locale)
 - This includes:
   - UI text
   - labels
   - messages
   - landing page content
   - backoffice UI
+- New user-facing text MUST be added through localization files or view data for every supported locale
+- Do not hardcode mixed-language UI text in templates or scripts
 
 ---
 
@@ -88,8 +93,8 @@ Core business value:
 
 NEVER:
 - translate business logic into Russian
-- generate UI text in Russian
-- mix languages randomly
+- generate user-facing text without localization
+- mix languages randomly within a single locale
 
 ---
 

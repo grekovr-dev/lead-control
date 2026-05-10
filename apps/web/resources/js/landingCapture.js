@@ -466,7 +466,7 @@ export default function landingCapture() {
 
             if (localPhone === '') {
                 this.leadFormState = 'validation-error';
-                this.leadFormMessage = this.config.formValidationMessage ?? '';
+                this.leadFormMessage = this.validationMessage('formValidationMessage');
                 this.leadFormFieldErrors = {
                     phone: [this.leadPhoneRequiredMessage()],
                 };
@@ -476,7 +476,7 @@ export default function landingCapture() {
 
             if (!this.isLeadPhoneLocalPartValid(localPhone)) {
                 this.leadFormState = 'validation-error';
-                this.leadFormMessage = this.config.formValidationMessage ?? '';
+                this.leadFormMessage = this.validationMessage('formValidationMessage');
                 this.leadFormFieldErrors = {
                     phone: [this.leadPhoneFormatMessage()],
                 };
@@ -505,29 +505,29 @@ export default function landingCapture() {
                     pushLandingAnalyticsEventForResultType(record, resultType);
 
                     this.leadFormState = 'success';
-                    this.leadFormMessage = this.config.formSuccessMessage ?? '';
+                    this.leadFormMessage = this.messageFromConfig('formSuccessMessage');
                     form.reset();
                     return;
                 }
 
                 if (response.status === 422) {
                     this.leadFormState = 'validation-error';
-                    this.leadFormMessage = this.config.formValidationMessage ?? '';
+                    this.leadFormMessage = this.validationMessage('formValidationMessage');
                     this.leadFormFieldErrors = this.translateLeadFormErrors(responseJson?.errors ?? {});
                     return;
                 }
 
                 if (response.status === 409 && responseJson?.code === 'current_visit_not_found') {
                     this.leadFormState = 'server-error';
-                    this.leadFormMessage = this.config.formConflictMessage ?? 'Не вдалося зберегти заявку без поточного візиту.';
+                    this.leadFormMessage = this.validationMessage('formConflictMessage');
                     return;
                 }
 
                 this.leadFormState = 'server-error';
-                this.leadFormMessage = this.config.formFailureMessage ?? '';
+                this.leadFormMessage = this.validationMessage('formFailureMessage');
             } catch {
                 this.leadFormState = 'server-error';
-                this.leadFormMessage = this.config.formFailureMessage ?? '';
+                this.leadFormMessage = this.validationMessage('formFailureMessage');
             } finally {
                 this.isSubmittingLeadForm = false;
             }
@@ -605,11 +605,11 @@ export default function landingCapture() {
         },
 
         leadPhoneRequiredMessage() {
-            return this.config.leadPhoneRequiredMessage ?? 'Вкажіть номер телефону.';
+            return this.messageFromConfig('leadPhoneRequiredMessage');
         },
 
         leadPhoneFormatMessage() {
-            return this.config.leadPhoneFormatMessage ?? 'Введіть 9 цифр після +380, наприклад 50 111 22 33.';
+            return this.messageFromConfig('leadPhoneFormatMessage');
         },
 
         isLeadPhoneLocalPartValid(value) {
@@ -646,12 +646,16 @@ export default function landingCapture() {
             const translations = {
                 'The phone field is required.': this.leadPhoneRequiredMessage(),
                 'The phone field format is invalid.': this.leadPhoneFormatMessage(),
-                'The name field must be a string.': 'Ім’я має бути рядком.',
-                'The name field may not be greater than 255 characters.': 'Ім’я не може перевищувати 255 символів.',
-                'The given data was invalid.': 'Перевірте правильність заповнення форми.',
+                'The name field must be a string.': this.messageFromConfig('validationNameMustBeStringMessage'),
+                'The name field may not be greater than 255 characters.': this.messageFromConfig('validationNameTooLongMessage'),
+                'The given data was invalid.': this.messageFromConfig('validationGenericMessage'),
             };
 
             return translations[message] ?? message;
+        },
+
+        validationMessage(key) {
+            return this.messageFromConfig(key);
         },
 
         async navigateAfterReady(href) {
@@ -893,6 +897,14 @@ export default function landingCapture() {
             const cleanUrl = `${window.location.pathname}${window.location.hash}`;
 
             window.history.replaceState({}, '', cleanUrl);
+        },
+
+        messageFromConfig(key) {
+            if (typeof key !== 'string' || key === '') {
+                return '';
+            }
+
+            return typeof this.config[key] === 'string' ? this.config[key] : '';
         },
     };
 }

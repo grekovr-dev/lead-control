@@ -20,6 +20,9 @@ function makeComponent(overrides = {}) {
         formFailureMessage: 'Не вдалося надіслати заявку. Спробуйте ще раз або зателефонуйте нам.',
         leadPhoneRequiredMessage: 'Вкажіть номер телефону.',
         leadPhoneFormatMessage: 'Введіть 9 цифр після +380, наприклад 50 111 22 33.',
+        validationNameMustBeStringMessage: 'Ім’я має бути рядком.',
+        validationNameTooLongMessage: 'Ім’я не може перевищувати 255 символів.',
+        validationGenericMessage: 'Перевірте правильність заповнення форми.',
     };
     const sessionStorageData = overrides.sessionStorageData ?? new Map();
     const sessionStorage = overrides.sessionStorage ?? {
