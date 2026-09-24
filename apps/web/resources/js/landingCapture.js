@@ -488,12 +488,7 @@ export default function landingCapture() {
                 const response = await fetch(this.config.leadFormUrl, {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': this.csrfToken(),
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
+                    headers: this.captureHeaders(),
                     body: JSON.stringify(payload),
                 });
 
@@ -742,12 +737,7 @@ export default function landingCapture() {
                 const response = await fetch(this.config.clickUrl, {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': this.csrfToken(),
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
+                    headers: this.captureHeaders(),
                     body: JSON.stringify({}),
                 });
 
@@ -795,12 +785,7 @@ export default function landingCapture() {
                         method: 'POST',
                         credentials: 'same-origin',
                         keepalive: true,
-                        headers: {
-                            Accept: 'application/json',
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': this.csrfToken(),
-                            'X-Requested-With': 'XMLHttpRequest',
-                        },
+                        headers: this.captureHeaders(),
                         body: JSON.stringify({}),
                     });
 
@@ -839,12 +824,7 @@ export default function landingCapture() {
                         method: 'POST',
                         credentials: 'same-origin',
                         keepalive: true,
-                        headers: {
-                            Accept: 'application/json',
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': this.csrfToken(),
-                            'X-Requested-With': 'XMLHttpRequest',
-                        },
+                        headers: this.captureHeaders(),
                         body: JSON.stringify({type}),
                     });
 
@@ -873,6 +853,21 @@ export default function landingCapture() {
 
         csrfToken() {
             return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+        },
+
+        captureHeaders() {
+            const headers = {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': this.csrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            };
+
+            if (['uk', 'ru'].includes(this.config.landingLocale)) {
+                headers['X-Landing-Locale'] = this.config.landingLocale;
+            }
+
+            return headers;
         },
 
         readConfig() {

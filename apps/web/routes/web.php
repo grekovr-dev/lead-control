@@ -17,11 +17,27 @@ Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::get('/', LandingController::class)->name('landing');
 Route::get('/{landingGeoSlug}', LandingController::class)
-    ->whereIn('landingGeoSlug', ['boryspil'])
+    ->whereIn('landingGeoSlug', array_keys(config('landing_pages.areas')))
     ->name('landing.geo');
+Route::get('/{landingGeoSlug}/{landingComplexSlug}', LandingController::class)
+    ->whereIn('landingGeoSlug', array_keys(config('landing_pages.areas')))
+    ->name('landing.complex');
+Route::prefix('ru')
+    ->group(function (): void {
+        Route::get('/', LandingController::class)->defaults('landingLocale', 'ru')->name('landing.ru');
+        Route::get('/{landingGeoSlug}', LandingController::class)
+            ->defaults('landingLocale', 'ru')
+            ->whereIn('landingGeoSlug', array_keys(config('landing_pages.areas')))
+            ->name('landing.ru.geo');
+        Route::get('/{landingGeoSlug}/{landingComplexSlug}', LandingController::class)
+            ->defaults('landingLocale', 'ru')
+            ->whereIn('landingGeoSlug', array_keys(config('landing_pages.areas')))
+            ->name('landing.ru.complex');
+    });
 
 Route::prefix('capture')
     ->name('capture.')
+    ->middleware('capture.locale')
     ->group(function (): void {
         Route::post('/click', [RegisterController::class, 'click'])->name('click');
         Route::post('/touch', [RegisterController::class, 'touch'])->name('touch');

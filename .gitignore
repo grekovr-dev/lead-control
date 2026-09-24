@@ -60,3 +60,4 @@ docker/certbot/*
 
 .phpunit.result.cache
 .codex
+handoff.md

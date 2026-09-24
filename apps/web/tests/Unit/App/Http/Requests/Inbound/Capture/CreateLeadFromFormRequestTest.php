@@ -10,7 +10,6 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Routing\Redirector;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\RouteCollection;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Request;
 use Tests\TestCase;
 
@@ -47,8 +46,8 @@ final class CreateLeadFromFormRequestTest extends TestCase
             $this->assertIsArray($payload);
             $this->assertSame(false, $payload['ok']);
             $this->assertSame('validation_error', $payload['code']);
-            $this->assertSame('The given data was invalid.', $payload['message']);
-            $this->assertSame('The phone field format is invalid.', $payload['errors']['phone'][0]);
+            $this->assertSame('Надіслані дані містять помилки.', $payload['message']);
+            $this->assertSame('Поле номер телефону має неправильний формат.', $payload['errors']['phone'][0]);
         }
     }
 
@@ -65,7 +64,7 @@ final class CreateLeadFromFormRequestTest extends TestCase
         });
 
         $this->app->instance('request', $request);
-        $this->app->instance('routes', new RouteCollection());
+        $this->app->instance('routes', new RouteCollection);
         $this->app->make(ValidationFactory::class);
 
         return $request;

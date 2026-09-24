@@ -13,6 +13,7 @@ function makeComponent(overrides = {}) {
         clickUrl: 'https://localhost:8443/capture/click',
         touchUrl: 'https://localhost:8443/capture/touch',
         leadFormUrl: 'https://localhost:8443/capture/leads/form',
+        landingLocale: 'uk',
         leadPhoneCountryCode: '+380',
         formSuccessMessage: 'Дякуємо! Заявку отримано, ми зв\'яжемося з вами найближчим часом.',
         formValidationMessage: 'Перевірте правильність заповнення форми та надішліть заявку ще раз.',
@@ -925,6 +926,7 @@ test('landingCapture submits the lead form successfully', async () => {
         config: {
             clickUrl: '',
             leadFormUrl: 'https://localhost:8443/capture/leads/form',
+            landingLocale: 'ru',
             leadPhoneCountryCode: '+380',
             formSuccessMessage: 'Дякуємо! Заявку отримано, ми зв\'яжемося з вами найближчим часом.',
             formValidationMessage: 'Перевірте правильність заповнення форми та надішліть заявку ще раз.',
@@ -1002,6 +1004,7 @@ test('landingCapture submits the lead form successfully', async () => {
     assert.equal(form.resetCalls, 1);
     assert.equal(fetchCalls.length, 1);
     assert.equal(fetchCalls[0][0], 'https://localhost:8443/capture/leads/form');
+    assert.equal(fetchCalls[0][1].headers['X-Landing-Locale'], 'ru');
     assert.equal(JSON.parse(fetchCalls[0][1].body).phone, '+380501112233');
     assert.equal(JSON.parse(fetchCalls[0][1].body).comment, undefined);
     assert.equal(form.elements.phone.value, '50 111 22 33');

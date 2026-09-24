@@ -1,10 +1,10 @@
 <section class="relative overflow-hidden px-6 py-8 md:py-12">
     @php
         $landingGeo = $landingGeo ?? null;
-        $landingHeroTitle = $landingGeo?->h1 ?? 'Натяжні стелі в Києві та області';
-        $landingHeroLead = $landingGeo?->leadSentence ?? 'Виїзд на замір у зручний час по Києву та області, допомога з підбором матеріалів і зрозумілий прорахунок вартості до початку робіт.';
+        $landingHeroTitle = $landingGeo?->h1 ?? $landingCopy['geo']['h1'];
+        $landingHeroLead = $landingGeo?->leadSentence ?? $landingCopy['geo']['lead_sentence'];
         $landingHeroArea = $landingGeo?->areaServed[0] ?? 'Київ';
-        $landingHeroImageAlt = "Натяжна стеля з підсвіткою в сучасному інтер'єрі, {$landingHeroArea}";
+        $landingHeroImageAlt = str_replace(':area', $landingHeroArea, $landingCopy['hero']['image_alt']);
     @endphp
     <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-linear-to-b from-teal-50 via-cyan-50/60 to-transparent"></div>
     <div class="pointer-events-none absolute -right-14 -top-20 -z-10 h-64 w-64 rounded-full bg-teal-200/40 blur-3xl"></div>
@@ -18,6 +18,13 @@
                     </div>
 
                     <div class="flex items-center gap-3 lg:justify-end">
+                        @foreach ($landingGeo?->alternateUrls ?? [] as $locale => $url)
+                            @if ($locale !== ($landingGeo?->locale ?? app()->getLocale()))
+                                <a href="{{ $url }}" class="text-sm font-semibold text-slate-600 transition hover:text-teal-700">
+                                    {{ $landingCopy['hero']['switch_to_'.$locale] }}
+                                </a>
+                            @endif
+                        @endforeach
                         <a
                             href="{{ $phoneHref }}"
                             @click.prevent="trackPhoneLeadAndNavigate('{{ $phoneHref }}')"
@@ -50,28 +57,28 @@
                 <ul class="grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
                     <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                        Фіксуємо ціну до монтажу
+                        {{ $landingCopy['hero']['price_fixed'] }}
                     </li>
                     <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                        Швидкий виїзд на замір
+                        {{ $landingCopy['hero']['quick_measurement'] }}
                     </li>
                     <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                        Гарантія на роботи і матеріали
+                        {{ $landingCopy['hero']['warranty'] }}
                     </li>
                     <li class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                        Офіційний договір і прозорі умови
+                        {{ $landingCopy['hero']['contract'] }}
                     </li>
                 </ul>
 
                 <div class="flex flex-col gap-3 sm:flex-row">
                     <a href="#lead-form" @click.prevent="trackTouchAndNavigate('#lead-form', 'lead_form_click')" class="inline-flex items-center justify-center rounded-xl bg-teal-700 px-6 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-teal-800">
-                        Отримати прорахунок
+                        {{ $landingCopy['hero']['estimate'] }}
                     </a>
                     <a href="#works" @click.prevent="trackTouchAndNavigate('#works', 'works_click')" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100">
-                        Приклади робіт
+                        {{ $landingCopy['hero']['works'] }}
                     </a>
                     <a href="{{ $phoneHref }}" @click.prevent="trackPhoneLeadAndNavigate('{{ $phoneHref }}')" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100">
                         {{ $phoneDisplay }}
@@ -82,35 +89,35 @@
             <div class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_22px_45px_-28px_rgba(15,23,42,0.45)] md:p-8">
                 <div class="flex flex-col gap-3">
                     <p class="text-sm font-semibold uppercase tracking-wide text-teal-700">
-                        Швидкий старт
+                        {{ $landingCopy['hero']['quick_start'] }}
                     </p>
                     <h3 class="text-2xl font-semibold leading-tight text-slate-700 md:text-3xl">
-                        Виїзд на замір у день звернення
+                        {{ $landingCopy['hero']['same_day_measurement'] }}
                     </h3>
                 </div>
 
                 <div class="mt-6 grid gap-4 sm:grid-cols-2">
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
                         <p class="text-xs uppercase tracking-wide text-slate-500">
-                            Досвід
+                            {{ $landingCopy['hero']['experience'] }}
                         </p>
                         <p class="mt-2 text-xl font-semibold text-slate-900">
-                            15+ років
+                            {{ $landingCopy['hero']['experience_value'] }}
                         </p>
                     </div>
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
                         <p class="text-xs uppercase tracking-wide text-slate-500">
-                            Проєкти
+                            {{ $landingCopy['hero']['projects'] }}
                         </p>
                         <p class="mt-2 text-xl font-semibold text-slate-900">
-                            230+ за рік
+                            {{ $landingCopy['hero']['projects_value'] }}
                         </p>
                     </div>
                 </div>
 
                 <div class="mt-4 rounded-2xl border border-teal-100 bg-teal-50 p-4">
                     <p class="text-sm font-medium text-teal-800">
-                        Безкоштовна консультація та попередній кошторис до початку робіт.
+                        {{ $landingCopy['hero']['consultation'] }}
                     </p>
                 </div>
             </div>

@@ -6,13 +6,13 @@
     <div class="mx-auto max-w-6xl">
         <div class="mb-10 max-w-3xl">
             <p class="mb-3 text-sm font-semibold uppercase tracking-[0.14em] text-teal-700">
-                Замовити дзвінок
+                {{ $landingCopy['form']['eyebrow'] }}
             </p>
             <h2 class="text-2xl font-semibold leading-tight text-slate-900 md:text-3xl">
-                Передзвонимо та підкажемо
+                {{ $landingCopy['form']['title'] }}
             </h2>
             <p class="mt-4 text-lg leading-relaxed text-slate-600">
-                Коротко пояснимо, як усе відбуватиметься.
+                {{ $landingCopy['form']['lead'] }}
             </p>
         </div>
 
@@ -50,13 +50,13 @@
                 <form method="POST" class="space-y-5" :aria-busy="isBootstrapping || isSubmittingLeadForm ? 'true' : 'false'" @submit.prevent="submitLeadForm($event)">
                     @csrf
                     <div>
-                        <label for="name" class="mb-2 block text-sm font-medium text-slate-700">Ім'я</label>
+                        <label for="name" class="mb-2 block text-sm font-medium text-slate-700">{{ $landingCopy['form']['name'] }}</label>
                         <input
                             id="name"
                             name="name"
                             type="text"
                             value="{{ old('name') }}"
-                            placeholder="Ваше ім'я"
+                            placeholder="{{ $landingCopy['form']['name_placeholder'] }}"
                             :disabled="isBootstrapping || isSubmittingLeadForm"
                             class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-100"
                         >
@@ -64,7 +64,7 @@
                     </div>
 
                     <div>
-                        <label for="phone" class="mb-2 block text-sm font-medium text-slate-700">Телефон</label>
+                        <label for="phone" class="mb-2 block text-sm font-medium text-slate-700">{{ $landingCopy['form']['phone'] }}</label>
                         <div class="flex overflow-hidden rounded-xl border border-slate-300 bg-slate-50 transition focus-within:border-teal-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-teal-100">
                             <span class="inline-flex items-center border-r border-slate-300 bg-slate-100 px-4 text-sm font-semibold text-slate-700">
                                 {{ $leadPhoneCountryCode }}
@@ -78,7 +78,7 @@
                                 autocomplete="tel-national"
                                 spellcheck="false"
                                 maxlength="20"
-                                title="Введіть 9 цифр після +380, наприклад 50 111 22 33"
+                                title="{{ $landingCopy['form']['phone_title'] }}"
                                 placeholder="50 111 22 33"
                                 @blur="normalizeLeadPhoneField($event)"
                                 :disabled="isBootstrapping || isSubmittingLeadForm"
@@ -86,7 +86,7 @@
                             >
                         </div>
                         <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                            Введіть 9 цифр після <span class="font-medium text-slate-700">{{ $leadPhoneCountryCode }}</span>, наприклад <span class="whitespace-nowrap font-medium text-slate-700">50 111 22 33</span>.
+                            {{ str_replace([':code', ':example'], [$leadPhoneCountryCode, '50 111 22 33'], $landingCopy['form']['phone_help']) }}
                         </p>
                         <p x-cloak x-show="leadFormFieldErrors.phone" class="mt-2 text-xs text-rose-600" x-text="leadFormFieldErrors.phone ? leadFormFieldErrors.phone[0] : ''"></p>
                     </div>
@@ -96,12 +96,12 @@
                         :disabled="isBootstrapping || isSubmittingLeadForm"
                         class="w-full rounded-xl bg-teal-700 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-teal-800"
                     >
-                        <span x-cloak x-show="!isSubmittingLeadForm">Замовити дзвінок</span>
-                        <span x-cloak x-show="isSubmittingLeadForm">Надсилаємо заявку...</span>
+                        <span x-cloak x-show="!isSubmittingLeadForm">{{ $landingCopy['form']['submit'] }}</span>
+                        <span x-cloak x-show="isSubmittingLeadForm">{{ $landingCopy['form']['submitting'] }}</span>
                     </button>
 
                     <p class="text-xs leading-relaxed text-slate-500">
-                        Натискаючи кнопку, ви погоджуєтесь на обробку контактних даних для зворотного зв'язку.
+                        {{ $landingCopy['form']['consent'] }}
                     </p>
 
                     <a
@@ -112,40 +112,40 @@
                         class="inline-flex items-center gap-3 self-start text-sm font-semibold text-sky-700 transition hover:text-sky-800"
                     >
                         <img src="{{ $messengerIconSrc }}" alt="" class="h-5 w-5 shrink-0">
-                        <span>Або написати у Telegram</span>
+                        <span>{{ $landingCopy['form']['telegram'] }}</span>
                     </a>
                 </form>
             </div>
 
             <div class="min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.45)] md:p-8">
-                <p class="text-sm font-semibold uppercase tracking-[0.14em] text-teal-700">Що буде далі</p>
+                <p class="text-sm font-semibold uppercase tracking-[0.14em] text-teal-700">{{ $landingCopy['form']['next_eyebrow'] }}</p>
                 <h3 class="mt-3 text-2xl font-semibold leading-tight text-slate-900 md:text-3xl">
-                    Зателефонуємо та підкажемо варіанти
+                    {{ $landingCopy['form']['next_title'] }}
                 </h3>
                 <p class="mt-4 leading-relaxed text-slate-600">
-                    Під час дзвінка уточнимо ваш запит і зорієнтуємо щодо рішення, яке найкраще підійде саме вам.
+                    {{ $landingCopy['form']['next_lead'] }}
                 </p>
 
                 <ul class="mt-6 space-y-3 text-sm text-slate-600">
                     <li class="flex items-start gap-2">
                         <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                        Уточнимо лише основні деталі вашого запиту
+                        {{ $landingCopy['form']['next_items'][0] }}
                     </li>
                     <li class="flex items-start gap-2">
                         <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                        Підберемо формат під ваш бюджет
+                        {{ $landingCopy['form']['next_items'][1] }}
                     </li>
                     <li class="flex items-start gap-2">
                         <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                        Озвучимо попередню вартість ще до заміру
+                        {{ $landingCopy['form']['next_items'][2] }}
                     </li>
                     <li class="flex items-start gap-2">
                         <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                        Розкажемо, що впливає на кінцеву вартість
+                        {{ $landingCopy['form']['next_items'][3] }}
                     </li>
                     <li class="flex items-start gap-2">
                         <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">✓</span>
-                        Після дзвінка вам буде зрозуміліше, що робити далі
+                        {{ $landingCopy['form']['next_items'][4] }}
                     </li>
                 </ul>
             </div>

@@ -13,6 +13,7 @@ final readonly class GeoLandingContext
      * @param  GeoLandingAreaServed  $areaServed
      */
     public function __construct(
+        public string $locale,
         public ?string $slug,
         public string $cityName,
         public string $title,
@@ -24,5 +25,7 @@ final readonly class GeoLandingContext
         public string $schemaName,
         public string $schemaDescription,
         public array $areaServed,
+        /** @var array<string, string> */
+        public array $alternateUrls,
     ) {}
 }

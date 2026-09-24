@@ -144,8 +144,8 @@ final class CreateLeadControllerTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonPath('ok', false);
         $response->assertJsonPath('code', 'validation_error');
-        $response->assertJsonPath('message', 'The given data was invalid.');
-        $response->assertJsonPath('errors.phone.0', 'The phone field is required.');
+        $response->assertJsonPath('message', 'Надіслані дані містять помилки.');
+        $response->assertJsonPath('errors.phone.0', 'Поле номер телефону обов’язкове.');
         $this->assertDatabaseCount('leads', 0);
     }
 
@@ -164,9 +164,26 @@ final class CreateLeadControllerTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonPath('ok', false);
         $response->assertJsonPath('code', 'validation_error');
-        $response->assertJsonPath('message', 'The given data was invalid.');
-        $response->assertJsonPath('errors.phone.0', 'The phone field format is invalid.');
+        $response->assertJsonPath('message', 'Надіслані дані містять помилки.');
+        $response->assertJsonPath('errors.phone.0', 'Поле номер телефону має неправильний формат.');
         $this->assertDatabaseCount('leads', 0);
+    }
+
+    public function test_form_endpoint_uses_the_russian_landing_locale_for_validation_errors(): void
+    {
+        $visitorIdCookieStore = $this->app->make(VisitorIdCookieStore::class);
+
+        $response = $this
+            ->withHeader('X-Landing-Locale', 'ru')
+            ->withCookie($visitorIdCookieStore->cookieName(), '550e8400-e29b-41d4-a716-446655440000')
+            ->withCredentials()
+            ->postJson(route('capture.leads.form'), [
+                'name' => 'John Doe',
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('message', 'Отправленные данные содержат ошибки.');
+        $response->assertJsonPath('errors.phone.0', 'Поле номер телефона обязательно.');
     }
 
     /**

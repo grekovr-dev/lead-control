@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="{{ $landingGeo?->locale ?? app()->getLocale() }}">
 <head>
     @php
         $googleTagManagerId = config('services.google_tag_manager.id');
@@ -43,7 +43,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
-    <meta property="og:locale" content="uk_UA">
+    <meta property="og:locale" content="{{ ($landingGeo?->locale ?? app()->getLocale()) === 'ru' ? 'ru_UA' : 'uk_UA' }}">
+    @foreach ($landingGeo?->alternateUrls ?? [] as $locale => $alternateUrl)
+    <link rel="alternate" hreflang="{{ $locale }}" href="{{ $alternateUrl }}">
+    @endforeach
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Добрі стелі">
     <meta property="og:title" content="{{ $landingTitle }}">

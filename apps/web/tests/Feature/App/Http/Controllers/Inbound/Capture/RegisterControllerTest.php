@@ -411,8 +411,8 @@ final class RegisterControllerTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonPath('ok', false);
         $response->assertJsonPath('code', 'validation_error');
-        $response->assertJsonPath('message', 'The given data was invalid.');
-        $response->assertJsonPath('errors.type.0', 'The selected type is invalid.');
+        $response->assertJsonPath('message', 'Надіслані дані містять помилки.');
+        $response->assertJsonPath('errors.type.0', 'Вибране значення для поля тип взаємодії некоректне.');
         $this->assertDatabaseCount('touches', 0);
         $this->assertDatabaseCount('visits', 0);
     }

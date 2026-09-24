@@ -6,6 +6,7 @@ namespace Tests\Feature\App\Http\Controllers\Inbound\Capture;
 
 use App\Http\Cookies\Inbound\Capture\AttributionCookieStore;
 use App\Http\Cookies\Inbound\Capture\VisitorIdCookieStore;
+use Illuminate\Support\Facades\Lang;
 use JsonException;
 use Tests\TestCase;
 
@@ -211,7 +212,66 @@ final class LandingControllerTest extends TestCase
         $this->assertStringContainsString('<h1 class="text-4xl font-semibold leading-tight text-slate-900">', $content);
         $this->assertStringContainsString('Натяжні стелі в Борисполі', $content);
         $response->assertSeeText('Швидкий виїзд на замір у Борисполі');
-        $this->assertStringContainsString('alt="Натяжна стеля з підсвіткою в сучасному інтер&#039;єрі, Бориспіль"', $content);
+        $this->assertStringContainsString('alt="Натяжна стеля з підсвіткою в сучасному інтер’єрі, Бориспіль"', $content);
+    }
+
+    public function test_it_serves_a_russian_boryspil_landing_only_under_the_ru_prefix(): void
+    {
+        $response = $this->get('/ru/boryspil');
+
+        $response->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('<html lang="ru">', $content);
+        $this->assertStringContainsString('<title>Натяжные потолки в Борисполе под ключ | Добрі стелі</title>', $content);
+        $this->assertStringContainsString('<link rel="canonical" href="'.route('landing.ru.geo', ['landingGeoSlug' => 'boryspil']).'">', $content);
+        $this->assertStringContainsString('<link rel="alternate" hreflang="uk" href="'.route('landing.geo', ['landingGeoSlug' => 'boryspil']).'">', $content);
+        $this->assertStringContainsString('<link rel="alternate" hreflang="ru" href="'.route('landing.ru.geo', ['landingGeoSlug' => 'boryspil']).'">', $content);
+        $response->assertSeeText('Натяжные потолки в Борисполе');
+        $response->assertSeeText('Преимущества');
+        $response->assertSeeText('Заказать звонок');
+    }
+
+    public function test_it_does_not_expose_an_uk_prefixed_boryspil_route(): void
+    {
+        $this->get('/uk/boryspil')->assertNotFound();
+    }
+
+    public function test_it_does_not_publish_an_unregistered_complex_landing(): void
+    {
+        $this->get('/boryspil/unregistered-complex')->assertNotFound();
+        $this->get('/ru/boryspil/unregistered-complex')->assertNotFound();
+    }
+
+    public function test_it_renders_registered_complex_content_in_both_locales(): void
+    {
+        config()->set('landing_pages.areas.boryspil.complexes', ['sample']);
+
+        Lang::addLines([
+            'landing/pages/boryspil/sample.geo.h1' => 'Тестовий ЖК у Бориспільському кластері',
+            'landing/pages/boryspil/sample.faq.local_items' => [
+                ['question' => 'Питання про тестовий ЖК?', 'answer' => 'Відповідь про тестовий ЖК.'],
+            ],
+        ], 'uk');
+        Lang::addLines([
+            'landing/pages/boryspil/sample.geo.h1' => 'Тестовый ЖК в Бориспольском кластере',
+            'landing/pages/boryspil/sample.faq.local_items' => [
+                ['question' => 'Вопрос о тестовом ЖК?', 'answer' => 'Ответ о тестовом ЖК.'],
+            ],
+        ], 'ru');
+
+        $uk = $this->get('/boryspil/sample');
+        $uk->assertOk();
+        $uk->assertSeeText('Тестовий ЖК у Бориспільському кластері');
+        $uk->assertSeeText('Питання про тестовий ЖК?');
+        $uk->assertSeeText('Натяжні стелі в Борисполі під ключ | Добрі стелі');
+
+        $ru = $this->get('/ru/boryspil/sample');
+        $ru->assertOk();
+        $ru->assertSeeText('Тестовый ЖК в Бориспольском кластере');
+        $ru->assertSeeText('Вопрос о тестовом ЖК?');
+        $ru->assertSeeText('Натяжные потолки в Борисполе под ключ | Добрі стелі');
     }
 
     public function test_it_keeps_root_landing_metadata_and_hero_content_unchanged(): void
@@ -226,7 +286,7 @@ final class LandingControllerTest extends TestCase
         $this->assertStringContainsString('<link rel="canonical" href="'.route('landing').'">', $content);
         $this->assertStringContainsString('<meta property="og:url" content="'.route('landing').'">', $content);
         $this->assertStringContainsString('Натяжні стелі в Києві та області', $content);
-        $this->assertStringContainsString('alt="Натяжна стеля з підсвіткою в сучасному інтер&#039;єрі, Київ"', $content);
+        $this->assertStringContainsString('alt="Натяжна стеля з підсвіткою в сучасному інтер’єрі, Київ"', $content);
     }
 
     public function test_it_exposes_favicon_links_for_browsers_and_mobile_devices(): void

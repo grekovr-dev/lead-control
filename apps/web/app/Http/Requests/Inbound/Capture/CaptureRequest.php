@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Inbound\Capture;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Contracts\Validation\Validator;
 
 abstract class CaptureRequest extends FormRequest
 {
@@ -13,7 +13,7 @@ abstract class CaptureRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'ok' => false,
             'code' => 'validation_error',
-            'message' => 'The given data was invalid.',
+            'message' => __('validation.failed'),
             'errors' => $validator->errors()->toArray(),
         ], 422));
     }

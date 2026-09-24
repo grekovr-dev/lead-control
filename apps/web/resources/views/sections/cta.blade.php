@@ -7,19 +7,19 @@
             <div class="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
                 <div class="max-w-xl">
                     <h2 class="text-3xl font-semibold leading-tight md:text-4xl">
-                        Потрібен швидкий прорахунок вартості?
+                        {{ $landingCopy['cta']['title'] }}
                     </h2>
                     <p class="mt-4 text-lg leading-relaxed text-teal-50/95">
-                        Залиште заявку, і ми зв'яжемося з вами для уточнення деталей та підготуємо попередній прорахунок без прихованих доплат.
+                        {{ $landingCopy['cta']['lead'] }}
                     </p>
                 </div>
 
                 <div class="flex flex-col gap-3 sm:flex-row lg:flex-col">
                     <a href="#lead-form" @click.prevent="trackTouchAndNavigate('#lead-form', 'lead_form_click')" class="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-teal-700 transition hover:bg-teal-50">
-                        Отримати консультацію
+                        {{ $landingCopy['cta']['consultation'] }}
                     </a>
                     <a href="#works" @click.prevent="trackTouchAndNavigate('#works', 'works_click')" class="inline-flex items-center justify-center rounded-xl border border-white/45 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/20">
-                        Переглянути роботи
+                        {{ $landingCopy['cta']['works'] }}
                     </a>
                 </div>
             </div>
